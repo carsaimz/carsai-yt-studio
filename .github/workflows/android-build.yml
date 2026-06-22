@@ -18,7 +18,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
 
       - uses: actions/setup-java@v4
         with:
@@ -38,7 +37,7 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build web
         run: npm run build
@@ -81,10 +80,6 @@ jobs:
             echo "❌ VERSION not set from tag"
             exit 1
           fi
-          # Validate semver format (basic)
-          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            echo "⚠️  Version doesn't follow semver format: $VERSION"
-          fi
 
       - name: Build signed APK + AAB
         if: secrets.KEYSTORE_BASE64 != ''
@@ -116,7 +111,6 @@ jobs:
         run: |
           echo "🔍 Validating build artifacts..."
           
-          # Check APK
           APK_COUNT=$(find android/app/build/outputs/apk/release -name "*.apk" 2>/dev/null | wc -l)
           if [ "$APK_COUNT" -eq 0 ]; then
             echo "❌ No APK found!"
@@ -124,7 +118,6 @@ jobs:
           fi
           echo "✅ Found $APK_COUNT APK(s)"
           
-          # Check AAB
           AAB_COUNT=$(find android/app/build/outputs/bundle/release -name "*.aab" 2>/dev/null | wc -l)
           if [ "$AAB_COUNT" -eq 0 ]; then
             echo "❌ No AAB found!"
@@ -132,7 +125,6 @@ jobs:
           fi
           echo "✅ Found $AAB_COUNT AAB(s)"
           
-          # Show file sizes
           echo "📊 Artifact sizes:"
           find android/app/build/outputs -name "*.apk" -o -name "*.aab" | while read file; do
             size=$(du -h "$file" | cut -f1)
@@ -147,37 +139,29 @@ jobs:
             android/app/build/outputs/apk/release/*.apk
             android/app/build/outputs/bundle/release/*.aab
           retention-days: 30
-          compression-level: 6
 
       - name: Generate CHANGELOG.md
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           echo "📝 Generating CHANGELOG..."
           
-          # Create temp file with version header
           echo "### Versão $VERSION" > CHANGELOG_temp.md
           echo "" >> CHANGELOG_temp.md
           
-          # Get commits since last tag
           PREV_TAG=$(git describe --abbrev=0 --tags HEAD^ 2>/dev/null || echo "")
           if [ -z "$PREV_TAG" ]; then
-            echo "📋 No previous tag found, getting all commits..."
             git log --pretty=format:"- %s (%h)" >> CHANGELOG_temp.md
           else
-            echo "📋 Changes since $PREV_TAG:"
             git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG_temp.md
           fi
           
-          # Add blank line
           echo "" >> CHANGELOG_temp.md
           echo "" >> CHANGELOG_temp.md
           
-          # Append existing CHANGELOG if it exists
           if [ -f CHANGELOG.md ]; then
             cat CHANGELOG.md >> CHANGELOG_temp.md
           fi
           
-          # Replace with new version
           mv CHANGELOG_temp.md CHANGELOG.md
           echo "✅ CHANGELOG generated successfully"
 
@@ -195,7 +179,6 @@ jobs:
             git commit -m "chore: update CHANGELOG.md for $VERSION"
             echo "✅ CHANGELOG committed locally"
             
-            # Push with retry
             if git push origin HEAD:main; then
               echo "✅ CHANGELOG pushed to remote"
             else
@@ -216,28 +199,3 @@ jobs:
           generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Notify on failure
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const message = `❌ **Build failed!**
-            - Workflow: ${context.workflow}
-            - Run ID: ${context.runId}
-            - Repository: ${context.repo.owner}/${context.repo.repo}
-            - Commit: ${context.sha}
-            
-            Check logs: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            
-            console.log(message);
-            core.setFailed('Build failed! Check logs for details.');
-
-      - name: Success message
-        if: success()
-        run: |
-          echo "🎉 Build completed successfully!"
-          echo "📦 Artifacts uploaded with retention of 30 days"
-          if [ "${{ startsWith(github.ref, 'refs/tags/v') }}" = "true" ]; then
-            echo "🏷️ Release created for version $VERSION"
-          fi
