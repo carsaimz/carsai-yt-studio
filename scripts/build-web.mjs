@@ -1,79 +1,67 @@
 #!/usr/bin/env node
 /**
  * build-web.mjs
- * Corre o build e garante que dist/client/ tem conteúdo para deploy/Capacitor.
+ * Build web universal — Vercel (SSR), Netlify, mobile (Capacitor), desktop.
+ *
+ * Para mobile/desktop é criado um index.html em dist/client/ que carrega
+ * os assets gerados pelo build SSR — o TanStack Router faz o routing no cliente.
  */
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, cpSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const preset = process.env.NITRO_PRESET ?? "node-server";
+const preset   = process.env.NITRO_PRESET   ?? "node-server";
+const forMobile = process.env.BUILD_TARGET  === "mobile";
+
 const run = (cmd, env = {}) =>
   execSync(cmd, { stdio: "inherit", env: { ...process.env, ...env } });
 
-console.log(`\n🔨 Build — preset: ${preset}\n`);
+console.log(`\n🔨 Build — preset: ${preset}${forMobile ? " (mobile)" : ""}\n`);
 run("npm run build", { NITRO_PRESET: preset });
 
-// Verifica se dist/client/ tem ficheiros (index.html OU assets/)
-const target = "dist/client";
-const hasContent = existsSync(target) &&
-  readdirSync(target).length > 0;
+// ── Para mobile: garantir dist/client/index.html ────────────────────────────
+if (forMobile) {
+  const clientDir = "dist/client";
+  mkdirSync(clientDir, { recursive: true });
 
-if (hasContent) {
-  // Se não tiver index.html mas tiver assets, criar um index.html mínimo
-  // para satisfazer o Capacitor (o TanStack Start SSR não gera index.html estático)
-  if (!existsSync(join(target, "index.html"))) {
-    console.log("⚙  A criar index.html de entrada para Capacitor...");
-    import("node:fs").then(({ writeFileSync }) => {
-      writeFileSync(
-        join(target, "index.html"),
-        `<!DOCTYPE html>
-<html lang="pt-BR">
+  if (!existsSync(join(clientDir, "index.html"))) {
+    // Descobrir o ficheiro CSS e JS principal gerados pelo Vite
+    const assetsDir = join(clientDir, "assets");
+    let cssFile = "";
+    let jsFile  = "";
+
+    if (existsSync(assetsDir)) {
+      for (const f of readdirSync(assetsDir)) {
+        if (!cssFile && f.match(/^index.*\.css$/)) cssFile = `assets/${f}`;
+        if (!jsFile  && f.match(/^index.*\.js$/))  jsFile  = `assets/${f}`;
+      }
+      // fallback: primeiro .js encontrado
+      if (!jsFile) {
+        const js = readdirSync(assetsDir).find(f => f.endsWith(".js"));
+        if (js) jsFile = `assets/${js}`;
+      }
+    }
+
+    console.log(`\n⚙  A gerar dist/client/index.html (css=${cssFile}, js=${jsFile})...`);
+
+    writeFileSync(join(clientDir, "index.html"), `<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a1410" />
     <title>Carsai YT Studio</title>
-    <script>
-      // Redireciona para o asset JS principal gerado pelo build
-      // O TanStack Router trata do routing no cliente
-    </script>
+    <meta name="description" content="Gerencie e automatize o seu canal YouTube com IA." />
+    ${cssFile ? `<link rel="stylesheet" href="/${cssFile}" />` : ""}
   </head>
   <body>
     <div id="root"></div>
+    ${jsFile ? `<script type="module" src="/${jsFile}"></script>` : ""}
   </body>
-</html>`
-      );
-    });
+</html>
+`);
+    console.log("✅ dist/client/index.html criado.\n");
+  } else {
+    console.log("✅ dist/client/index.html já existe.\n");
   }
-  console.log(`\n✅ dist/client/ OK (${readdirSync(target).length} entradas)\n`);
-  process.exit(0);
-}
-
-// dist/client vazio ou inexistente — tentar locais alternativos do Nitro
-const candidates = [
-  ".output/public",
-  "dist/public",
-  ".vercel/output/static",
-  "dist",
-  "build",
-  "out",
-];
-
-const found = candidates.find((c) => {
-  if (!existsSync(c)) return false;
-  try { return readdirSync(c).length > 0; } catch { return false; }
-});
-
-if (found) {
-  console.log(`\n📂 Output em "${found}" — a copiar para "${target}"...`);
-  mkdirSync(target, { recursive: true });
-  cpSync(found, target, { recursive: true });
-  console.log(`\n✅ dist/client/ OK\n`);
-} else {
-  console.error("\n❌ Nenhum output encontrado após build. Pastas existentes:\n");
-  for (const entry of readdirSync(".", { withFileTypes: true })) {
-    if (["node_modules", ".git", "src"].includes(entry.name)) continue;
-    console.error((entry.isDirectory() ? "📁 " : "📄 ") + entry.name);
-  }
-  process.exit(1);
 }
