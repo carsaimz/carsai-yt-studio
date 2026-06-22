@@ -1,12 +1,8 @@
 [build]
-  command = "npm run build"
-  publish = ".vercel/output/static"
-
-  [build.environment]
-    NITRO_PRESET = "netlify"
+  command    = "npm run build"
+  publish    = "dist/client"
 
 [[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/server"
+  from   = "/*"
+  to     = "/index.html"
   status = 200
-  force = true
