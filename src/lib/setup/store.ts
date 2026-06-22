@@ -1,0 +1,53 @@
+import { useLS, lsGet } from "@/lib/storage/kv";
+
+export type FirebaseConfig = {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  appId: string;
+  messagingSenderId?: string;
+  storageBucket?: string;
+};
+
+export type YouTubeConfig = {
+  apiKey: string;
+  oauthClientId?: string;
+  defaultChannelId?: string;
+};
+
+export type SetupState = {
+  completed: boolean;
+  completedAt?: string;
+  firebase?: FirebaseConfig;
+  youtube?: YouTubeConfig;
+  preferences: {
+    theme: "dark" | "light" | "system";
+    locale: "pt-BR" | "en";
+    notificationsEnabled: boolean;
+    syncFirestore: boolean;
+  };
+};
+
+const DEFAULT: SetupState = {
+  completed: false,
+  preferences: {
+    theme: "dark",
+    locale: "pt-BR",
+    notificationsEnabled: true,
+    syncFirestore: false,
+  },
+};
+
+export const SETUP_KEY = "setup";
+
+export function getSetup(): SetupState {
+  return lsGet<SetupState>(SETUP_KEY, DEFAULT);
+}
+
+export function useSetup() {
+  return useLS<SetupState>(SETUP_KEY, DEFAULT);
+}
+
+export function isSetupCompleted() {
+  return getSetup().completed === true;
+}

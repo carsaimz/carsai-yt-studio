@@ -1,0 +1,46 @@
+name: iOS Build (unsigned IPA)
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  ios:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Add Capacitor iOS
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/ios
+          [ -d ios ] || npx cap add ios
+          npx cap sync ios
+      - name: Build archive (no signing)
+        working-directory: ios/App
+        run: |
+          pod install
+          xcodebuild -workspace App.xcworkspace -scheme App \
+            -configuration Release -sdk iphoneos \
+            -archivePath build/App.xcarchive archive \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+      - name: Package unsigned IPA
+        working-directory: ios/App/build
+        run: |
+          mkdir -p Payload
+          cp -R App.xcarchive/Products/Applications/App.app Payload/
+          zip -qr App-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: ios/App/build/App-unsigned.ipa
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ios/App/build/App-unsigned.ipa

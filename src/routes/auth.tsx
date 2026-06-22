@@ -1,0 +1,204 @@
+import { createFileRoute, Link, useNavigate, Navigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FirebaseError } from "firebase/app";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { loginEmail, loginGoogle, registerEmail, resetPassword } from "@/lib/firebase/auth";
+import { isSetupCompleted } from "@/lib/setup/store";
+import { toast, alert } from "@/lib/notifications";
+
+export const Route = createFileRoute("/auth")({
+  head: () => ({
+    meta: [
+      { title: "Entrar — Carsai YT Studio" },
+      { name: "description", content: "Faça login para gerenciar seu canal." },
+    ],
+  }),
+  component: AuthPage,
+});
+
+function friendly(e: unknown) {
+  if (e instanceof FirebaseError) {
+    const map: Record<string, string> = {
+      "auth/invalid-credential": "Credenciais inválidas.",
+      "auth/user-not-found": "Usuário não encontrado.",
+      "auth/wrong-password": "Senha incorreta.",
+      "auth/email-already-in-use": "Este e-mail já está cadastrado.",
+      "auth/weak-password": "Senha muito fraca (mín. 6 caracteres).",
+      "auth/invalid-email": "E-mail inválido.",
+      "auth/popup-closed-by-user": "Janela fechada antes de concluir o login.",
+    };
+    return map[e.code] ?? e.message;
+  }
+  return e instanceof Error ? e.message : "Erro inesperado.";
+}
+
+function AuthPage() {
+  const navigate = useNavigate();
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  if (!isSetupCompleted()) {
+    return <Navigate to="/welcome" />;
+  }
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const id = toast.loading(mode === "login" ? "Entrando…" : "Criando conta…");
+    try {
+      if (mode === "login") await loginEmail(email, password);
+      else await registerEmail(email, password);
+      toast.dismiss(id);
+      toast.success(mode === "login" ? "Bem-vindo de volta!" : "Conta criada com sucesso!");
+      navigate({ to: "/" });
+    } catch (err) {
+      toast.dismiss(id);
+      toast.error(friendly(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onGoogle = async () => {
+    setBusy(true);
+    const id = toast.loading("Conectando com Google…");
+    try {
+      await loginGoogle();
+      toast.dismiss(id);
+      toast.success("Login com Google realizado!");
+      navigate({ to: "/" });
+    } catch (err) {
+      toast.dismiss(id);
+      toast.error(friendly(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onReset = async () => {
+    if (!email) {
+      await alert({ title: "E-mail necessário", text: "Informe seu e-mail antes de redefinir a senha.", icon: "warning" });
+      return;
+    }
+    try {
+      await resetPassword(email);
+      toast.success("E-mail de recuperação enviado.");
+    } catch (err) {
+      toast.error(friendly(err));
+    }
+  };
+
+  return (
+    <Shell>
+      <h1 className="font-display text-2xl font-bold tracking-tight">
+        {mode === "login" ? "Entrar" : "Criar conta"}
+      </h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Acesse com sua conta para sincronizar preferências entre dispositivos.
+      </p>
+
+      <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="mt-5">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="login">
+            <FontAwesomeIcon icon={["fas", "right-to-bracket"]} className="mr-1.5" />
+            Entrar
+          </TabsTrigger>
+          <TabsTrigger value="register">
+            <FontAwesomeIcon icon={["fas", "user-plus"]} className="mr-1.5" />
+            Criar conta
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value={mode} className="mt-4">
+          <form onSubmit={onSubmit} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="email">
+                <FontAwesomeIcon icon={["fas", "envelope"]} className="mr-1.5 text-muted-foreground" />
+                E-mail
+              </Label>
+              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">
+                <FontAwesomeIcon icon={["fas", "lock"]} className="mr-1.5 text-muted-foreground" />
+                Senha
+              </Label>
+              <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.currentTarget.value)} />
+            </div>
+            <Button type="submit" disabled={busy} className="w-full gradient-brand text-primary-foreground hover:opacity-90">
+              {busy
+                ? <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />
+                : <FontAwesomeIcon icon={["fas", mode === "login" ? "right-to-bracket" : "user-plus"]} className="mr-2" />
+              }
+              {mode === "login" ? "Entrar" : "Criar conta"}
+            </Button>
+          </form>
+        </TabsContent>
+      </Tabs>
+
+      <div className="mt-4 flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted-foreground">ou</span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      <Button variant="outline" onClick={onGoogle} disabled={busy} className="mt-3 w-full">
+        <FontAwesomeIcon icon={["fab", "google"]} className="mr-2 text-blue-400" />
+        Continuar com Google
+      </Button>
+
+      {mode === "login" && (
+        <button type="button" onClick={onReset} className="mt-3 w-full text-center text-xs text-muted-foreground hover:text-foreground transition">
+          <FontAwesomeIcon icon={["fas", "key"]} className="mr-1" />
+          Esqueci minha senha
+        </button>
+      )}
+    </Shell>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
+      <div className="absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
+      <div className="absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-warning/10 blur-3xl" />
+      <div className="relative w-full max-w-md rounded-3xl border border-border bg-card/80 p-8 backdrop-blur">
+        <div className="flex items-center gap-3">
+          <div className="grid h-12 w-12 place-items-center rounded-2xl gradient-brand glow-brand">
+            <FontAwesomeIcon icon={["fab", "youtube"]} className="h-6 w-6 text-primary-foreground" size="lg" />
+          </div>
+          <div>
+            <p className="font-display text-xl font-bold">Carsai</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">YT Studio</p>
+          </div>
+        </div>
+        <div className="mt-6">{children}</div>
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Ao continuar você concorda com nossos{" "}
+          <Link to="/terms" className="underline">Termos</Link> e{" "}
+          <Link to="/privacy" className="underline">Privacidade</Link>.
+        </p>
+        <nav className="mt-4 flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground">
+          <Link to="/docs" className="hover:text-foreground">
+            <FontAwesomeIcon icon={["fas", "book-open"]} className="mr-1" />Docs
+          </Link>
+          <Link to="/help" className="hover:text-foreground">
+            <FontAwesomeIcon icon={["fas", "circle-question"]} className="mr-1" />Ajuda
+          </Link>
+          <Link to="/about" className="hover:text-foreground">
+            <FontAwesomeIcon icon={["fas", "circle-info"]} className="mr-1" />Sobre
+          </Link>
+          <Link to="/changelog" className="hover:text-foreground">
+            <FontAwesomeIcon icon={["fas", "clock-rotate-left"]} className="mr-1" />Changelog
+          </Link>
+        </nav>
+      </div>
+    </div>
+  );
+}

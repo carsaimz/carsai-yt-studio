@@ -1,0 +1,27 @@
+{
+  "appId": "com.carsai.ytstudio",
+  "appName": "Carsai YT Studio",
+  "webDir": "dist/client",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#1a1410",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#1a1410",
+      "overlaysWebView": false
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "Preferences": {
+      "group": "CarsaiSecureStore"
+    }
+  }
+}
