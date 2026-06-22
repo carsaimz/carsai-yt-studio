@@ -19,6 +19,8 @@ jobs:
       - run: npm run build
         env:
           NITRO_PRESET: ${{ vars.NITRO_PRESET || 'node-server' }}
+        env:
+          NITRO_PRESET: ${{ vars.NITRO_PRESET || 'node-server' }}
       - uses: actions/upload-artifact@v4
         with:
           name: web-build
