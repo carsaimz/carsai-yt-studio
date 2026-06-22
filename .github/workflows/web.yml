@@ -1,4 +1,4 @@
-name: Web Build & Deploy
+name: Web — Build & Deploy
 
 on:
   push:
@@ -9,25 +9,32 @@ on:
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
-      - run: npm run build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
         env:
-          NITRO_PRESET: ${{ vars.NITRO_PRESET || 'node-server' }}
-        env:
-          NITRO_PRESET: ${{ vars.NITRO_PRESET || 'node-server' }}
-      - uses: actions/upload-artifact@v4
+          NITRO_PRESET: ${{ vars.NITRO_PRESET || 'vercel' }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
           name: web-build
-          path: dist
+          path: .vercel/output
           retention-days: 7
 
   deploy-pages:
+    name: Deploy to GitHub Pages
     needs: build
     if: github.ref == 'refs/heads/main' && vars.DEPLOY_TARGET == 'pages'
     runs-on: ubuntu-latest
@@ -42,10 +49,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: web-build
-          path: dist
+          path: .vercel/output
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/client
+          path: .vercel/output/static
       - id: deployment
         uses: actions/deploy-pages@v4

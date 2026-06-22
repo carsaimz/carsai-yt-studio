@@ -1,4 +1,4 @@
-name: Desktop Build (Tauri)
+name: Desktop — Tauri (Win + Mac + Linux)
 
 on:
   workflow_dispatch:
@@ -7,38 +7,52 @@ on:
 
 jobs:
   tauri:
+    name: Build ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            target: ''
+            args: ''
           - os: macos-latest
-            target: '--target universal-apple-darwin'
+            args: '--target universal-apple-darwin'
           - os: windows-latest
-            target: ''
+            args: ''
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-      - name: Linux deps
+
+      - name: Linux system dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
-      - run: npm install
-      - run: npm run build
-      - uses: tauri-apps/tauri-action@v0
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build web
+        run: npm run build
+        env:
+          NITRO_PRESET: static
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Carsai YT Studio ${{ github.ref_name }}'
+          releaseName: Carsai YT Studio ${{ github.ref_name }}
           releaseDraft: true
           prerelease: false
-          args: ${{ matrix.target }}
+          args: ${{ matrix.args }}
