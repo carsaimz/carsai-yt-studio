@@ -19,7 +19,7 @@ jobs:
           java-version: '21'
       - uses: android-actions/setup-android@v3
 
-      - run: npm ci
+      - run: npm install
       - run: npm run build
       - name: Add Capacitor + Android
         run: |
