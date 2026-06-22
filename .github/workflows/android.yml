@@ -26,16 +26,24 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build web
-        run: npm run build
-        env:
-          NITRO_PRESET: static
+      - name: Install Capacitor
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Setup Capacitor Android
+      - name: Build web (mobile static)
+        run: npm run build:mobile
+
+      - name: Init Capacitor (se ainda não inicializado)
         run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          [ -d android ] || npx cap add android
-          npx cap sync android
+          if [ ! -f "android/app/src/main/assets/capacitor.config.json" ] && \
+             [ ! -f "android/app/src/main/assets/capacitor.config.ts" ]; then
+            echo "A inicializar projecto Android Capacitor..."
+            npx cap add android
+          else
+            echo "Projecto Android já existe no repositório."
+          fi
+
+      - name: Sync Capacitor
+        run: npx cap sync android
 
       - name: Decode keystore
         env:
@@ -49,7 +57,7 @@ jobs:
             echo "⚠️  Sem keystore — build não assinada."
           fi
 
-      - name: Build signed APK + AAB
+      - name: Build APK + AAB (signed)
         if: env.HAS_KEYSTORE == 'true'
         working-directory: android
         env:
@@ -64,7 +72,7 @@ jobs:
             -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
             -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
 
-      - name: Build unsigned APK + AAB
+      - name: Build APK + AAB (unsigned)
         if: env.HAS_KEYSTORE == 'false'
         working-directory: android
         run: |

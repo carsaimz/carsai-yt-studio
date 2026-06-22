@@ -19,10 +19,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build web
-        run: npm run build
-        env:
-          NITRO_PRESET: static
+      - name: Build web (mobile static)
+        run: npm run build:mobile
 
       - name: Setup Capacitor iOS
         run: |
