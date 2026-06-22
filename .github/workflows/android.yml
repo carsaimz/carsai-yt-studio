@@ -31,9 +31,6 @@ jobs:
 
       - name: Build web (mobile)
         run: npm run build:mobile
-        env:
-          BUILD_TARGET: mobile
-          NITRO_PRESET: node-server
 
       - name: Init Capacitor (se ainda não inicializado)
         run: |
@@ -44,6 +41,15 @@ jobs:
           else
             echo "Projecto Android já existe no repositório."
           fi
+
+      - name: Copy Android icons
+        run: |
+          RES="android/app/src/main/res"
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            mkdir -p "$RES/mipmap-$density"
+            cp "public/android-icons/mipmap-$density/ic_launcher.png"                "$RES/mipmap-$density/ic_launcher.png"
+            cp "public/android-icons/mipmap-$density/ic_launcher.png"                "$RES/mipmap-$density/ic_launcher_round.png"
+          done
 
       - name: Sync Capacitor
         run: npx cap sync android

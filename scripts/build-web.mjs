@@ -1,49 +1,49 @@
 #!/usr/bin/env node
 /**
  * build-web.mjs
- * Build web universal — Vercel (SSR), Netlify, mobile (Capacitor), desktop.
- *
- * Para mobile/desktop é criado um index.html em dist/client/ que carrega
- * os assets gerados pelo build SSR — o TanStack Router faz o routing no cliente.
+ * Build web universal — Vercel (SSR), Netlify, mobile (Capacitor), desktop (Tauri).
  */
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const preset   = process.env.NITRO_PRESET   ?? "node-server";
+const preset    = process.env.NITRO_PRESET  ?? "node-server";
 const forMobile = process.env.BUILD_TARGET  === "mobile";
 
 const run = (cmd, env = {}) =>
   execSync(cmd, { stdio: "inherit", env: { ...process.env, ...env } });
 
-console.log(`\n🔨 Build — preset: ${preset}${forMobile ? " (mobile)" : ""}\n`);
+console.log(`\n🔨 Build — preset: ${preset}${forMobile ? " [mobile]" : ""}\n`);
 run("npm run build", { NITRO_PRESET: preset });
 
-// ── Para mobile: garantir dist/client/index.html ────────────────────────────
+// ── Mobile: gerar dist/client/index.html ────────────────────────────────────
 if (forMobile) {
-  const clientDir = "dist/client";
+  const clientDir  = "dist/client";
+  const assetsDir  = join(clientDir, "assets");
   mkdirSync(clientDir, { recursive: true });
 
   if (!existsSync(join(clientDir, "index.html"))) {
-    // Descobrir o ficheiro CSS e JS principal gerados pelo Vite
-    const assetsDir = join(clientDir, "assets");
     let cssFile = "";
     let jsFile  = "";
 
     if (existsSync(assetsDir)) {
-      for (const f of readdirSync(assetsDir)) {
-        if (!cssFile && f.match(/^index.*\.css$/)) cssFile = `assets/${f}`;
-        if (!jsFile  && f.match(/^index.*\.js$/))  jsFile  = `assets/${f}`;
-      }
-      // fallback: primeiro .js encontrado
-      if (!jsFile) {
-        const js = readdirSync(assetsDir).find(f => f.endsWith(".js"));
-        if (js) jsFile = `assets/${js}`;
-      }
+      const files = readdirSync(assetsDir);
+
+      // Preferir index-*.css e index-*.js (entry points do Vite)
+      cssFile = files.find(f => /^index.*\.css$/.test(f)) ?? "";
+      jsFile  = files.find(f => /^index.*\.js$/.test(f))  ?? "";
+
+      // Fallback: client-*.js (TanStack Start client entry)
+      if (!jsFile) jsFile = files.find(f => /^client.*\.js$/.test(f)) ?? "";
+
+      // Último recurso: qualquer .js
+      if (!jsFile) jsFile = files.find(f => f.endsWith(".js")) ?? "";
     }
 
-    console.log(`\n⚙  A gerar dist/client/index.html (css=${cssFile}, js=${jsFile})...`);
+    console.log(`\n⚙  Gerando index.html  css=${cssFile || "nenhum"}  js=${jsFile || "nenhum"}`);
 
+    // IMPORTANTE: usar caminhos RELATIVOS (./assets/...) para Capacitor
+    // Caminhos absolutos (/assets/...) não funcionam com capacitor://localhost
     writeFileSync(join(clientDir, "index.html"), `<!DOCTYPE html>
 <html lang="pt-BR" class="dark">
   <head>
@@ -52,11 +52,14 @@ if (forMobile) {
     <meta name="theme-color" content="#1a1410" />
     <title>Carsai YT Studio</title>
     <meta name="description" content="Gerencie e automatize o seu canal YouTube com IA." />
-    ${cssFile ? `<link rel="stylesheet" href="/${cssFile}" />` : ""}
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    ${cssFile ? `<link rel="stylesheet" href="./assets/${cssFile}" />` : ""}
   </head>
-  <body>
+  <body style="margin:0;background:#1a1410;">
     <div id="root"></div>
-    ${jsFile ? `<script type="module" src="/${jsFile}"></script>` : ""}
+    ${jsFile ? `<script type="module" src="./assets/${jsFile}"></script>` : ""}
   </body>
 </html>
 `);

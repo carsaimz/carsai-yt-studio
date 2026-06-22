@@ -11,8 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "build:mobile": "BUILD_TARGET=mobile NITRO_PRESET=node-server node scripts/build-web.mjs",
-    "build:web": "node scripts/build-web.mjs"
+    "build:mobile": "cross-env BUILD_TARGET=mobile NITRO_PRESET=node-server node scripts/build-web.mjs",
+    "build:web": "cross-env node scripts/build-web.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -77,7 +77,8 @@
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "axios": "^1.7.9",
-    "react-hot-toast": "^2.4.1"
+    "react-hot-toast": "^2.4.1",
+    "cross-env": "^7.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
