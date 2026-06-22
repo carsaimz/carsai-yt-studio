@@ -9,19 +9,18 @@
       "NITRO_PRESET": "node-server"
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "^/assets/(.*)$",
-      "dest": "/dist/client/assets/$1",
-      "headers": { "cache-control": "public, max-age=31536000, immutable" }
+      "source": "/assets/:path*",
+      "destination": "/dist/client/assets/:path*"
     },
     {
-      "src": "^/(.+\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webmanifest|txt|xml))$",
-      "dest": "/dist/client/$1"
+      "source": "/:file(.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|webmanifest|txt|xml|json))",
+      "destination": "/dist/client/:file"
     },
     {
-      "src": "^/(.*)$",
-      "dest": "/dist/server/server.js"
+      "source": "/(.*)",
+      "destination": "/api/index"
     }
   ]
 }
