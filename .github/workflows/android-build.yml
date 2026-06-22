@@ -42,25 +42,23 @@ jobs:
       - name: Build web
         run: npm run build
 
-      - name: Install Capacitor deps
-        run: npm install @capacitor/core @capacitor/cli @capacitor/android
-
-      - name: Add Android platform if missing
+      - name: Add Capacitor + Android
         run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
           [ -d android ] || npx cap add android
           npx cap sync android
 
       - name: Decode keystore
         if: secrets.KEYSTORE_BASE64 != ''
         run: |
-          mkdir -p android/app/keystore
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore/release.jks
+          mkdir -p android/app
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/carsai-release.jks
           echo "✅ Keystore decodificado com sucesso"
 
       - name: Validate keystore
         if: secrets.KEYSTORE_BASE64 != ''
         run: |
-          if [ ! -f "android/app/keystore/release.jks" ]; then
+          if [ ! -f "android/app/carsai-release.jks" ]; then
             echo "❌ Keystore file not found after decode"
             exit 1
           fi
@@ -73,14 +71,6 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "✅ Version set to: $VERSION"
 
-      - name: Validate version
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          if [ -z "$VERSION" ]; then
-            echo "❌ VERSION not set from tag"
-            exit 1
-          fi
-
       - name: Build signed APK + AAB
         if: secrets.KEYSTORE_BASE64 != ''
         working-directory: android
@@ -89,14 +79,14 @@ jobs:
           echo "🔐 Building signed artifacts..."
           chmod +x ./gradlew
           ./gradlew assembleRelease bundleRelease --no-daemon \
-            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/android/app/keystore/release.jks" \
+            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/android/app/carsai-release.jks" \
             -Pandroid.injected.signing.store.password="${{ secrets.KEYSTORE_PASSWORD }}" \
             -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
             -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}" \
             -PversionName="${VERSION:-1.0.0}"
           echo "✅ Build signed completed"
 
-      - name: Build unsigned APK + AAB
+      - name: Build unsigned APK + AAB (no keystore)
         if: secrets.KEYSTORE_BASE64 == ''
         working-directory: android
         shell: bash
@@ -105,6 +95,7 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleRelease bundleRelease --no-daemon \
             -PversionName="${VERSION:-1.0.0}"
+          echo "⚠️  Artefato não assinado — adicione os secrets de keystore para assinar."
           echo "✅ Build unsigned completed"
 
       - name: Validate APK and AAB
@@ -186,7 +177,7 @@ jobs:
             fi
           fi
 
-      - name: Create Release
+      - name: Attach to release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
