@@ -21,16 +21,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build web
-        run: npm run build:web
+      - name: Build
+        run: npm run build
         env:
-          NITRO_PRESET: ${{ vars.NITRO_PRESET || 'static' }}
+          NITRO_PRESET: node-server
 
-      - name: Upload build artifact
+      - name: Upload artifact (dist/client — assets estáticos)
         uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: dist/client
+          if-no-files-found: warn
           retention-days: 7
 
   deploy-pages:
