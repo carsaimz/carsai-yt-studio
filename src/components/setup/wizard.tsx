@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronLeft, ChevronRight, Sparkles, Zap, Youtube, Bot, Globe } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Youtube, Bot, Globe } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "@/lib/notifications";
@@ -44,8 +44,8 @@ export function SetupWizard() {
       <div className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-8 sm:py-12">
         <header className="mb-6 flex items-center justify-between">
           <Link to="/welcome" className="flex items-center gap-2">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl gradient-brand glow-brand">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl">
+              <img src="/icon-192.png" alt="Carsai" className="h-full w-full object-cover" />
             </div>
             <div className="min-w-0">
               <p className="font-display text-sm font-bold">Carsai YT Studio</p>

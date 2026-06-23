@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { BookOpen, HelpCircle, History, Info, Shield, Zap } from "lucide-react";
+import { BookOpen, HelpCircle, History, Info, Shield } from "lucide-react";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -28,8 +28,8 @@ export function PublicShell({ title, subtitle, eyebrow, icon, art, children }: P
       <header className="relative z-10 border-b border-border/60 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link to="/welcome" className="flex items-center gap-2">
-            <div className="grid h-8 w-8 place-items-center rounded-lg gradient-brand glow-brand">
-              <Zap className="h-4 w-4 text-primary-foreground" />
+            <div className="h-8 w-8 overflow-hidden rounded-lg flex-shrink-0">
+              <img src="/icon-192.png" alt="Carsai" className="h-full w-full object-cover" />
             </div>
             <span className="font-display font-bold">Carsai YT Studio</span>
           </Link>

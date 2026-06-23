@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, BarChart3, Bot, Film, Search, Shield, Sparkles, Wand2, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, Bot, Film, Search, Shield, Wand2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -33,8 +33,8 @@ function WelcomePage() {
 
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
         <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl gradient-brand glow-brand">
-            <Zap className="h-5 w-5 text-primary-foreground" />
+          <div className="h-9 w-9 overflow-hidden rounded-xl">
+            <img src="/icon-192.png" alt="Carsai" className="h-full w-full object-cover" />
           </div>
           <span className="font-display font-bold">Carsai YT Studio</span>
         </div>
