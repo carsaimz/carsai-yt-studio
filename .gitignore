@@ -30,3 +30,8 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables — nunca commitar o .env com chaves reais
+.env
+.env.local
+.env.*.local

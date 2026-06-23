@@ -19,6 +19,7 @@ jobs:
           - os: windows-latest
             args: ''
     runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -36,33 +37,129 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev libgtk-3-dev \
-            libayatana-appindicator3-dev librsvg2-dev \
-            patchelf
+            libayatana-appindicator3-dev librsvg2-dev
 
       - name: Install dependencies
         run: npm install
 
-      - name: Install Tauri CLI
-        run: npm install --save-dev @tauri-apps/cli@^2
-
-      - name: Build web (mobile static for Tauri)
+      - name: Build web (desktop)
         run: npm run build:mobile
         env:
           BUILD_TARGET: mobile
           NITRO_PRESET: node-server
 
-      - name: Init Tauri project (if src-tauri missing)
+      - name: Ensure src-tauri exists
         shell: bash
         run: |
           if [ ! -d "src-tauri" ]; then
-            npx tauri init \
-              --app-name "Carsai YT Studio" \
-              --window-title "Carsai YT Studio" \
-              --dist-dir "../dist/client" \
-              --dev-url "http://localhost:3000" \
-              --before-dev-command "" \
-              --before-build-command "" \
-              --ci
+            echo "A criar src-tauri..."
+            mkdir -p src-tauri/icons
+            mkdir -p src-tauri/src
+
+            # Copy icons
+            cp public/tauri-icons/32x32.png        src-tauri/icons/32x32.png
+            cp public/tauri-icons/128x128.png       src-tauri/icons/128x128.png
+            cp public/tauri-icons/128x128@2x.png    src-tauri/icons/128x128@2x.png
+            cp public/tauri-icons/icon.ico          src-tauri/icons/icon.ico
+            cp public/tauri-icons/icon.png          src-tauri/icons/icon.png
+
+            # Cargo.toml
+            cat > src-tauri/Cargo.toml << 'CARGO'
+          [package]
+          name = "carsai-yt-studio-pro"
+          version = "0.1.0"
+          edition = "2021"
+          rust-version = "1.77.2"
+
+          [build-dependencies]
+          tauri-build = { version = "2", features = [] }
+
+          [dependencies]
+          tauri = { version = "2", features = [] }
+          tauri-plugin-opener = "2"
+          serde = { version = "1", features = ["derive"] }
+          serde_json = "1"
+          CARGO
+
+            # build.rs
+            cat > src-tauri/build.rs << 'BUILDRS'
+          fn main() {
+              tauri_build::build()
+          }
+          BUILDRS
+
+            # main.rs
+            cat > src-tauri/src/main.rs << 'MAINRS'
+          #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+          fn main() {
+              carsai_yt_studio_pro_lib::run()
+          }
+          MAINRS
+
+            # lib.rs
+            cat > src-tauri/src/lib.rs << 'LIBRS'
+          #[cfg_attr(mobile, tauri::mobile_entry_point)]
+          pub fn run() {
+              tauri::Builder::default()
+                  .plugin(tauri_plugin_opener::init())
+                  .run(tauri::generate_context!())
+                  .expect("error while running tauri application");
+          }
+          LIBRS
+
+            # tauri.conf.json
+            cat > src-tauri/tauri.conf.json << 'TAURICONF'
+          {
+            "$schema": "https://schema.tauri.app/config/2",
+            "productName": "Carsai YT Studio",
+            "version": "0.1.0",
+            "identifier": "com.carsai.ytstudio",
+            "build": {
+              "frontendDist": "../dist/client",
+              "devUrl": "http://localhost:3000",
+              "beforeDevCommand": "",
+              "beforeBuildCommand": ""
+            },
+            "app": {
+              "windows": [
+                {
+                  "title": "Carsai YT Studio",
+                  "width": 1280,
+                  "height": 800,
+                  "minWidth": 960,
+                  "minHeight": 600,
+                  "resizable": true,
+                  "fullscreen": false
+                }
+              ],
+              "security": {
+                "csp": null
+              }
+            },
+            "bundle": {
+              "active": true,
+              "targets": "all",
+              "icon": [
+                "icons/32x32.png",
+                "icons/128x128.png",
+                "icons/128x128@2x.png",
+                "icons/icon.ico",
+                "icons/icon.png"
+              ]
+            }
+          }
+          TAURICONF
+
+            echo "src-tauri criado."
+          else
+            echo "src-tauri já existe no repositório."
+            # Garantir que os ícones estão actualizados
+            cp public/tauri-icons/32x32.png        src-tauri/icons/32x32.png    2>/dev/null || true
+            cp public/tauri-icons/128x128.png       src-tauri/icons/128x128.png  2>/dev/null || true
+            cp public/tauri-icons/128x128@2x.png    src-tauri/icons/128x128@2x.png 2>/dev/null || true
+            cp public/tauri-icons/icon.ico          src-tauri/icons/icon.ico     2>/dev/null || true
+            cp public/tauri-icons/icon.png          src-tauri/icons/icon.png     2>/dev/null || true
           fi
 
       - name: Build Tauri app
@@ -74,5 +171,4 @@ jobs:
           releaseName: Carsai YT Studio ${{ github.ref_name }}
           releaseDraft: true
           prerelease: false
-          tauriScript: npx tauri
           args: ${{ matrix.args }}
