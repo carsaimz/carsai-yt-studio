@@ -1,3 +1,4 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2, KeyRound, Shield, Globe, Palette, Bell, Youtube as YoutubeIcon, LogOut, Loader2, Download } from "lucide-react";
 import { useState } from "react";
@@ -17,7 +18,7 @@ import {
 import { useSetup } from "@/lib/setup/store";
 import { useFirebaseUser } from "@/lib/firebase/auth";
 import { logout } from "@/lib/firebase/auth";
-import { youtube } from "@/lib/youtube/client";
+import { youtube, hasOAuth, startOAuthPKCE, clearYtToken, getYtToken } from "@/lib/youtube/client";
 import { UpdateCard } from "@/components/updates/update-card";
 
 export const Route = createFileRoute("/settings")({
@@ -143,8 +144,43 @@ function YouTubeSettings() {
           </p>
         </div>
         <Field label="API Key" value={apiKey} onChange={setApiKey} placeholder="AIza…" type="password" />
-        <Field label="OAuth Client ID (opcional)" value={clientId} onChange={setClientId}
+        <Field label="OAuth Client ID" value={clientId} onChange={setClientId}
           placeholder="xxxx.apps.googleusercontent.com" />
+        <div className="rounded-xl border border-border bg-card/60 p-4 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">OAuth YouTube</p>
+              <p className="text-xs text-muted-foreground">
+                Necessário para upload, edição, playlists, comentários e analytics.
+              </p>
+            </div>
+            {hasOAuth() ? (
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 text-xs text-success">
+                  <FontAwesomeIcon icon={["fas", "circle-check"]} />
+                  Conectado
+                </span>
+                <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={() => { clearYtToken(); toast.success("OAuth desconectado."); window.location.reload(); }}>
+                  Desconectar
+                </Button>
+              </div>
+            ) : (
+              <Button size="sm" className="gradient-brand text-primary-foreground hover:opacity-90"
+                disabled={!clientId}
+                onClick={() => startOAuthPKCE().catch(e => toast.error(e.message))}>
+                <FontAwesomeIcon icon={["fab", "google"]} className="mr-1.5" />
+                Conectar com Google
+              </Button>
+            )}
+          </div>
+          {!clientId && (
+            <p className="text-xs text-warning">
+              <FontAwesomeIcon icon={["fas", "triangle-exclamation"]} className="mr-1" />
+              Preencha o OAuth Client ID acima antes de conectar.
+            </p>
+          )}
+        </div>
       </section>
 
       {/* Canal */}
