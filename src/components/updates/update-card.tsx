@@ -262,7 +262,7 @@ export function UpdateCard({ compact = false }: { compact?: boolean }) {
                   <RefreshCw className="mr-1 h-4 w-4" /> Tentar de novo
                 </Button>
                 <Button size="sm" variant="ghost" asChild>
-                  <a href="https://github.com/carsaimz/carsai-yt-studio/releases" target="_blank" rel="noreferrer">
+                  <a href="https://github.com/carsaimz/carsai-yt-studio-pro/releases" target="_blank" rel="noreferrer">
                     Abrir GitHub <ExternalLink className="ml-1 h-3 w-3" />
                   </a>
                 </Button>
@@ -457,7 +457,7 @@ export function UpdateCard({ compact = false }: { compact?: boolean }) {
               </a>
             </Button>
             <Button asChild size="sm" variant="ghost">
-              <a href="https://github.com/carsaimz/carsai-yt-studio/releases" target="_blank" rel="noreferrer">
+              <a href="https://github.com/carsaimz/carsai-yt-studio-pro/releases" target="_blank" rel="noreferrer">
                 Todas as releases <ExternalLink className="ml-1 h-3 w-3" />
               </a>
             </Button>

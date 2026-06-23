@@ -32,7 +32,7 @@ const FAQ: { q: string; a: string; tags: string[]; cat: string }[] = [
   { cat: "Self-host", q: "Posso auto-hospedar?", tags: ["self-host"],
     a: "Sim, é MIT. 'npm install && npm run build' gera dist/client/. Hospede em qualquer CDN ou localmente com 'npx serve dist/client'." },
   { cat: "Suporte", q: "Como reporto bugs?", tags: ["suporte"],
-    a: "Abra issue em github.com/carsaimz/carsai-yt-studio/issues. Suporte direto: suporte@carsai.app." },
+    a: "Abra issue em github.com/carsaimz/carsai-yt-studio-pro/issues. Suporte direto: suporte@carsai.app." },
 ];
 
 const CATEGORIES = Array.from(new Set(FAQ.map((f) => f.cat)));
@@ -111,7 +111,7 @@ function Help() {
             <Link to="/docs" className="text-primary hover:underline">Guia completo de configuração →</Link>
           </SectionCard>
           <SectionCard title="GitHub" icon={<Github className="h-4 w-4" />}>
-            <a href="https://github.com/carsaimz/carsai-yt-studio/issues" target="_blank" rel="noreferrer"
+            <a href="https://github.com/carsaimz/carsai-yt-studio-pro/issues" target="_blank" rel="noreferrer"
               className="text-primary hover:underline">Abrir uma issue →</a>
           </SectionCard>
           <SectionCard title="E-mail" icon={<MessageCircle className="h-4 w-4" />}>

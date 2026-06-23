@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, BarChart3, Bot, Film, Search, Shield, Wand2 } from "lucide-react";
+import { ArrowRight, BarChart3, Bot, Film, Search, Shield, Sparkles, Wand2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -33,7 +33,7 @@ function WelcomePage() {
 
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
         <div className="flex items-center gap-2">
-          <div className="h-9 w-9 overflow-hidden rounded-xl">
+          <div className="h-9 w-9 overflow-hidden rounded-xl flex-shrink-0">
             <img src="/icon-192.png" alt="Carsai" className="h-full w-full object-cover" />
           </div>
           <span className="font-display font-bold">Carsai YT Studio</span>
@@ -127,7 +127,12 @@ function WelcomePage() {
 
       <footer className="relative z-10 border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-muted-foreground">
-          <span>© {new Date().getFullYear()} Carsai YT Studio</span>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 overflow-hidden rounded-lg flex-shrink-0">
+              <img src="/icon-192.png" alt="Carsai" className="h-full w-full object-cover" />
+            </div>
+            <span>© {new Date().getFullYear()} Carsai YT Studio</span>
+          </div>
           <div className="flex flex-wrap gap-4">
             <Link to="/privacy" className="hover:text-foreground">Privacidade</Link>
             <Link to="/terms" className="hover:text-foreground">Termos</Link>

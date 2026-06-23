@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronLeft, ChevronRight, Youtube, Bot, Globe } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Youtube, Bot, Globe, Zap } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "@/lib/notifications";
