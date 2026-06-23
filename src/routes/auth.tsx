@@ -170,8 +170,8 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div className="absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-warning/10 blur-3xl" />
       <div className="relative w-full max-w-md rounded-3xl border border-border bg-card/80 p-8 backdrop-blur">
         <div className="flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl gradient-brand glow-brand">
-            <FontAwesomeIcon icon={["fab", "youtube"]} className="h-6 w-6 text-primary-foreground" size="lg" />
+          <div className="grid h-12 w-12 place-items-center rounded-2xl overflow-hidden">
+            <img src="/icon-192.png" alt="Carsai" className="h-full w-full object-cover" />
           </div>
           <div>
             <p className="font-display text-xl font-bold">Carsai</p>

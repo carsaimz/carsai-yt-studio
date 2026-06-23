@@ -71,8 +71,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <Link to="/" className="flex items-center gap-2 px-2 py-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-brand glow-brand flex-shrink-0">
-            <FontAwesomeIcon icon={["fab", "youtube"]} className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden flex-shrink-0">
+            <img src="/icon-192.png" alt="Carsai" className="h-full w-full object-cover" />
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">

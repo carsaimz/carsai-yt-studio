@@ -5,7 +5,7 @@
 import { lsGet } from "@/lib/storage/kv";
 
 export const APP_VERSION = "0.1.0";
-export const DEFAULT_REPO = "carsaimz/carsai-yt-studio";
+export const DEFAULT_REPO = "carsaimz/carsai-yt-studio-pro";
 
 export type Release = {
   tag_name: string;

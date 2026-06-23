@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 /**
- * build-web.mjs
- * Build web universal — Vercel (SSR), Netlify, mobile (Capacitor), desktop (Tauri).
+ * build-web.mjs — Build universal para web, mobile e desktop.
  */
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const preset    = process.env.NITRO_PRESET  ?? "node-server";
-const forMobile = process.env.BUILD_TARGET  === "mobile";
+const preset    = process.env.NITRO_PRESET ?? "node-server";
+const forMobile = process.env.BUILD_TARGET === "mobile";
 
 const run = (cmd, env = {}) =>
   execSync(cmd, { stdio: "inherit", env: { ...process.env, ...env } });
@@ -16,34 +15,35 @@ const run = (cmd, env = {}) =>
 console.log(`\n🔨 Build — preset: ${preset}${forMobile ? " [mobile]" : ""}\n`);
 run("npm run build", { NITRO_PRESET: preset });
 
-// ── Mobile: gerar dist/client/index.html ────────────────────────────────────
 if (forMobile) {
-  const clientDir  = "dist/client";
-  const assetsDir  = join(clientDir, "assets");
+  const clientDir = "dist/client";
+  const assetsDir = join(clientDir, "assets");
   mkdirSync(clientDir, { recursive: true });
 
   if (!existsSync(join(clientDir, "index.html"))) {
-    let cssFile = "";
-    let jsFile  = "";
+    let cssFiles = [];
+    let entryJs  = "";
 
     if (existsSync(assetsDir)) {
       const files = readdirSync(assetsDir);
+      cssFiles = files.filter(f => f.endsWith(".css"));
 
-      // Preferir index-*.css e index-*.js (entry points do Vite)
-      cssFile = files.find(f => /^index.*\.css$/.test(f)) ?? "";
-      jsFile  = files.find(f => /^index.*\.js$/.test(f))  ?? "";
-
-      // Fallback: client-*.js (TanStack Start client entry)
-      if (!jsFile) jsFile = files.find(f => /^client.*\.js$/.test(f)) ?? "";
-
-      // Último recurso: qualquer .js
-      if (!jsFile) jsFile = files.find(f => f.endsWith(".js")) ?? "";
+      // Entry JS: prefer index-*.js, then client-*.js, fallback first .js
+      entryJs =
+        files.find(f => /^index.*\.js$/.test(f)) ??
+        files.find(f => /^client.*\.js$/.test(f)) ??
+        files.find(f => f.endsWith(".js")) ?? "";
     }
 
-    console.log(`\n⚙  Gerando index.html  css=${cssFile || "nenhum"}  js=${jsFile || "nenhum"}`);
+    console.log(`\n⚙  Gerando index.html`);
+    console.log(`   CSS: ${cssFiles.join(", ") || "nenhum"}`);
+    console.log(`   JS entry: ${entryJs || "nenhum"}`);
 
-    // IMPORTANTE: usar caminhos RELATIVOS (./assets/...) para Capacitor
-    // Caminhos absolutos (/assets/...) não funcionam com capacitor://localhost
+    const cssLinks = cssFiles
+      .map(f => `    <link rel="stylesheet" href="./assets/${f}" />`)
+      .join("\n");
+
+    // IMPORTANTE: caminhos RELATIVOS (./assets/...) para Capacitor
     writeFileSync(join(clientDir, "index.html"), `<!DOCTYPE html>
 <html lang="pt-BR" class="dark">
   <head>
@@ -55,11 +55,11 @@ if (forMobile) {
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    ${cssFile ? `<link rel="stylesheet" href="./assets/${cssFile}" />` : ""}
+${cssLinks}
   </head>
-  <body style="margin:0;background:#1a1410;">
+  <body style="margin:0;padding:0;background:#1a1410;color:#f5f0eb;">
     <div id="root"></div>
-    ${jsFile ? `<script type="module" src="./assets/${jsFile}"></script>` : ""}
+    ${entryJs ? `<script type="module" src="./assets/${entryJs}"></script>` : "<!-- JS entry não encontrado -->"}
   </body>
 </html>
 `);

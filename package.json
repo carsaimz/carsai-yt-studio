@@ -1,5 +1,5 @@
 {
-  "name": "carsai-yt-studio",
+  "name": "carsai-yt-studio-pro",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -98,5 +98,9 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.0.16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/carsaimz/carsai-yt-studio-pro"
   }
 }
