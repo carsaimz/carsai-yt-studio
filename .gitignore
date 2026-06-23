@@ -32,6 +32,6 @@ lerna-debug.log*
 *.sw?
 
 # Environment variables — nunca commitar o .env com chaves reais
-# .env
+.env
 .env.local
 .env.*.local
