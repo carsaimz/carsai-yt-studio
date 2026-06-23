@@ -1,11 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useState, useRef, useEffect } from "react";
 import { Send, FileText, Image as ImageIcon, TrendingUp, Sparkles, Bot } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { aiAgents, trends } from "@/lib/mock-data";
+import { youtube } from "@/lib/youtube/client";
+import { getSetup } from "@/lib/setup/store";
+import { toast } from "@/lib/notifications";
 
 export const Route = createFileRoute("/ai")({
   head: () => ({
@@ -17,119 +23,294 @@ export const Route = createFileRoute("/ai")({
   component: AIPage,
 });
 
+type Msg = { role: "user" | "assistant"; text: string };
+
 const iconMap = { FileText, Image: ImageIcon, TrendingUp, Sparkles };
 
+const agents = [
+  { id: "scriptwriter", name: "Agente Roteirista", description: "Gera scripts com estrutura narrativa, ganchos e CTAs.", icon: "FileText" as const, prompt: "Você é um roteirista especialista em YouTube. Crie scripts envolventes." },
+  { id: "thumbnail", name: "Agente Thumbnail", description: "Sugere composições, copy e variações de thumbnail.", icon: "Image" as const, prompt: "Você é especialista em thumbnails de YouTube com alto CTR." },
+  { id: "trend", name: "Agente de Tendências", description: "Analisa tópicos em alta e cruza com o seu nicho.", icon: "TrendingUp" as const, prompt: "Você é um analista de tendências para criadores de conteúdo YouTube." },
+  { id: "summary", name: "Agente de Resumo", description: "Cria descrições, posts para redes e capítulos.", icon: "Sparkles" as const, prompt: "Você é especialista em criar descrições e resumos para vídeos YouTube." },
+];
+
 function AIPage() {
+  const { youtube: yt, ai } = getSetup();
+  const channelId = yt?.defaultChannelId;
+  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [scriptInput, setScriptInput] = useState("");
+  const [scriptResult, setScriptResult] = useState("");
+  const [generatingScript, setGeneratingScript] = useState(false);
+  const [activeAgent, setActiveAgent] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const channelQ = useQuery({
+    enabled: !!channelId,
+    queryKey: ["channel", channelId],
+    queryFn: () => youtube.channelById(channelId!),
+  });
+  const ch = channelQ.data?.items?.[0];
+
+  // Load recent video titles for context
+  const uploadsId = ch?.contentDetails?.relatedPlaylists?.uploads;
+  const videosQ = useQuery({
+    enabled: !!uploadsId,
+    queryKey: ["uploads", uploadsId],
+    queryFn: () => youtube.myVideos(uploadsId!),
+  });
+  const videoIds = (videosQ.data?.items ?? [])
+    .map((v: any) => v.contentDetails?.videoId).filter(Boolean).slice(0, 5);
+  const detailsQ = useQuery({
+    enabled: videoIds.length > 0,
+    queryKey: ["video-titles-ai", videoIds.join(",")],
+    queryFn: () => youtube.videoDetails(videoIds),
+  });
+  const recentTitles = (detailsQ.data?.items ?? [])
+    .map((v: any) => v.snippet?.title).filter(Boolean).join("\n");
+
+  const activeProvider = ai?.providers?.find((p: any) => p.enabled);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs]);
+
+  async function callAI(userMsg: string, systemPrompt?: string): Promise<string> {
+    if (!activeProvider?.apiKey) {
+      throw new Error("Nenhum provedor de IA configurado. Vá a Configurações → Provedores IA.");
+    }
+
+    const channelCtx = ch
+      ? `Canal: ${ch.snippet?.title} (${ch.statistics?.subscriberCount} inscritos).\nVídeos recentes:\n${recentTitles}`
+      : "";
+
+    const sys = systemPrompt
+      ? `${systemPrompt}\n\n${channelCtx}`
+      : `Você é um assistente especialista em YouTube para o canal "${ch?.snippet?.title ?? "do utilizador"}".\n${channelCtx}`;
+
+    // Generic OpenAI-compatible endpoint
+    const baseUrl = activeProvider.baseUrl || "https://api.openai.com/v1";
+    const model = activeProvider.model || "gpt-4o-mini";
+
+    const res = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${activeProvider.apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: sys },
+          ...msgs.map((m) => ({ role: m.role, content: m.text })),
+          { role: "user", content: userMsg },
+        ],
+        max_tokens: 1024,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message ?? `API error ${res.status}`);
+    }
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content ?? "Sem resposta.";
+  }
+
+  async function handleSend() {
+    if (!input.trim() || sending) return;
+    const userText = input.trim();
+    setInput("");
+    setMsgs((prev) => [...prev, { role: "user", text: userText }]);
+    setSending(true);
+    try {
+      const agentDef = agents.find((a) => a.id === activeAgent);
+      const reply = await callAI(userText, agentDef?.prompt);
+      setMsgs((prev) => [...prev, { role: "assistant", text: reply }]);
+    } catch (err) {
+      toast.error((err as Error).message);
+      setMsgs((prev) => [...prev, { role: "assistant", text: `Erro: ${(err as Error).message}` }]);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleGenerateScript() {
+    if (!scriptInput.trim()) return;
+    setGeneratingScript(true);
+    setScriptResult("");
+    try {
+      const result = await callAI(
+        `Crie um roteiro completo para YouTube sobre: "${scriptInput}". Inclua gancho, desenvolvimento e CTA.`,
+        agents[0].prompt
+      );
+      setScriptResult(result);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setGeneratingScript(false);
+    }
+  }
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
         title="IA & Agentes"
-        description="Roteiros, thumbnails, tendências e um assistente que conhece seu canal."
+        description={activeProvider
+          ? `Provedor activo: ${activeProvider.name} · modelo: ${activeProvider.model ?? "padrão"}`
+          : "Configure um provedor de IA em Configurações → Provedores IA"}
       />
 
-      <Tabs defaultValue="agents">
+      {!activeProvider && (
+        <Card className="border-warning/40 bg-warning/5 p-5">
+          <div className="flex items-start gap-3">
+            <FontAwesomeIcon icon={["fas", "triangle-exclamation"]} className="mt-0.5 text-warning" />
+            <div>
+              <p className="font-semibold">Sem provedor de IA configurado</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                O chat e os agentes precisam de uma API Key.{" "}
+                <Link to="/settings" className="text-primary underline">Configurar agora</Link>
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <Tabs defaultValue="chat">
         <TabsList>
           <TabsTrigger value="agents">Agentes</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
           <TabsTrigger value="scripts">Roteiros</TabsTrigger>
-          <TabsTrigger value="thumbs">Thumbnails IA</TabsTrigger>
-          <TabsTrigger value="trends">Tendências</TabsTrigger>
         </TabsList>
 
         <TabsContent value="agents">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {aiAgents.map((a) => {
+            {agents.map((a) => {
               const Icon = iconMap[a.icon as keyof typeof iconMap] ?? Bot;
               return (
-                <div
-                  key={a.id}
-                  className="gradient-panel relative overflow-hidden rounded-2xl border border-border p-5 transition hover:border-primary/40"
-                >
+                <Card key={a.id}
+                  className={`relative overflow-hidden p-5 transition cursor-pointer hover:border-primary/40 ${activeAgent === a.id ? "border-primary bg-primary/5" : ""}`}
+                  onClick={() => setActiveAgent(activeAgent === a.id ? null : a.id)}>
                   <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-brand">
                     <Icon className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <h3 className="mt-3 font-display text-lg font-semibold">{a.name}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">{a.description}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">{a.runs} execuções</span>
-                    <Button size="sm" variant="outline">Executar</Button>
-                  </div>
-                </div>
+                  {activeAgent === a.id && (
+                    <Badge className="mt-3" variant="default">Activo no chat</Badge>
+                  )}
+                </Card>
               );
             })}
           </div>
+          {activeAgent && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Agente <strong>{agents.find(a => a.id === activeAgent)?.name}</strong> activo —{" "}
+              vá para o <strong>Chat</strong> para interagir.
+            </p>
+          )}
         </TabsContent>
 
         <TabsContent value="chat">
-          <div className="flex h-[60vh] flex-col rounded-2xl border border-border bg-card">
+          <Card className="flex h-[60vh] flex-col">
             <div className="flex-1 space-y-3 overflow-y-auto p-4">
-              <div className="flex gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-brand">
-                  <Bot className="h-4 w-4 text-primary-foreground" />
+              {msgs.length === 0 && (
+                <div className="flex h-full items-center justify-center">
+                  <div className="text-center">
+                    <FontAwesomeIcon icon={["fas", "robot"]} size="2x" className="text-muted-foreground" />
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {activeProvider
+                        ? `${activeAgent ? agents.find(a => a.id === activeAgent)?.name + " activo — " : ""}Comece a conversar.`
+                        : "Configure um provedor de IA para começar."}
+                    </p>
+                  </div>
                 </div>
-                <div className="max-w-[80%] rounded-2xl bg-accent/40 p-3 text-sm">
-                  Olá Carsai! Já analisei seus últimos 10 vídeos. Quer ideias de pauta baseadas no
-                  que está em alta no seu nicho?
+              )}
+              {msgs.map((m, i) => (
+                <div key={i} className={`flex gap-3 ${m.role === "user" ? "justify-end" : ""}`}>
+                  {m.role === "assistant" && (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-brand flex-shrink-0">
+                      <Bot className="h-4 w-4 text-primary-foreground" />
+                    </div>
+                  )}
+                  <div className={`max-w-[80%] rounded-2xl p-3 text-sm whitespace-pre-wrap ${
+                    m.role === "user" ? "gradient-brand text-primary-foreground" : "bg-accent/40"
+                  }`}>
+                    {m.text}
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-end gap-3">
-                <div className="max-w-[80%] rounded-2xl gradient-brand p-3 text-sm text-primary-foreground">
-                  Sim, foca em IA generativa.
+              ))}
+              {sending && (
+                <div className="flex gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-brand flex-shrink-0">
+                    <Bot className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                  <div className="rounded-2xl bg-accent/40 p-3 text-sm text-muted-foreground">
+                    <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />
+                    A pensar…
+                  </div>
                 </div>
-              </div>
+              )}
+              <div ref={messagesEndRef} />
             </div>
             <div className="border-t border-border p-3">
               <div className="flex gap-2">
                 <input
                   className="h-10 flex-1 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring"
-                  placeholder="Pergunte algo ao assistente…"
+                  placeholder={activeProvider ? "Escreva uma mensagem…" : "Configure um provedor de IA primeiro…"}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                  disabled={!activeProvider || sending}
                 />
-                <Button className="gradient-brand text-primary-foreground">
+                <Button className="gradient-brand text-primary-foreground"
+                  disabled={!activeProvider || sending || !input.trim()}
+                  onClick={handleSend}>
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="mt-2 text-[11px] text-muted-foreground">
-                Provedor ativo: Google Gemini 1.5 Flash · alterne em Configurações → Provedores IA
-              </p>
+              {msgs.length > 0 && (
+                <button onClick={() => setMsgs([])}
+                  className="mt-2 text-xs text-muted-foreground hover:text-foreground">
+                  Limpar conversa
+                </button>
+              )}
             </div>
-          </div>
+          </Card>
         </TabsContent>
 
         <TabsContent value="scripts">
-          <div className="gradient-panel rounded-2xl border border-border p-5">
+          <Card className="p-5 space-y-4">
             <h3 className="font-display text-lg font-semibold">Gerador de roteiros</h3>
             <textarea
-              className="mt-3 h-32 w-full resize-none rounded-lg border border-border bg-background p-3 text-sm outline-none focus:border-primary/40"
-              placeholder="Descreva o tema, formato e duração desejada…"
+              className="h-32 w-full resize-none rounded-lg border border-border bg-background p-3 text-sm outline-none focus:border-primary/40"
+              placeholder="Descreva o tema, formato e duração do vídeo…"
+              value={scriptInput}
+              onChange={(e) => setScriptInput(e.target.value)}
             />
-            <Button className="mt-3 gradient-brand text-primary-foreground">
-              <Sparkles className="mr-1 h-4 w-4" />
-              Gerar roteiro completo
+            <Button
+              className="gradient-brand text-primary-foreground"
+              disabled={!activeProvider || generatingScript || !scriptInput.trim()}
+              onClick={handleGenerateScript}>
+              {generatingScript
+                ? <><FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />A gerar…</>
+                : <><Sparkles className="mr-1 h-4 w-4" />Gerar roteiro completo</>}
             </Button>
-          </div>
-        </TabsContent>
 
-        <TabsContent value="thumbs">
-          <div className="gradient-panel rounded-2xl border border-border p-5">
-            <h3 className="font-display text-lg font-semibold">Thumbnails generativos</h3>
-            <p className="text-sm text-muted-foreground">
-              Use modelos como Replicate, Together ou Hugging Face para gerar 4 variações.
-            </p>
-            <Button className="mt-3 gradient-brand text-primary-foreground">Gerar 4 variações</Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="trends">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {trends.map((t) => (
-              <div key={t.topic} className="gradient-panel rounded-2xl border border-border p-4">
-                <Badge variant="secondary">{t.category}</Badge>
-                <p className="mt-2 font-display text-lg font-semibold">{t.topic}</p>
-                <p className="text-sm text-success">{t.growth} nos últimos 7 dias</p>
+            {scriptResult && (
+              <div className="rounded-xl border border-border bg-card/60 p-4 text-sm whitespace-pre-wrap">
+                {scriptResult}
               </div>
-            ))}
-          </div>
+            )}
+            {!activeProvider && (
+              <p className="text-xs text-muted-foreground">
+                Configure um provedor de IA em{" "}
+                <Link to="/settings" className="text-primary underline">Configurações</Link>.
+              </p>
+            )}
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
