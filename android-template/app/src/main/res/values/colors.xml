@@ -2,6 +2,6 @@
 <resources>
     <color name="colorPrimary">#FF5A3C</color>
     <color name="colorPrimaryDark">#1A1410</color>
-    <color name="colorAccent">#FF5A3C</color>
-    <color name="ic_launcher_background">#1A1410</color>
+    <color name="colorAccent">#FF5A3B</color>
+  <!--  <color name="ic_launcher_background">#1A1412</color> -->
 </resources>
