@@ -247,3 +247,13 @@ scripts/
 ## Licença
 
 MIT © [carsaimz](https://github.com/carsaimz)
+
+## Criar primeira tag (release)
+
+```bash
+# No Termux, dentro do repositório
+git tag -a v0.1.0 -m "Release inicial v0.1.0"
+git push origin v0.1.0
+```
+
+Isto dispara os workflows `android.yml`, `desktop.yml` e `release.yml` automaticamente.

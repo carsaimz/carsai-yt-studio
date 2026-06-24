@@ -1,4 +1,5 @@
 import { useLS, lsGet } from "@/lib/storage/kv";
+import type { AIProviderConfig } from "@/lib/local-store";
 
 export type FirebaseConfig = {
   apiKey: string;
@@ -20,6 +21,22 @@ export type SetupState = {
   completedAt?: string;
   firebase?: FirebaseConfig;
   youtube?: YouTubeConfig;
+  ai?: {
+    providers: AIProviderConfig[];
+  };
+  general?: {
+    lang: string;
+    notif: boolean;
+    autosync: boolean;
+  };
+  integrations?: {
+    resendKey?: string;
+    webhookUrl?: string;
+    discordUrl?: string;
+  };
+  security?: {
+    biometric: boolean;
+  };
   preferences: {
     theme: "dark" | "light" | "system";
     locale: "pt-BR" | "en";
@@ -30,6 +47,7 @@ export type SetupState = {
 
 const DEFAULT: SetupState = {
   completed: false,
+  ai: { providers: [] },
   preferences: {
     theme: "dark",
     locale: "pt-BR",

@@ -1,164 +1,319 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
-  ArrowRight, BookOpen, KeyRound, Youtube, Bot, Shield, Smartphone, Server,
-  Sparkles, Zap, ListChecks, ChevronRight,
+  ArrowRight, BookOpen, KeyRound, Youtube, Bot, Shield, Smartphone,
+  Server, Sparkles, Zap, ListChecks, ChevronRight, AlertTriangle,
 } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { PublicShell, SectionCard, FloatingArt } from "@/components/public/public-shell";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/docs")({
   head: () => ({
     meta: [
       { title: "Documentação — Carsai YT Studio" },
-      { name: "description", content: "Guia completo de uso, configuração e integrações do Carsai YT Studio." },
+      { name: "description", content: "Guia completo: configuração, OAuth 2.0, API Keys, erros comuns." },
     ],
   }),
-  component: DocsIndex,
+  component: DocsPage,
 });
 
-const TOC = [
-  { id: "inicio", label: "Primeiros passos", icon: Sparkles },
-  { id: "youtube", label: "YouTube API Key", icon: Youtube },
-  { id: "oauth", label: "OAuth (ações privadas)", icon: KeyRound },
-  { id: "ia", label: "Provedores de IA", icon: Bot },
-  { id: "instalar", label: "Instalar como app", icon: Smartphone },
-  { id: "self-host", label: "Self-host", icon: Server },
-  { id: "atalhos", label: "Atalhos de teclado", icon: Zap },
-  { id: "privacidade", label: "Privacidade", icon: Shield },
+const sections = [
+  { id: "inicio",       label: "Primeiros passos",      icon: Sparkles },
+  { id: "firebase",     label: "Firebase",               icon: Shield },
+  { id: "youtube-api",  label: "YouTube API Key",         icon: Youtube },
+  { id: "oauth",        label: "OAuth 2.0 (passo a passo)", icon: KeyRound },
+  { id: "ia",           label: "Provedores de IA",        icon: Bot },
+  { id: "mobile",       label: "Android / iOS",           icon: Smartphone },
+  { id: "desktop",      label: "Desktop (Tauri)",         icon: Server },
+  { id: "erros",        label: "Erros comuns",            icon: AlertTriangle },
+  { id: "atalhos",      label: "Atalhos de teclado",      icon: Zap },
+  { id: "changelog",    label: "Changelog & Releases",    icon: ListChecks },
 ];
 
-function DocsIndex() {
+function DocsPage() {
   return (
-    <PublicShell
-      eyebrow="Documentação"
-      icon={<BookOpen className="h-3 w-3" />}
-      title="Tudo sobre o Carsai YT Studio"
-      subtitle="Guias passo a passo de configuração, integração com YouTube e provedores de IA, instalação como app e self-hosting."
-      art={<FloatingArt variant="doc" />}
-    >
-      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-        <aside className="h-fit rounded-2xl border border-border bg-card/60 p-4 backdrop-blur lg:sticky lg:top-4">
-          <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">Sumário</p>
-          <nav className="space-y-1 text-sm">
-            {TOC.map((t) => (
-              <a key={t.id} href={`#${t.id}`}
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground">
-                <t.icon className="h-3.5 w-3.5" />
-                <span className="flex-1">{t.label}</span>
-                <ChevronRight className="h-3 w-3 opacity-40" />
-              </a>
-            ))}
-          </nav>
-        </aside>
+    <PublicShell>
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+        <FloatingArt />
+        <div className="relative z-10 mb-10 text-center">
+          <h1 className="font-display text-4xl font-extrabold sm:text-5xl">Documentação</h1>
+          <p className="mt-3 text-base text-muted-foreground">
+            Guia completo de configuração, API Keys, OAuth 2.0 e resolução de erros.
+          </p>
+        </div>
 
-        <div className="space-y-4">
-          <SectionCard number={1} title="Primeiros passos" icon={<Sparkles className="h-4 w-4" />}>
-            <ol className="ml-4 list-decimal space-y-1.5">
-              <li>Crie sua conta em <Link to="/auth" className="text-primary hover:underline">/auth</Link> ou faça login.</li>
-              <li>Abra <Link to="/setup" className="text-primary hover:underline">o assistente</Link> e cole sua YouTube API Key.</li>
-              <li>(Opcional) Ative provedores de IA — OpenAI, Anthropic, Google, Groq, OpenRouter.</li>
-              <li>Conecte seu canal e escolha o canal padrão (ID <code>UC…</code>).</li>
-            </ol>
+        <div className="flex flex-wrap justify-center gap-2 mb-10">
+          {sections.map((s) => (
+            <a key={s.id} href={`#${s.id}`}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1 text-xs hover:border-primary/40 transition">
+              <s.icon className="h-3.5 w-3.5 text-muted-foreground" />
+              {s.label}
+            </a>
+          ))}
+        </div>
+
+        <div className="space-y-10">
+
+          {/* Primeiros passos */}
+          <SectionCard id="inicio" number={1} title="Primeiros passos" icon={<Sparkles className="h-4 w-4" />}>
+            <Steps items={[
+              "Acesse o app e passe pelo assistente de configuração em /welcome → /setup.",
+              "Configure o Firebase (gratuito) para autenticação.",
+              "Crie uma YouTube Data API Key (gratuito) para leitura de dados.",
+              "Opcionalmente, crie um OAuth 2.0 Client ID para escrita (upload, edição, playlists).",
+              "Opcionalmente, adicione um provedor de IA (Gemini ou Groq têm camada gratuita generosa).",
+            ]} />
+            <div className="mt-4">
+              <Button asChild size="sm" className="gradient-brand text-primary-foreground hover:opacity-90">
+                <Link to="/setup"><ArrowRight className="mr-1 h-4 w-4" />Ir para configuração</Link>
+              </Button>
+            </div>
           </SectionCard>
 
-          <SectionCard number={2} title="Como obter a YouTube API Key" icon={<Youtube className="h-4 w-4" />}>
-            <ol className="ml-4 list-decimal space-y-1.5">
-              <li>Acesse o <a className="text-primary hover:underline" href="https://console.cloud.google.com/" target="_blank" rel="noreferrer">Google Cloud Console</a> e crie um projeto.</li>
-              <li><strong>APIs &amp; Services → Library</strong> → ative <strong>YouTube Data API v3</strong> (e <em>YouTube Analytics API</em> se quiser métricas privadas).</li>
-              <li>Em <strong>Credentials → Create credentials → API key</strong>. Restrinja por HTTP referrer se for hospedar publicamente.</li>
-              <li>Cole a chave em Configurações → YouTube. Ela fica apenas no seu dispositivo.</li>
-            </ol>
+          {/* Firebase */}
+          <SectionCard id="firebase" number={2} title="Configurar Firebase" icon={<Shield className="h-4 w-4" />}>
+            <Steps items={[
+              "Acesse console.firebase.google.com e clique em 'Adicionar projecto'.",
+              "Crie um projecto (ex: carsaiplay-project). Analytics é opcional.",
+              "No painel do projecto, clique em '</>' para adicionar uma app Web.",
+              "Registe a app com um nome (ex: Carsai YT Studio).",
+              "Copie o objecto firebaseConfig e cole em Configurações → YouTube (os campos são preenchidos automaticamente via variáveis de ambiente VITE_FIREBASE_*).",
+              "Em Authentication → Sign-in method, active Email/Password e Google.",
+              "Em Authentication → Settings → Authorized domains, adicione o seu domínio de deploy (ex: carsai-yt-studio.vercel.app).",
+            ]} />
+            <InfoBox>
+              As chaves Firebase são públicas por design — são identificadores do projecto, não segredos.
+              As regras de segurança do Firestore/Auth controlam o acesso real.
+            </InfoBox>
           </SectionCard>
 
-          <SectionCard number={3} title="OAuth para ações privadas" icon={<KeyRound className="h-4 w-4" />}>
-            <p>
-              Para editar vídeos, responder comentários ou usar Analytics privadas, crie um{" "}
-              <strong>OAuth Client ID (Web)</strong> no mesmo projeto Google Cloud. Adicione a origem
-              (ex. <code>https://seu-dominio.com</code>) em <em>Authorized JavaScript origins</em> e cole o Client ID em Configurações.
+          {/* YouTube API Key */}
+          <SectionCard id="youtube-api" number={3} title="YouTube Data API Key" icon={<Youtube className="h-4 w-4" />}>
+            <Steps items={[
+              "Acesse console.cloud.google.com e crie um projecto (ou reutilize o do Firebase).",
+              "Em APIs & Services → Library, pesquise 'YouTube Data API v3' e clique em Enable.",
+              "Em APIs & Services → Credentials, clique em '+ CREATE CREDENTIALS' → 'API key'.",
+              "Copie a chave gerada (começa com AIza…).",
+              "Em Application restrictions, escolha 'HTTP referrers' e adicione o seu domínio.",
+              "Em API restrictions, restrinja à 'YouTube Data API v3'.",
+              "Cole a chave em Configurações → YouTube → API Key e clique em Guardar.",
+            ]} />
+            <InfoBox type="warning">
+              A cota padrão é 10.000 unidades por dia. Uma pesquisa (search.list) custa 100 unidades.
+              Solicite aumento em quotas.cloud.google.com se necessário.
+            </InfoBox>
+          </SectionCard>
+
+          {/* OAuth 2.0 */}
+          <SectionCard id="oauth" number={4} title="OAuth 2.0 — passo a passo" icon={<KeyRound className="h-4 w-4" />}>
+            <p className="text-sm text-muted-foreground mb-3">
+              OAuth 2.0 é necessário para upload de vídeos, edição, playlists, comentários e YouTube Analytics.
+              Usa o fluxo PKCE — seguro sem expor segredos no browser.
             </p>
+            <Steps items={[
+              "No Google Cloud Console (console.cloud.google.com), vá a APIs & Services → Credentials.",
+              "Clique em '+ CREATE CREDENTIALS' → 'OAuth client ID'.",
+              "Em Application type, escolha 'Web application'.",
+              "Em 'Authorized JavaScript origins', adicione a URL da sua app (ex: https://carsai-yt-studio.vercel.app e http://localhost:3000 para desenvolvimento).",
+              "Em 'Authorized redirect URIs', adicione: https://carsai-yt-studio.vercel.app/oauth/callback e http://localhost:3000/oauth/callback",
+              "Clique em Create. Copie o 'Client ID' (termina em .apps.googleusercontent.com).",
+              "Cole em Configurações → YouTube → OAuth Client ID e clique em Guardar.",
+              "Clique em 'Conectar com Google' — será redirecionado para login Google.",
+              "Autorize as permissões solicitadas (YouTube, YouTube Analytics).",
+              "Será redirecionado de volta para /oauth/callback. O token é guardado localmente.",
+            ]} />
+            <div className="mt-4 rounded-xl border border-border bg-card/60 p-4 space-y-3">
+              <p className="text-sm font-semibold flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+                Erros comuns OAuth
+              </p>
+              <ErrorItem code="redirect_uri_mismatch"
+                desc="A URI de redirect configurada no Google Console não corresponde à URI usada pela app."
+                fix="Adicione exactamente https://SEU-DOMINIO/oauth/callback nas Authorized redirect URIs do Client ID." />
+              <ErrorItem code="invalid_client"
+                desc="O Client ID está incorrecto ou mal colado."
+                fix="Verifique que copiou o Client ID completo (termina em .apps.googleusercontent.com), não o Client Secret." />
+              <ErrorItem code="access_denied"
+                desc="O utilizador recusou as permissões na janela Google."
+                fix="Clique novamente em Conectar e aceite todas as permissões solicitadas." />
+              <ErrorItem code="Token expirado / sessão inválida"
+                desc="O token OAuth expirou (normalmente após 1 hora)."
+                fix="O app tenta renovar automaticamente via refresh token. Se falhar, clique em Desconectar e conecte novamente." />
+              <ErrorItem code="OAuth only works on registered domains"
+                desc="Está a testar num domínio não registado."
+                fix="Adicione localhost:3000 e o seu domínio de preview aos Authorized origins e redirect URIs." />
+            </div>
           </SectionCard>
 
-          <SectionCard number={4} title="Provedores de IA" icon={<Bot className="h-4 w-4" />}>
-            <p>
-              Ative quantos quiser. A ordem define o <strong>fallback em cascata</strong>: se um falhar, o próximo é usado.
-              As chamadas vão direto do seu dispositivo para o provedor.
+          {/* IA Providers */}
+          <SectionCard id="ia" number={5} title="Provedores de IA" icon={<Bot className="h-4 w-4" />}>
+            <p className="text-sm text-muted-foreground mb-3">
+              O app suporta qualquer provedor com API compatível com OpenAI (endpoint /chat/completions).
             </p>
-            <ul className="ml-4 mt-2 list-disc space-y-1">
-              <li><strong>OpenAI</strong> — <a className="text-primary hover:underline" href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com</a></li>
-              <li><strong>Anthropic</strong> — <a className="text-primary hover:underline" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">console.anthropic.com</a></li>
-              <li><strong>Google AI Studio (Gemini)</strong> — <a className="text-primary hover:underline" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">aistudio.google.com</a></li>
-              <li><strong>Groq</strong> — <a className="text-primary hover:underline" href="https://console.groq.com/keys" target="_blank" rel="noreferrer">console.groq.com</a></li>
-              <li><strong>OpenRouter</strong> — <a className="text-primary hover:underline" href="https://openrouter.ai/keys" target="_blank" rel="noreferrer">openrouter.ai</a></li>
-            </ul>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[500px] text-sm border border-border rounded-xl overflow-hidden">
+                <thead className="bg-card/50 text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="p-3 text-left">Provedor</th>
+                    <th className="p-3 text-left">Tier</th>
+                    <th className="p-3 text-left">Onde obter chave</th>
+                    <th className="p-3 text-left">Modelo sugerido</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["Google Gemini", "Gratuito generoso", "aistudio.google.com", "gemini-2.0-flash"],
+                    ["Groq", "Gratuito generoso", "console.groq.com", "llama-3.3-70b-versatile"],
+                    ["OpenAI", "Pago (créditos)", "platform.openai.com", "gpt-4o-mini"],
+                    ["Anthropic", "Pago (créditos)", "console.anthropic.com", "claude-haiku-4-5"],
+                    ["OpenRouter", "Misto", "openrouter.ai", "google/gemini-flash-1.5"],
+                    ["Personalizado", "—", "Qualquer API OpenAI-compat.", "—"],
+                  ].map(([name, tier, url, model]) => (
+                    <tr key={name} className="border-t border-border">
+                      <td className="p-3 font-medium">{name}</td>
+                      <td className="p-3"><Badge variant={tier.includes("Gratuito") ? "default" : "secondary"} className="text-xs">{tier}</Badge></td>
+                      <td className="p-3 text-muted-foreground text-xs">{url}</td>
+                      <td className="p-3 font-mono text-xs">{model}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Steps items={[
+              "Vá a Configurações → Provedores IA → Adicionar provedor.",
+              "Escolha o provedor desejado e preencha a API Key.",
+              "Clique em 'Guardar provedores de IA' — este passo é obrigatório.",
+              "Na página IA & Agentes, o chat usará o provedor com maior prioridade que tenha API Key preenchida.",
+            ]} />
           </SectionCard>
 
-          <SectionCard number={5} title="Instalar como app" icon={<Smartphone className="h-4 w-4" />}>
-            <ul className="ml-4 list-disc space-y-1">
-              <li><strong>PWA</strong>: abra no Chrome/Safari e use "Adicionar à tela inicial".</li>
-              <li><strong>Android (APK / AAB)</strong>: baixe da página <Link to="/about" className="text-primary hover:underline">Sobre &amp; Atualizações</Link>.</li>
-              <li><strong>iOS</strong>: TestFlight, ou compile via Capacitor + Xcode.</li>
-              <li><strong>Desktop (Win/macOS/Linux)</strong>: instaladores Tauri em Sobre.</li>
-            </ul>
+          {/* Mobile */}
+          <SectionCard id="mobile" number={6} title="Android" icon={<Smartphone className="h-4 w-4" />}>
+            <Steps items={[
+              "Cada push de tag (ex: git tag v1.0.0 && git push origin v1.0.0) gera APK e AAB automaticamente.",
+              "Para assinar o APK, configure os secrets KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS e KEY_PASSWORD no repositório.",
+              "Para gerar keystore: keytool -genkeypair -v -keystore carsai.jks -alias carsai -keyalg RSA -keysize 2048 -validity 10000",
+              "Encode para base64: base64 -w 0 carsai.jks > carsai.b64 && cat carsai.b64",
+              "Adicionar secret: gh secret set KEYSTORE_BASE64 < <(base64 -w 0 carsai.jks)",
+              "O APK gerado (não assinado) pode ser instalado manualmente via adb install ou enviado para o dispositivo.",
+            ]} />
           </SectionCard>
 
-          <SectionCard number={6} title="Self-host" icon={<Server className="h-4 w-4" />}>
-            <p>
-              Open-source (MIT). <code>npm install &amp;&amp; npm run build</code> gera <code>dist/</code> estático.
-              Hospede em qualquer CDN — Vercel, Netlify, Cloudflare Pages, GitHub Pages, S3, Docker ou local
-              com <code>npx serve dist/client</code>.
-            </p>
+          {/* Desktop */}
+          <SectionCard id="desktop" number={7} title="Desktop (Tauri v2)" icon={<Server className="h-4 w-4" />}>
+            <Steps items={[
+              "Cada push de tag gera instaladores para Windows (.msi/.exe), macOS (.dmg) e Linux (.AppImage/.deb).",
+              "O src-tauri/ é criado automaticamente em CI se não existir no repositório.",
+              "Para build local: npm run build:mobile && npx tauri build",
+              "Requer Rust instalado: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh",
+            ]} />
           </SectionCard>
 
-          <SectionCard number={7} title="Atalhos de teclado" icon={<Zap className="h-4 w-4" />}>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {/* Erros comuns */}
+          <SectionCard id="erros" number={8} title="Erros comuns" icon={<AlertTriangle className="h-4 w-4" />}>
+            <div className="space-y-3">
+              <ErrorItem code="quotaExceeded / 403"
+                desc="Cota diária da YouTube API esgotada (10.000 unidades)."
+                fix="Aguarde a meia-noite (horário Pacífico) para reset. Solicite aumento em quotas.cloud.google.com." />
+              <ErrorItem code="API key not valid"
+                desc="A API Key está incorrecta, foi apagada ou tem restrições de domínio muito estritas."
+                fix="Verifique a chave em Google Cloud Console → Credentials. Teste sem restrições de IP/domínio primeiro." />
+              <ErrorItem code="The caller does not have permission"
+                desc="A API solicitada não está activa no projecto Google Cloud."
+                fix="Em APIs & Services → Library, active a YouTube Data API v3 e (se usar Analytics) a YouTube Analytics API." />
+              <ErrorItem code="Tela branca no Android"
+                desc="O index.html não foi gerado ou os caminhos de assets estão incorrectos."
+                fix="Execute npm run build:mobile localmente e verifique que dist/client/index.html existe com caminhos relativos (./assets/...)." />
+              <ErrorItem code="Firebase: auth/unauthorized-domain"
+                desc="O domínio de deploy não está autorizado no Firebase."
+                fix="Em Firebase Console → Authentication → Settings → Authorized domains, adicione o seu domínio." />
+              <ErrorItem code="provedores IA não funcionam"
+                desc="Os provedores são adicionados mas não guardados."
+                fix="Em Configurações → Provedores IA, após preencher as API Keys, clique em 'Guardar provedores de IA'. O botão de guardar é obrigatório." />
+            </div>
+          </SectionCard>
+
+          {/* Atalhos */}
+          <SectionCard id="atalhos" number={9} title="Atalhos de teclado" icon={<Zap className="h-4 w-4" />}>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {[
-                ["⌘K", "Paleta"], ["G+D", "Dashboard"],
-                ["G+A", "Analytics"], ["?", "Atalhos"],
-              ].map(([k, l]) => (
-                <div key={k} className="rounded-lg border border-border bg-background/50 p-2 text-center">
-                  <kbd className="font-mono text-sm font-bold">{k}</kbd>
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{l}</p>
+                ["g d", "Ir para Dashboard"],
+                ["g c", "Ir para Conteúdo"],
+                ["g a", "Ir para Analytics"],
+                ["g s", "Ir para Estúdio"],
+                ["g i", "Ir para IA"],
+                ["?",   "Mostrar atalhos"],
+                ["⌘/Ctrl + K", "Barra de pesquisa global"],
+                ["Esc",        "Fechar modais / sidebars"],
+              ].map(([key, desc]) => (
+                <div key={key} className="flex items-center justify-between rounded-lg border border-border bg-card/50 px-3 py-2 text-sm">
+                  <span className="text-muted-foreground">{desc}</span>
+                  <kbd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">{key}</kbd>
                 </div>
               ))}
             </div>
           </SectionCard>
 
-          <SectionCard number={8} title="Privacidade" icon={<Shield className="h-4 w-4" />}>
-            <p>
-              Chaves, tokens e preferências ficam <strong>apenas no seu dispositivo</strong>.
-              Veja a <Link to="/privacy" className="text-primary hover:underline">política de privacidade</Link>{" "}
-              e os <Link to="/terms" className="text-primary hover:underline">termos</Link>.
+          {/* Changelog */}
+          <SectionCard id="changelog" number={10} title="Changelog & Releases" icon={<ListChecks className="h-4 w-4" />}>
+            <p className="text-sm text-muted-foreground">
+              Veja o histórico completo de versões em{" "}
+              <Link to="/changelog" className="text-primary underline">Changelog</Link>{" "}
+              ou no{" "}
+              <a href="https://github.com/carsaimz/carsai-yt-studio-pro/releases"
+                target="_blank" rel="noreferrer" className="text-primary underline">
+                GitHub Releases
+              </a>.
             </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Para criar uma release:
+            </p>
+            <pre className="mt-2 overflow-x-auto rounded-xl bg-muted/50 p-3 text-xs font-mono">
+{`git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0`}
+            </pre>
           </SectionCard>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Link to="/help" className="group flex items-center gap-3 rounded-2xl border border-border bg-card/60 p-4 hover:border-primary/40">
-              <div className="grid h-10 w-10 place-items-center rounded-xl gradient-brand">
-                <ListChecks className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold">Central de Ajuda</p>
-                <p className="text-xs text-muted-foreground">FAQ completo e busca.</p>
-              </div>
-              <ArrowRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" />
-            </Link>
-            <Link to="/changelog" className="group flex items-center gap-3 rounded-2xl border border-border bg-card/60 p-4 hover:border-primary/40">
-              <div className="grid h-10 w-10 place-items-center rounded-xl gradient-brand">
-                <Sparkles className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold">Changelog</p>
-                <p className="text-xs text-muted-foreground">Veja o que há de novo.</p>
-              </div>
-              <ArrowRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" />
-            </Link>
-          </div>
         </div>
       </div>
     </PublicShell>
   );
 }
 
-// Backward-compat re-export
-export { PublicShell } from "@/components/public/public-shell";
+function Steps({ items }: { items: string[] }) {
+  return (
+    <ol className="space-y-2">
+      {items.map((item, i) => (
+        <li key={i} className="flex gap-3 text-sm">
+          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full gradient-brand text-[10px] font-bold text-primary-foreground mt-0.5">
+            {i + 1}
+          </span>
+          <span className="text-muted-foreground">{item}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function InfoBox({ children, type = "info" }: { children: React.ReactNode; type?: "info" | "warning" }) {
+  return (
+    <div className={`mt-3 rounded-xl border p-3 text-sm ${type === "warning" ? "border-warning/40 bg-warning/5 text-warning" : "border-primary/30 bg-primary/5 text-primary"}`}>
+      {children}
+    </div>
+  );
+}
+
+function ErrorItem({ code, desc, fix }: { code: string; desc: string; fix: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-card/60 p-3 space-y-1">
+      <p className="font-mono text-xs font-semibold text-destructive">{code}</p>
+      <p className="text-xs text-muted-foreground">{desc}</p>
+      <p className="text-xs text-foreground">
+        <span className="font-medium text-success">Fix:</span> {fix}
+      </p>
+    </div>
+  );
+}

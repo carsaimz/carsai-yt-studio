@@ -35,7 +35,9 @@ const agents = [
 ];
 
 function AIPage() {
-  const { youtube: yt, ai } = getSetup();
+  const setup = getSetup();
+  const { youtube: yt } = setup;
+  const ai = setup.ai;
   const channelId = yt?.defaultChannelId;
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -70,7 +72,7 @@ function AIPage() {
   const recentTitles = (detailsQ.data?.items ?? [])
     .map((v: any) => v.snippet?.title).filter(Boolean).join("\n");
 
-  const activeProvider = ai?.providers?.find((p: any) => p.enabled);
+  const activeProvider = (ai?.providers ?? []).find((p: any) => p.enabled && p.apiKey);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconName } from "@fortawesome/fontawesome-svg-core";
 import { useEffect, useState } from "react";
@@ -24,24 +24,24 @@ const groups: {
   {
     label: "Criação",
     items: [
-      { title: "Conteúdo",     url: "/content", icon: "film" },
-      { title: "Estúdio",      url: "/studio",  icon: "wand-magic-sparkles" },
-      { title: "SEO",          url: "/seo",     icon: "magnifying-glass-chart" },
+      { title: "Conteúdo",   url: "/content", icon: "film" },
+      { title: "Estúdio",    url: "/studio",  icon: "wand-magic-sparkles" },
+      { title: "SEO",        url: "/seo",     icon: "magnifying-glass-chart" },
     ],
   },
   {
     label: "Engajamento",
     items: [
-      { title: "Comunidade", url: "/community", icon: "comments" },
-      { title: "IA & Agentes", url: "/ai",      icon: "robot" },
+      { title: "Comunidade",   url: "/community", icon: "comments" },
+      { title: "IA & Agentes", url: "/ai",        icon: "robot" },
     ],
   },
   {
     label: "Conta",
     items: [
-      { title: "Perfil",         url: "/profile",       icon: "circle-user" },
-      { title: "Notificações",   url: "/notifications", icon: "bell" },
-      { title: "Configurações",  url: "/settings",      icon: "sliders" },
+      { title: "Perfil",        url: "/profile",       icon: "circle-user" },
+      { title: "Notificações",  url: "/notifications", icon: "bell" },
+      { title: "Configurações", url: "/settings",      icon: "sliders" },
     ],
   },
   {
@@ -55,14 +55,13 @@ const groups: {
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpen, isMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
 
-  // Real quota — refresh every 30s
-  const [quotaUsed, setQuotaUsed]    = useState(getQuotaUsed);
-  const [quotaPct,  setQuotaPct]     = useState(getQuotaPercent);
-  const [remaining, setRemaining]    = useState(getRemainingQuota);
+  const [quotaUsed,  setQuotaUsed]  = useState(getQuotaUsed);
+  const [quotaPct,   setQuotaPct]   = useState(getQuotaPercent);
+  const [remaining,  setRemaining]  = useState(getRemainingQuota);
 
   useEffect(() => {
     const tick = () => {
@@ -75,10 +74,18 @@ export function AppSidebar() {
     return () => clearInterval(id);
   }, []);
 
+  // Auto-close on mobile when route changes
+  useEffect(() => {
+    if (isMobile) setOpen(false);
+  }, [pathname, isMobile]);
+
+  function handleNavClick() {
+    if (isMobile) setOpen(false);
+  }
+
   const quotaColor =
     quotaPct >= 90 ? "bg-destructive" :
-    quotaPct >= 70 ? "bg-warning" :
-    "gradient-brand";
+    quotaPct >= 70 ? "bg-warning" : "gradient-brand";
 
   const isActive = (url: string, exact?: boolean) =>
     exact ? pathname === url : pathname === url || pathname.startsWith(url + "/");
@@ -86,7 +93,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/" className="flex items-center gap-2 px-2 py-3">
+        <Link to="/" onClick={handleNavClick} className="flex items-center gap-2 px-2 py-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden flex-shrink-0">
             <img src="/icon-192.png" alt="Carsai" className="h-full w-full object-cover" />
           </div>
@@ -108,7 +115,7 @@ export function AppSidebar() {
                 {group.items.map((item) => (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild isActive={isActive(item.url, item.exact)}>
-                      <Link to={item.url} className="flex items-center gap-2">
+                      <Link to={item.url} onClick={handleNavClick} className="flex items-center gap-2">
                         <FontAwesomeIcon icon={["fas", item.icon]} className="h-4 w-4 flex-shrink-0" />
                         {!collapsed && <span>{item.title}</span>}
                       </Link>
@@ -134,10 +141,8 @@ export function AppSidebar() {
               </span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-background/50">
-              <div
-                className={`h-full transition-all duration-500 ${quotaColor}`}
-                style={{ width: `${quotaPct}%` }}
-              />
+              <div className={`h-full transition-all duration-500 ${quotaColor}`}
+                style={{ width: `${Math.max(2, quotaPct)}%` }} />
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>{quotaUsed.toLocaleString("pt-BR")} usadas</span>
@@ -146,9 +151,9 @@ export function AppSidebar() {
           </div>
         )}
         {collapsed && (
-          <div className="px-2 py-2">
-            <div className={`h-1.5 w-full overflow-hidden rounded-full bg-background/50`} title={`Cota: ${quotaUsed}/${DAILY_LIMIT}`}>
-              <div className={`h-full transition-all ${quotaColor}`} style={{ width: `${quotaPct}%` }} />
+          <div className="px-2 py-2" title={`Cota API: ${quotaUsed}/${DAILY_LIMIT}`}>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-background/50">
+              <div className={`h-full transition-all ${quotaColor}`} style={{ width: `${Math.max(2, quotaPct)}%` }} />
             </div>
           </div>
         )}
