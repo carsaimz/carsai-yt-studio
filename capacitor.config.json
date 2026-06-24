@@ -42,7 +42,7 @@
   "android": {
     "buildOptions": {
       "keystorePath": "carsai-release.jks",
-      "keystoreAlias": "carsai"
+      "keystoreAlias": "carsaidev"
     },
     "allowMixedContent": false,
     "captureInput": true,
