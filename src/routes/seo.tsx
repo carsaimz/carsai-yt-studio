@@ -148,7 +148,8 @@ function SEOPage() {
 
           {topTags.length > 0 ? (
             <div className="mt-4 overflow-hidden rounded-xl border border-border">
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full min-w-[320px] text-sm">
                 <thead className="bg-card/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="p-3">Tag</th>
@@ -173,6 +174,7 @@ function SEOPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           ) : !detailsQ.isLoading && (
             <p className="mt-4 text-sm text-muted-foreground">

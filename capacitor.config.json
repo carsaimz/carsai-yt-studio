@@ -4,13 +4,20 @@
   "webDir": "dist/client",
   "bundledWebRuntime": false,
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "iosScheme": "https",
+    "hostname": "app"
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 1500,
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
       "backgroundColor": "#1a1410",
-      "showSpinner": false
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
     },
     "StatusBar": {
       "style": "DARK",
@@ -20,8 +27,30 @@
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"]
     },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#FF5A3C",
+      "sound": "beep.wav"
+    },
     "Preferences": {
       "group": "CarsaiSecureStore"
+    },
+    "Camera": {
+      "permissions": ["camera", "photos"]
     }
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "carsai-release.jks",
+      "keystoreAlias": "carsai"
+    },
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "contentInset": "always",
+    "allowsLinkPreview": false,
+    "scrollEnabled": true
   }
 }

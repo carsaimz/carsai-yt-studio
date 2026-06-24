@@ -26,12 +26,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Capacitor
-        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+      - name: Install Capacitor plugins
+        run: |
+          npm install \
+            @capacitor/core @capacitor/cli @capacitor/android \
+            @capacitor/push-notifications @capacitor/local-notifications \
+            @capacitor/splash-screen @capacitor/status-bar \
+            @capacitor/camera @capacitor/filesystem @capacitor/preferences \
+            @capacitor/network @capacitor/device @capacitor/haptics
 
       - name: Build web (mobile)
         run: npm run build:mobile
         env:
+          BUILD_TARGET: mobile
+          NITRO_PRESET: node-server
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
@@ -40,24 +48,37 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
-      - name: Init Capacitor (se ainda não inicializado)
+      - name: Init Capacitor Android
         run: |
-          if [ ! -f "android/app/src/main/assets/capacitor.config.json" ] && \
-             [ ! -f "android/app/src/main/assets/capacitor.config.ts" ]; then
-            echo "A inicializar projecto Android Capacitor..."
-            npx cap add android
-          else
-            echo "Projecto Android já existe no repositório."
-          fi
+          [ -d android ] || npx cap add android
 
-      - name: Copy Android icons
+      - name: Copy app icons to Android
         run: |
           RES="android/app/src/main/res"
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             mkdir -p "$RES/mipmap-$density"
-            cp "public/android-icons/mipmap-$density/ic_launcher.png"                "$RES/mipmap-$density/ic_launcher.png"
-            cp "public/android-icons/mipmap-$density/ic_launcher.png"                "$RES/mipmap-$density/ic_launcher_round.png"
+            cp "public/android-icons/mipmap-$density/ic_launcher.png" \
+               "$RES/mipmap-$density/ic_launcher.png"
+            cp "public/android-icons/mipmap-$density/ic_launcher.png" \
+               "$RES/mipmap-$density/ic_launcher_round.png"
           done
+          echo "✓ Icons copied"
+
+      - name: Apply AndroidManifest and resources from template
+        run: |
+          MAIN="android/app/src/main"
+          TMPL="android-template/app/src/main"
+
+          # Manifest
+          cp "$TMPL/AndroidManifest.xml" "$MAIN/AndroidManifest.xml"
+
+          # Resource folders
+          for dir in values xml; do
+            mkdir -p "$MAIN/res/$dir"
+            cp -r "$TMPL/res/$dir/." "$MAIN/res/$dir/"
+          done
+
+          echo "✓ Manifest and resources applied"
 
       - name: Sync Capacitor
         run: npx cap sync android

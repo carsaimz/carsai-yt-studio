@@ -93,7 +93,7 @@ jobs:
           #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
           fn main() {
-              carsai_yt_studio_pro_lib::run()
+              carsai_yt_studio_pro::run()
           }
           MAINRS
 

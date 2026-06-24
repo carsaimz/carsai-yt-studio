@@ -421,8 +421,9 @@ function StudioPage() {
               <div className="text-xs text-muted-foreground">
                 Dados dos últimos 30 dias · {analyticsRows.length} dias
               </div>
-              <Card className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <Card className="overflow-hidden">
+                <div className="overflow-x-auto">
+                <table className="w-full min-w-[700px] text-sm">
                   <thead className="bg-card/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
                       {analyticsHeaders.map((h: string) => (
@@ -442,6 +443,7 @@ function StudioPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </Card>
             </div>
           ) : (

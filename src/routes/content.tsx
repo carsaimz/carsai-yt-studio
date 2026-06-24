@@ -429,7 +429,8 @@ function ContentPage() {
 
           {videos.length > 0 && (
             <Card className="overflow-hidden">
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead className="bg-card/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="p-3">Vídeo</th>
@@ -485,6 +486,7 @@ function ContentPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </Card>
           )}
 

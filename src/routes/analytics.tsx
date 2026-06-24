@@ -171,7 +171,8 @@ function AnalyticsPage() {
                 Desempenho por vídeo
               </h2>
               <Card className="overflow-hidden">
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto">
+                <table className="w-full min-w-[600px] text-sm">
                   <thead className="bg-card/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
                       <th className="p-3">Título</th>
@@ -196,6 +197,7 @@ function AnalyticsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </Card>
             </section>
           )}

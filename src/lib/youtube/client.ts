@@ -14,6 +14,7 @@
  */
 
 import { getSetup } from "@/lib/setup/store";
+import { trackQuota } from "./quota";
 import { lsGet, lsSet } from "@/lib/storage/kv";
 
 const BASE      = "https://www.googleapis.com/youtube/v3";
@@ -217,6 +218,13 @@ async function ytFetch<T>(
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.error?.message ?? `YouTube API ${res.status}`);
   }
+
+  // Track quota usage based on endpoint
+  const seg = path.split("/").filter(Boolean);
+  const resource = seg[0] ?? "";
+  const action = opts.method && opts.method !== "GET" ? "insert" : "list";
+  trackQuota(`${resource}.${action}`);
+
   return res.json() as Promise<T>;
 }
 
