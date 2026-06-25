@@ -15,6 +15,7 @@ import { youtube } from "@/lib/youtube/client";
 import { getSetup, isSetupCompleted } from "@/lib/setup/store";
 import { useFirebaseUser } from "@/lib/firebase/auth";
 import { toast, confirm } from "@/lib/notifications";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,6 +58,7 @@ function fmt(n: string | number | undefined) {
 }
 
 function Dashboard() {
+  const { t } = useI18n();
   const { youtube: yt } = getSetup();
   const channelId = yt?.defaultChannelId;
 
@@ -81,18 +83,18 @@ function Dashboard() {
       title: "Actualizar dados?",
       text: "Isso irá buscar as métricas mais recentes do canal.",
       icon: "question",
-      confirmText: "Actualizar",
+      confirmText: t("common.refresh"),
     });
     if (ok) {
-      const id = toast.loading("A buscar dados…");
+      const id = toast.loading(t("common.loading"));
       try {
         await channelQ.refetch();
         await videosQ.refetch();
         toast.dismiss(id);
-        toast.success("Dados actualizados com sucesso!");
+        toast.success(t("common.success") + "!");
       } catch {
         toast.dismiss(id);
-        toast.error("Erro ao actualizar dados.");
+        toast.error(t("errors.apiError"));
       }
     }
   }
@@ -100,10 +102,10 @@ function Dashboard() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
-        title={channel ? `Olá, ${channel.snippet?.title} 👋` : "Bem-vindo ao seu Studio"}
+        title={channel ? t("dashboard.welcome", { name: channel.snippet?.title ?? "" }) : t("dashboard.welcomeFallback")}
         description={
           channel
-            ? "Aqui está o resumo do seu canal."
+            ? t("dashboard.subtitle")
             : "Conecte seu canal em Configurações → YouTube para ver dados reais aqui."
         }
         actions={

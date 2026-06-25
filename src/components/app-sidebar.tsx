@@ -9,47 +9,48 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar";
 import { getQuotaUsed, getQuotaPercent, DAILY_LIMIT, getRemainingQuota } from "@/lib/youtube/quota";
+import { useI18n } from "@/lib/i18n";
 
-const groups: {
+const NAV_GROUPS: {
   label: string;
-  items: { title: string; url: string; icon: IconName; exact?: boolean }[];
+  items: { title: string; url: string; icon: IconName; exact?: boolean; i18nKey: string }[];
 }[] = [
   {
     label: "Principal",
     items: [
-      { title: "Dashboard",  url: "/",          icon: "gauge",     exact: true },
-      { title: "Análise",    url: "/analytics", icon: "chart-line" },
+      { title: "Dashboard",  url: "/",          icon: "gauge",     exact: true, i18nKey: "nav.dashboard" },
+      { title: "Análise",    url: "/analytics", icon: "chart-line", i18nKey: "nav.analytics" },
     ],
   },
   {
     label: "Criação",
     items: [
-      { title: "Conteúdo",   url: "/content", icon: "film" },
-      { title: "Estúdio",    url: "/studio",  icon: "wand-magic-sparkles" },
-      { title: "SEO",        url: "/seo",     icon: "magnifying-glass-chart" },
+      { title: "Conteúdo",   url: "/content", icon: "film", i18nKey: "nav.content" },
+      { title: "Estúdio",    url: "/studio",  icon: "wand-magic-sparkles", i18nKey: "nav.studio" },
+      { title: "SEO",        url: "/seo",     icon: "magnifying-glass-chart", i18nKey: "nav.seo" },
     ],
   },
   {
     label: "Engajamento",
     items: [
-      { title: "Comunidade",   url: "/community", icon: "comments" },
-      { title: "IA & Agentes", url: "/ai",        icon: "robot" },
+      { title: "Comunidade",   url: "/community", icon: "comments", i18nKey: "nav.community" },
+      { title: "IA & Agentes", url: "/ai",        icon: "robot", i18nKey: "nav.ai" },
     ],
   },
   {
     label: "Conta",
     items: [
-      { title: "Perfil",        url: "/profile",       icon: "circle-user" },
-      { title: "Notificações",  url: "/notifications", icon: "bell" },
-      { title: "Configurações", url: "/settings",      icon: "sliders" },
+      { title: "Perfil",        url: "/profile",       icon: "circle-user", i18nKey: "nav.profile" },
+      { title: "Notificações",  url: "/notifications", icon: "bell", i18nKey: "nav.notifications" },
+      { title: "Configurações", url: "/settings",      icon: "sliders", i18nKey: "nav.settings" },
     ],
   },
   {
     label: "Ajuda",
     items: [
-      { title: "Documentação", url: "/docs",  icon: "book-open" },
-      { title: "Ajuda / FAQ",  url: "/help",  icon: "circle-question" },
-      { title: "Sobre",        url: "/about", icon: "circle-info" },
+      { title: "Documentação", url: "/docs",  icon: "book-open", i18nKey: "nav.docs" },
+      { title: "Ajuda / FAQ",  url: "/help",  icon: "circle-question", i18nKey: "nav.help" },
+      { title: "Sobre",        url: "/about", icon: "circle-info", i18nKey: "nav.about" },
     ],
   },
 ];
@@ -59,6 +60,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
 
+  const { t } = useI18n();
   const [quotaUsed,  setQuotaUsed]  = useState(getQuotaUsed);
   const [quotaPct,   setQuotaPct]   = useState(getQuotaPercent);
   const [remaining,  setRemaining]  = useState(getRemainingQuota);
@@ -107,7 +109,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {groups.map((group) => (
+        {NAV_GROUPS.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -117,7 +119,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild isActive={isActive(item.url, item.exact)}>
                       <Link to={item.url} onClick={handleNavClick} className="flex items-center gap-2">
                         <FontAwesomeIcon icon={["fas", item.icon]} className="h-4 w-4 flex-shrink-0" />
-                        {!collapsed && <span>{item.title}</span>}
+                        {!collapsed && <span>{t(item.i18nKey as any) || item.title}</span>}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -134,7 +136,7 @@ export function AppSidebar() {
             <div className="flex items-center justify-between gap-1">
               <div className="flex items-center gap-1.5">
                 <FontAwesomeIcon icon={["fab", "youtube"]} className="text-red-500" />
-                <p className="font-medium text-sidebar-foreground">Cota YouTube API</p>
+                <p className="font-medium text-sidebar-foreground">{t("quota.label")}</p>
               </div>
               <span className={`text-[10px] font-medium ${quotaPct >= 90 ? "text-destructive" : quotaPct >= 70 ? "text-warning" : "text-muted-foreground"}`}>
                 {quotaPct}%
@@ -145,8 +147,8 @@ export function AppSidebar() {
                 style={{ width: `${Math.max(2, quotaPct)}%` }} />
             </div>
             <div className="flex justify-between text-muted-foreground">
-              <span>{quotaUsed.toLocaleString("pt-BR")} usadas</span>
-              <span>{remaining.toLocaleString("pt-BR")} restantes</span>
+              <span>{quotaUsed.toLocaleString()} {t("quota.used")}</span>
+              <span>{remaining.toLocaleString()} {t("quota.remaining")}</span>
             </div>
           </div>
         )}

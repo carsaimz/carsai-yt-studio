@@ -1,4 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useI18n, LOCALES, type Locale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, Trash2, KeyRound, Shield, Globe, Palette, Bell, Youtube as YoutubeIcon, LogOut, Loader2, Download, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -406,38 +407,60 @@ function AIProvidersSettings() {
 // ── General Settings ──────────────────────────────────────────────────────────
 function GeneralSettings() {
   const [setup, setSetup] = useSetup();
-  const [lang,     setLang]     = useState(setup.general?.lang     ?? "pt-BR");
+  const { t, lang: currentLang, setLang: applyLang } = useI18n();
+  const [lang,     setLangLocal] = useState<Locale>((setup.general?.lang as Locale) ?? currentLang);
   const [notif,    setNotif]    = useState(setup.general?.notif    ?? true);
   const [autosync, setAutosync] = useState(setup.general?.autosync ?? true);
 
+  function handleLangChange(newLang: Locale) {
+    setLangLocal(newLang);
+    applyLang(newLang); // Apply immediately — whole app re-renders
+  }
+
   function save() {
     setSetup({ ...setup, general: { lang, notif, autosync } });
-    toast.success("Preferências gerais guardadas!");
+    toast.success(t("settings.saveGeneral") + " ✓");
   }
 
   return (
     <div className="space-y-4">
-      <Section title="Preferências gerais">
+      <Section title={t("settings.general")}>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Idioma</label>
-          <select value={lang} onChange={(e) => setLang(e.target.value)}
-            className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary/40">
-            <option value="pt-BR">Português (Brasil)</option>
-            <option value="en-US">English (US)</option>
-            <option value="es-ES">Español</option>
-          </select>
+          <label className="text-xs font-medium text-muted-foreground">{t("settings.language")}</label>
+          <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {LOCALES.map((locale) => (
+              <button
+                key={locale.code}
+                onClick={() => handleLangChange(locale.code)}
+                className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition ${
+                  lang === locale.code
+                    ? "border-primary bg-primary/10 font-medium"
+                    : "border-border bg-card/60 hover:border-primary/40"
+                }`}
+              >
+                <span className="text-xl">{locale.flag}</span>
+                <span>{locale.label}</span>
+                {lang === locale.code && (
+                  <FontAwesomeIcon icon={["fas", "circle-check"]} className="ml-auto text-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            A mudança de idioma é aplicada imediatamente em toda a aplicação.
+          </p>
         </div>
-        <Toggle icon={<Bell className="h-4 w-4" />} label="Notificações push"
-          description="Alertas sobre comentários urgentes e metas atingidas."
+        <Toggle icon={<Bell className="h-4 w-4" />} label={t("settings.notifications")}
+          description={t("settings.notificationsDesc")}
           checked={notif} onChange={setNotif} />
-        <Toggle icon={<Globe className="h-4 w-4" />} label="Sincronização automática"
-          description="Buscar atualizações em segundo plano a cada 15 minutos."
+        <Toggle icon={<Globe className="h-4 w-4" />} label={t("settings.autosync")}
+          description={t("settings.autosyncDesc")}
           checked={autosync} onChange={setAutosync} />
       </Section>
       <div className="flex justify-end">
         <Button className="gradient-brand text-primary-foreground hover:opacity-90 w-full sm:w-auto" onClick={save}>
           <FontAwesomeIcon icon={["fas", "floppy-disk"]} className="mr-2" />
-          Guardar preferências
+          {t("settings.saveGeneral")}
         </Button>
       </div>
     </div>

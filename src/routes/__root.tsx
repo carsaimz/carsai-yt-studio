@@ -23,6 +23,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { isSetupCompleted } from "@/lib/setup/store";
 import { useFirebaseUser } from "@/lib/firebase/auth";
+import { useI18n, setLang, getLang } from "@/lib/i18n";
+import { getSetup } from "@/lib/setup/store";
 
 // Register Font Awesome icons globally
 library.add(fas, fab);
@@ -157,6 +159,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function TopBar() {
   const [search, setSearch] = useState("");
   const { user } = useFirebaseUser();
+  const { t } = useI18n();
 
   const avatar = user?.photoURL
     ?? `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user?.email ?? "U")}&backgroundColor=ff5a3c`;
@@ -173,7 +176,7 @@ function TopBar() {
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar vídeos, comentários, tags…"
+          placeholder={t("common.search") + "…"}
           className="h-9 w-full rounded-lg border border-border bg-card/60 pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-ring"
         />
       </div>
@@ -217,6 +220,12 @@ function AppGate({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+
+  // Apply saved language from setup store on first render
+  useEffect(() => {
+    const savedLang = getSetup().general?.lang;
+    if (savedLang) setLang(savedLang as any);
+  }, []);
 
   if (typeof window !== "undefined" && pathname !== "/" && !isSetupCompleted() && !isPublic(pathname)) {
     return (

@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { loginEmail, loginGoogle, registerEmail, resetPassword } from "@/lib/firebase/auth";
 import { isSetupCompleted } from "@/lib/setup/store";
 import { toast, alert } from "@/lib/notifications";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -39,6 +40,7 @@ function friendly(e: unknown) {
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,12 +53,12 @@ function AuthPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const id = toast.loading(mode === "login" ? "Entrando…" : "Criando conta…");
+    const id = toast.loading(t(mode === "login" ? "auth.signingIn" : "auth.creating"));
     try {
       if (mode === "login") await loginEmail(email, password);
       else await registerEmail(email, password);
       toast.dismiss(id);
-      toast.success(mode === "login" ? "Bem-vindo de volta!" : "Conta criada com sucesso!");
+      toast.success(t(mode === "login" ? "auth.welcome" : "auth.created"));
       navigate({ to: "/" });
     } catch (err) {
       toast.dismiss(id);
@@ -68,11 +70,11 @@ function AuthPage() {
 
   const onGoogle = async () => {
     setBusy(true);
-    const id = toast.loading("Conectando com Google…");
+    const id = toast.loading(t("auth.connecting"));
     try {
       await loginGoogle();
       toast.dismiss(id);
-      toast.success("Login com Google realizado!");
+      toast.success(t("auth.welcome"));
       navigate({ to: "/" });
     } catch (err) {
       toast.dismiss(id);
@@ -98,7 +100,7 @@ function AuthPage() {
   return (
     <Shell>
       <h1 className="font-display text-2xl font-bold tracking-tight">
-        {mode === "login" ? "Entrar" : "Criar conta"}
+        {mode === "login" ? t("auth.signIn") : t("auth.signUp")}
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Acesse com sua conta para sincronizar preferências entre dispositivos.
@@ -108,11 +110,11 @@ function AuthPage() {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">
             <FontAwesomeIcon icon={["fas", "right-to-bracket"]} className="mr-1.5" />
-            Entrar
+            {t("auth.signIn")}
           </TabsTrigger>
           <TabsTrigger value="register">
             <FontAwesomeIcon icon={["fas", "user-plus"]} className="mr-1.5" />
-            Criar conta
+            {t("auth.signUp")}
           </TabsTrigger>
         </TabsList>
         <TabsContent value={mode} className="mt-4">
@@ -136,7 +138,7 @@ function AuthPage() {
                 ? <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />
                 : <FontAwesomeIcon icon={["fas", mode === "login" ? "right-to-bracket" : "user-plus"]} className="mr-2" />
               }
-              {mode === "login" ? "Entrar" : "Criar conta"}
+              {mode === "login" ? t("auth.signIn") : t("auth.signUp")}
             </Button>
           </form>
         </TabsContent>

@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { youtube, hasOAuth, startOAuthPKCE } from "@/lib/youtube/client";
 import { getSetup } from "@/lib/setup/store";
 import { toast, confirm, confirmDelete } from "@/lib/notifications";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/community")({
@@ -24,6 +25,7 @@ function CommunityPage() {
   const { youtube: yt } = getSetup();
   const channelId = yt?.defaultChannelId;
   const qc = useQueryClient();
+  const { t } = useI18n();
   const oauthOk = hasOAuth();
 
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
@@ -72,7 +74,7 @@ function CommunityPage() {
     setSending(true);
     try {
       await youtube.replyToComment(parentId, replyText);
-      toast.success("Resposta publicada!");
+      toast.success(t("common.success") + "!");
       setReplyOpen(null);
       setReplyText("");
       qc.invalidateQueries({ queryKey: ["comments", activeVideoId] });
@@ -85,7 +87,7 @@ function CommunityPage() {
     setSending(true);
     try {
       await youtube.updateComment(commentId, editText);
-      toast.success("Comentário actualizado!");
+      toast.success(t("common.success") + "!");
       setEditOpen(null);
       setEditText("");
       qc.invalidateQueries({ queryKey: ["comments", activeVideoId] });
@@ -97,7 +99,7 @@ function CommunityPage() {
     if (!await confirmDelete("este comentário")) return;
     try {
       await youtube.deleteComment(id);
-      toast.success("Comentário eliminado.");
+      toast.success(t("common.success") + ".");
       qc.invalidateQueries({ queryKey: ["comments", activeVideoId] });
     } catch (e) { toast.error((e as Error).message); }
   }
@@ -138,7 +140,7 @@ function CommunityPage() {
             </Button>
           ) : (
             <Button variant="outline" size="sm"
-              onClick={() => { commentsQ.refetch(); toast.success("A actualizar…"); }}>
+              onClick={() => { commentsQ.refetch(); toast.success(t("common.loading")); }}>
               <FontAwesomeIcon icon={["fas", "rotate-right"]} className="mr-1.5" />
               Actualizar
             </Button>

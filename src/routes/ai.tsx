@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { youtube } from "@/lib/youtube/client";
 import { getSetup } from "@/lib/setup/store";
 import { callAI, selectProvider } from "@/lib/ai/providers";
+import { useI18n } from "@/lib/i18n";
 import { toast } from "@/lib/notifications";
 
 export const Route = createFileRoute("/ai")({
@@ -36,6 +37,7 @@ const agents = [
 ];
 
 function AIPage() {
+  const { t } = useI18n();
   const setup = getSetup();
   const { youtube: yt } = setup;
   const ai = setup.ai;
@@ -83,7 +85,7 @@ function AIPage() {
   async function handleCallAI(userMsg: string, systemPrompt?: string): Promise<string> {
     const provider = selectProvider(setup.ai?.providers ?? []);
     if (!provider) {
-      throw new Error("Nenhum provedor de IA activo. Configure em Definições → Provedores IA e clique em Guardar.");
+      throw new Error(t("ai.noProvider"));
     }
 
     const channelCtx = ch
@@ -244,7 +246,7 @@ function AIPage() {
               <div className="flex gap-2">
                 <input
                   className="h-10 flex-1 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring"
-                  placeholder={activeProvider ? "Escreva uma mensagem…" : "Configure um provedor de IA primeiro…"}
+                  placeholder={activeProvider ? t("ai.typeMessage") : t("ai.configFirst")}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
