@@ -1,9 +1,14 @@
 name: Desktop — Tauri (Win + Mac + Linux)
 
 on:
+  release:
+    types: [published, created]
   workflow_dispatch:
   push:
     tags: ['v*']
+
+permissions:
+  contents: write
 
 jobs:
   tauri:
@@ -19,7 +24,6 @@ jobs:
           - os: windows-latest
             args: ''
     runs-on: ${{ matrix.os }}
-
     steps:
       - uses: actions/checkout@v4
 
@@ -42,38 +46,38 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build web (desktop)
+      - name: Build web
         run: npm run build:mobile
         env:
           BUILD_TARGET: mobile
           NITRO_PRESET: node-server
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
       - name: Ensure src-tauri exists
         shell: bash
         run: |
           if [ ! -d "src-tauri" ]; then
-            echo "A criar src-tauri..."
-            mkdir -p src-tauri/icons
-            mkdir -p src-tauri/src
+            mkdir -p src-tauri/icons src-tauri/src
+            cp public/tauri-icons/32x32.png       src-tauri/icons/32x32.png
+            cp public/tauri-icons/128x128.png      src-tauri/icons/128x128.png
+            cp public/tauri-icons/128x128@2x.png   src-tauri/icons/128x128@2x.png
+            cp public/tauri-icons/icon.ico         src-tauri/icons/icon.ico
+            cp public/tauri-icons/icon.png         src-tauri/icons/icon.png
 
-            # Copy icons
-            cp public/tauri-icons/32x32.png        src-tauri/icons/32x32.png
-            cp public/tauri-icons/128x128.png       src-tauri/icons/128x128.png
-            cp public/tauri-icons/128x128@2x.png    src-tauri/icons/128x128@2x.png
-            cp public/tauri-icons/icon.ico          src-tauri/icons/icon.ico
-            cp public/tauri-icons/icon.png          src-tauri/icons/icon.png
-
-            # Cargo.toml
             cat > src-tauri/Cargo.toml << 'CARGO'
           [package]
           name = "carsai-yt-studio-pro"
           version = "0.1.0"
           edition = "2021"
           rust-version = "1.77.2"
-
           [build-dependencies]
           tauri-build = { version = "2", features = [] }
-
           [dependencies]
           tauri = { version = "2", features = [] }
           tauri-plugin-opener = "2"
@@ -81,23 +85,15 @@ jobs:
           serde_json = "1"
           CARGO
 
-            # build.rs
             cat > src-tauri/build.rs << 'BUILDRS'
-          fn main() {
-              tauri_build::build()
-          }
+          fn main() { tauri_build::build() }
           BUILDRS
 
-            # main.rs
             cat > src-tauri/src/main.rs << 'MAINRS'
           #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-
-          fn main() {
-              carsai_yt_studio_pro::run()
-          }
+          fn main() { carsai_yt_studio_pro::run() }
           MAINRS
 
-            # lib.rs
             cat > src-tauri/src/lib.rs << 'LIBRS'
           #[cfg_attr(mobile, tauri::mobile_entry_point)]
           pub fn run() {
@@ -108,7 +104,6 @@ jobs:
           }
           LIBRS
 
-            # tauri.conf.json
             cat > src-tauri/tauri.conf.json << 'TAURICONF'
           {
             "$schema": "https://schema.tauri.app/config/2",
@@ -128,14 +123,10 @@ jobs:
                   "width": 1280,
                   "height": 800,
                   "minWidth": 960,
-                  "minHeight": 600,
-                  "resizable": true,
-                  "fullscreen": false
+                  "minHeight": 600
                 }
               ],
-              "security": {
-                "csp": null
-              }
+              "security": { "csp": null }
             },
             "bundle": {
               "active": true,
@@ -150,16 +141,9 @@ jobs:
             }
           }
           TAURICONF
-
-            echo "src-tauri criado."
           else
-            echo "src-tauri já existe no repositório."
-            # Garantir que os ícones estão actualizados
-            cp public/tauri-icons/32x32.png        src-tauri/icons/32x32.png    2>/dev/null || true
-            cp public/tauri-icons/128x128.png       src-tauri/icons/128x128.png  2>/dev/null || true
-            cp public/tauri-icons/128x128@2x.png    src-tauri/icons/128x128@2x.png 2>/dev/null || true
-            cp public/tauri-icons/icon.ico          src-tauri/icons/icon.ico     2>/dev/null || true
-            cp public/tauri-icons/icon.png          src-tauri/icons/icon.png     2>/dev/null || true
+            cp public/tauri-icons/*.png src-tauri/icons/ 2>/dev/null || true
+            cp public/tauri-icons/icon.ico src-tauri/icons/ 2>/dev/null || true
           fi
 
       - name: Build Tauri app
@@ -169,6 +153,6 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Carsai YT Studio ${{ github.ref_name }}
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

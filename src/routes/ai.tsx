@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { youtube } from "@/lib/youtube/client";
 import { getSetup } from "@/lib/setup/store";
+import { callAI, selectProvider } from "@/lib/ai/providers";
 import { toast } from "@/lib/notifications";
 
 export const Route = createFileRoute("/ai")({
@@ -72,52 +73,34 @@ function AIPage() {
   const recentTitles = (detailsQ.data?.items ?? [])
     .map((v: any) => v.snippet?.title).filter(Boolean).join("\n");
 
-  const activeProvider = (ai?.providers ?? []).find((p: any) => p.enabled && p.apiKey);
+  const setup = getSetup();
+  const activeProvider = selectProvider(setup.ai?.providers ?? []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs]);
 
-  async function callAI(userMsg: string, systemPrompt?: string): Promise<string> {
-    if (!activeProvider?.apiKey) {
-      throw new Error("Nenhum provedor de IA configurado. Vá a Configurações → Provedores IA.");
+  async function handleCallAI(userMsg: string, systemPrompt?: string): Promise<string> {
+    const provider = selectProvider(setup.ai?.providers ?? []);
+    if (!provider) {
+      throw new Error("Nenhum provedor de IA activo. Configure em Definições → Provedores IA e clique em Guardar.");
     }
 
     const channelCtx = ch
       ? `Canal: ${ch.snippet?.title} (${ch.statistics?.subscriberCount} inscritos).\nVídeos recentes:\n${recentTitles}`
       : "";
 
-    const sys = systemPrompt
+    const system = systemPrompt
       ? `${systemPrompt}\n\n${channelCtx}`
       : `Você é um assistente especialista em YouTube para o canal "${ch?.snippet?.title ?? "do utilizador"}".\n${channelCtx}`;
 
-    // Generic OpenAI-compatible endpoint
-    const baseUrl = activeProvider.baseUrl || "https://api.openai.com/v1";
-    const model = activeProvider.model || "gpt-4o-mini";
+    const messages = [
+      { role: "system" as const, content: system },
+      ...msgs.map((m) => ({ role: m.role as "user" | "assistant", content: m.text })),
+      { role: "user" as const, content: userMsg },
+    ];
 
-    const res = await fetch(`${baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${activeProvider.apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: sys },
-          ...msgs.map((m) => ({ role: m.role, content: m.text })),
-          { role: "user", content: userMsg },
-        ],
-        max_tokens: 1024,
-      }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message ?? `API error ${res.status}`);
-    }
-    const data = await res.json();
-    return data.choices?.[0]?.message?.content ?? "Sem resposta.";
+    return callAI(provider, messages);
   }
 
   async function handleSend() {
@@ -128,7 +111,7 @@ function AIPage() {
     setSending(true);
     try {
       const agentDef = agents.find((a) => a.id === activeAgent);
-      const reply = await callAI(userText, agentDef?.prompt);
+      const reply = await handleCallAI(userText, agentDef?.prompt);
       setMsgs((prev) => [...prev, { role: "assistant", text: reply }]);
     } catch (err) {
       toast.error((err as Error).message);
@@ -143,7 +126,7 @@ function AIPage() {
     setGeneratingScript(true);
     setScriptResult("");
     try {
-      const result = await callAI(
+      const result = await handleCallAI(
         `Crie um roteiro completo para YouTube sobre: "${scriptInput}". Inclua gancho, desenvolvimento e CTA.`,
         agents[0].prompt
       );

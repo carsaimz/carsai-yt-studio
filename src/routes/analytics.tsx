@@ -172,7 +172,7 @@ function AnalyticsPage() {
               </h2>
               <Card className="overflow-hidden">
                 <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px] text-sm">
+                <table className="w-full min-w-[580px] text-sm">
                   <thead className="bg-card/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
                       <th className="p-3">Título</th>

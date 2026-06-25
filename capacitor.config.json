@@ -2,19 +2,16 @@
   "appId": "com.carsai.ytstudio",
   "appName": "Carsai YT Studio",
   "webDir": "dist/client",
-  "bundledWebRuntime": false,
-  "server": {
-    "androidScheme": "https",
-    "iosScheme": "https",
-    "hostname": "app"
+  "appVersion": "0.1.0",
+  "appVersionCode": 1,
+  "android": {
+    "allowMixedContent": false
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 2000,
-      "launchAutoHide": true,
+      "launchShowDuration": 800,
       "backgroundColor": "#1a1410",
-      "androidSplashResourceName": "splash",
-      "androidScaleType": "CENTER_CROP",
+      "launchAutoHide": true,
       "showSpinner": false,
       "splashFullScreen": true,
       "splashImmersive": true
@@ -27,30 +24,8 @@
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"]
     },
-    "LocalNotifications": {
-      "smallIcon": "ic_stat_icon_config_sample",
-      "iconColor": "#FF5A3C",
-      "sound": "beep.wav"
-    },
     "Preferences": {
       "group": "CarsaiSecureStore"
-    },
-    "Camera": {
-      "permissions": ["camera", "photos"]
     }
-  },
-  "android": {
-    "buildOptions": {
-      "keystorePath": "carsai-release.jks",
-      "keystoreAlias": "carsai"
-    },
-    "allowMixedContent": false,
-    "captureInput": true,
-    "webContentsDebuggingEnabled": false
-  },
-  "ios": {
-    "contentInset": "always",
-    "allowsLinkPreview": false,
-    "scrollEnabled": true
   }
 }

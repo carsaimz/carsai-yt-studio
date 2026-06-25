@@ -1,41 +1,48 @@
 name: Android — APK + AAB
 
 on:
-  workflow_dispatch:
   push:
-    tags: ['v*']
+    branches: [main]
+  release:
+    types: [published, created]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag opcional (ex: v1.2.3)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  actions: write
 
 jobs:
   android:
-    name: Build Android
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: "22"
 
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
       - uses: android-actions/setup-android@v3
 
       - name: Install dependencies
         run: npm install
-
-      - name: Install Capacitor plugins
-        run: |
-          npm install \
-            @capacitor/core @capacitor/cli @capacitor/android \
-            @capacitor/push-notifications @capacitor/local-notifications \
-            @capacitor/splash-screen @capacitor/status-bar \
-            @capacitor/camera @capacitor/filesystem @capacitor/preferences \
-            @capacitor/network @capacitor/device @capacitor/haptics
 
       - name: Build web (mobile)
         run: npm run build:mobile
@@ -50,87 +57,155 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
-      - name: Init Capacitor Android
+      - name: Setup Capacitor Android
         run: |
-          [ -d android ] || npx cap add android
+          npm install @capacitor/core @capacitor/cli @capacitor/android \
+            @capacitor/push-notifications @capacitor/splash-screen \
+            @capacitor/status-bar @capacitor/camera @capacitor/filesystem \
+            @capacitor/preferences @capacitor/network @capacitor/device
 
-      - name: Copy app icons to Android
+          if [ -d "android" ] && [ ! -f "android/app/src/main/AndroidManifest.xml" ]; then
+            rm -rf android
+          fi
+          [ -d android ] || npx cap add android
+          npx cap sync android
+
+      - name: Copy app icons
         run: |
           RES="android/app/src/main/res"
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             mkdir -p "$RES/mipmap-$density"
             cp "public/android-icons/mipmap-$density/ic_launcher.png" \
-               "$RES/mipmap-$density/ic_launcher.png"
+               "$RES/mipmap-$density/ic_launcher.png" 2>/dev/null || true
             cp "public/android-icons/mipmap-$density/ic_launcher.png" \
-               "$RES/mipmap-$density/ic_launcher_round.png"
+               "$RES/mipmap-$density/ic_launcher_round.png" 2>/dev/null || true
           done
-          echo "✓ Icons copied"
 
-      - name: Apply AndroidManifest and resources from template
+      - name: Apply AndroidManifest and resources
         run: |
           MAIN="android/app/src/main"
           TMPL="android-template/app/src/main"
-
-          # Manifest
           cp "$TMPL/AndroidManifest.xml" "$MAIN/AndroidManifest.xml"
-
-          # Resource folders
           for dir in values xml; do
             mkdir -p "$MAIN/res/$dir"
             cp -r "$TMPL/res/$dir/." "$MAIN/res/$dir/"
           done
 
-          echo "✓ Manifest and resources applied"
-
-      - name: Sync Capacitor
-        run: npx cap sync android
-
-      - name: Decode keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Calculate version
+        id: versioning
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > android/app/carsai-release.jks
+          BASE=$(node -p "require('./package.json').version")
+          LAST=$(git tag -l "v${BASE}*" --sort=-v:refname | head -n1)
+          if [ -z "$LAST" ]; then BUILD=1
+          elif [[ "$LAST" =~ build\.([0-9]+)$ ]]; then BUILD=$(( ${BASH_REMATCH[1]} + 1 ))
+          else BUILD=1; fi
+          NEW="v${BASE}-build.${BUILD}"
+          echo "base=$BASE" >> $GITHUB_OUTPUT
+          echo "build=$BUILD" >> $GITHUB_OUTPUT
+          echo "version=$NEW" >> $GITHUB_OUTPUT
+          echo "📦 Version: $NEW"
+
+      - name: Update Android version
+        run: |
+          sed -i "s/versionCode [0-9]*/versionCode ${{ steps.versioning.outputs.build }}/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${{ steps.versioning.outputs.base }}\"/" android/app/build.gradle
+
+      - name: Setup keystore
+        env:
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_FILE" ]; then
+            printf '%s' "$KEYSTORE_FILE" | tr -d '[:space:]' | base64 -d > android/app/carsai.keystore
             echo "HAS_KEYSTORE=true" >> $GITHUB_ENV
           else
             echo "HAS_KEYSTORE=false" >> $GITHUB_ENV
-            echo "⚠️  Sem keystore — build não assinada."
           fi
 
-      - name: Build APK + AAB (signed)
+      - name: Configure signing
         if: env.HAS_KEYSTORE == 'true'
+        env:
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          cat >> android/app/build.gradle << 'GRADLE'
+
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file('carsai.keystore')
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("KEYSTORE_ALIAS")
+                      keyPassword System.getenv("KEYSTORE_PASSWORD")
+                  }
+              }
+              buildTypes {
+                  release { signingConfig signingConfigs.release }
+              }
+          }
+          GRADLE
+
+      - name: Build APK + AAB
         working-directory: android
         env:
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          chmod +x ./gradlew
-          ./gradlew assembleRelease bundleRelease --no-daemon \
-            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/android/app/carsai-release.jks" \
-            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
-            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
-
-      - name: Build APK + AAB (unsigned)
-        if: env.HAS_KEYSTORE == 'false'
-        working-directory: android
         run: |
           chmod +x ./gradlew
           ./gradlew assembleRelease bundleRelease --no-daemon
 
-      - name: Upload artifacts
+      - name: Set final version
+        id: final
+        run: |
+          if   [ "${{ github.event_name }}" = "release" ];           then V="${{ github.ref_name }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then V="${{ inputs.tag }}"
+          elif [ "${{ github.ref_type }}" = "tag" ];                  then V="${{ github.ref_name }}"
+          else V="${{ steps.versioning.outputs.version }}"; fi
+          echo "version=$V" >> $GITHUB_OUTPUT
+
+      - name: Prepare artifacts
+        id: artifacts
+        run: |
+          APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n1)
+          AAB=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -n1)
+          V="${{ steps.final.outputs.version }}"
+          ANAME="carsai-yt-studio-${V}.apk"
+          BNAME="carsai-yt-studio-${V}.aab"
+          cp "$APK" "$ANAME"
+          cp "$AAB" "$BNAME"
+          echo "apk=$ANAME" >> $GITHUB_OUTPUT
+          echo "aab=$BNAME" >> $GITHUB_OUTPUT
+
+      - name: Create tag (on push to main)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          V="${{ steps.final.outputs.version }}"
+          git tag -a "$V" -m "Build #${{ steps.versioning.outputs.build }}"
+          git push origin "$V"
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-artifacts
-          path: |
-            android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/bundle/release/*.aab
+          name: android-apk-${{ steps.final.outputs.version }}
+          path: ${{ steps.artifacts.outputs.apk }}
+          retention-days: 30
 
-      - name: Attach to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab-${{ steps.final.outputs.version }}
+          path: ${{ steps.artifacts.outputs.aab }}
+          retention-days: 30
+
+      - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.final.outputs.version }}
+          name: "Carsai YT Studio ${{ steps.final.outputs.version }}"
+          generate_release_notes: true
           files: |
-            android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/bundle/release/*.aab
+            ${{ steps.artifacts.outputs.apk }}
+            ${{ steps.artifacts.outputs.aab }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

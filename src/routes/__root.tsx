@@ -156,10 +156,14 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function TopBar() {
   const [search, setSearch] = useState("");
+  const { user } = useFirebaseUser();
+
+  const avatar = user?.photoURL
+    ?? `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user?.email ?? "U")}&backgroundColor=ff5a3c`;
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-3 backdrop-blur sm:px-4">
-      <SidebarTrigger />
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur sm:gap-3 sm:px-4">
+      <SidebarTrigger className="flex-shrink-0" />
       <div className="relative hidden flex-1 max-w-md md:block">
         <FontAwesomeIcon
           icon={["fas", "magnifying-glass"]}
@@ -173,39 +177,21 @@ function TopBar() {
           className="h-9 w-full rounded-lg border border-border bg-card/60 pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-ring"
         />
       </div>
-      <div className="ml-auto flex items-center gap-2">
-        {/* YouTube brand icon */}
-        <a
-          href="https://studio.youtube.com"
-          target="_blank"
-          rel="noreferrer"
-          title="YouTube Studio"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card/60 text-red-500 hover:bg-accent hover:text-red-400 transition"
-        >
+      <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+        <a href="https://studio.youtube.com" target="_blank" rel="noreferrer" title="YouTube Studio"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card/60 text-red-500 hover:bg-accent transition sm:h-9 sm:w-9">
           <FontAwesomeIcon icon={["fab", "youtube"]} className="h-4 w-4" />
         </a>
-
-        {/* Notifications */}
-        <Link
-          to="/notifications"
-          className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card/60 hover:bg-accent transition"
-          title="Notificações"
-        >
+        <Link to="/notifications"
+          className="relative inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card/60 hover:bg-accent transition sm:h-9 sm:w-9"
+          title="Notificações">
           <FontAwesomeIcon icon={["fas", "bell"]} className="h-4 w-4" />
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
         </Link>
-
-        {/* Profile */}
-        <Link
-          to="/profile"
-          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card/60 px-2.5 text-sm hover:bg-accent transition"
-        >
-          <img
-            src="https://api.dicebear.com/9.x/shapes/svg?seed=carsai&backgroundColor=ff5a3c"
-            alt=""
-            className="h-6 w-6 rounded-md"
-          />
-          <span className="hidden sm:inline">Conta</span>
+        <Link to="/profile"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card/60 px-2 text-sm hover:bg-accent transition sm:h-9 sm:px-2.5">
+          <img src={avatar} alt="" className="h-5 w-5 rounded-full sm:h-6 sm:w-6" />
+          <span className="hidden sm:inline truncate max-w-[80px]">{user?.displayName ?? user?.email?.split("@")[0] ?? "Conta"}</span>
         </Link>
       </div>
     </header>
