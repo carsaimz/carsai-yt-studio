@@ -57,39 +57,77 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
-      - name: Setup Capacitor Android
+      - name: Install Capacitor
         run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android \
+          npm install \
+            @capacitor/core @capacitor/cli @capacitor/android \
+            @capacitor/assets \
             @capacitor/push-notifications @capacitor/splash-screen \
             @capacitor/status-bar @capacitor/camera @capacitor/filesystem \
             @capacitor/preferences @capacitor/network @capacitor/device
 
+      - name: Setup Capacitor Android
+        run: |
           if [ -d "android" ] && [ ! -f "android/app/src/main/AndroidManifest.xml" ]; then
             rm -rf android
           fi
           [ -d android ] || npx cap add android
           npx cap sync android
 
-      - name: Copy app icons
+      - name: Generate app icons and splash (via @capacitor/assets)
         run: |
-          RES="android/app/src/main/res"
-          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-            mkdir -p "$RES/mipmap-$density"
-            cp "public/android-icons/mipmap-$density/ic_launcher.png" \
-               "$RES/mipmap-$density/ic_launcher.png" 2>/dev/null || true
-            cp "public/android-icons/mipmap-$density/ic_launcher.png" \
-               "$RES/mipmap-$density/ic_launcher_round.png" 2>/dev/null || true
-          done
+          # @capacitor/assets reads icon.png + splash.png from resources/ folder
+          mkdir -p resources
+          cp public/icon-512.png resources/icon.png
+          cp public/icon-512.png resources/icon-foreground.png
+          # Create a simple dark background for adaptive icon
+          convert public/icon-512.png -resize 512x512 \
+            -background "#1a1410" -gravity center -extent 512x512 \
+            resources/icon-background.png 2>/dev/null || cp public/icon-512.png resources/icon-background.png
+          # Use icon as splash too
+          convert public/icon-512.png -resize 512x512 \
+            -background "#1a1410" -gravity center -extent 2732x2732 \
+            resources/splash.png 2>/dev/null || cp public/icon-512.png resources/splash.png
 
-      - name: Apply AndroidManifest and resources
+          npx @capacitor/assets generate --android \
+            --iconBackgroundColor "#1a1410" \
+            --iconBackgroundColorDark "#1a1410" \
+            --splashBackgroundColor "#1a1410" \
+            --splashBackgroundColorDark "#1a1410" \
+            || echo "⚠️ @capacitor/assets partial failure — continuing"
+
+      - name: Apply AndroidManifest
         run: |
-          MAIN="android/app/src/main"
-          TMPL="android-template/app/src/main"
-          cp "$TMPL/AndroidManifest.xml" "$MAIN/AndroidManifest.xml"
-          for dir in values xml; do
-            mkdir -p "$MAIN/res/$dir"
-            cp -r "$TMPL/res/$dir/." "$MAIN/res/$dir/"
-          done
+          python3 << 'PY'
+          import re
+
+          path = "android/app/src/main/AndroidManifest.xml"
+          with open(path) as f:
+              content = f.read()
+
+          # Remove existing permissions
+          content = re.sub(r'\s*<uses-permission[^/]*/>', '', content)
+
+          perms = """
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+              <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
+              <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+              <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+              <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+              <uses-permission android:name="android.permission.CAMERA"/>
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+              <uses-permission android:name="android.permission.VIBRATE"/>
+              <uses-permission android:name="android.permission.WAKE_LOCK"/>
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>"""
+
+          content = re.sub(r'(<manifest[^>]*>)', r'\1' + perms, content, count=1)
+
+          with open(path, 'w') as f:
+              f.write(content)
+
+          print("✅ AndroidManifest patched")
+          PY
 
       - name: Calculate version
         id: versioning
@@ -100,15 +138,19 @@ jobs:
           elif [[ "$LAST" =~ build\.([0-9]+)$ ]]; then BUILD=$(( ${BASH_REMATCH[1]} + 1 ))
           else BUILD=1; fi
           NEW="v${BASE}-build.${BUILD}"
-          echo "base=$BASE" >> $GITHUB_OUTPUT
+          echo "base=$BASE"  >> $GITHUB_OUTPUT
           echo "build=$BUILD" >> $GITHUB_OUTPUT
           echo "version=$NEW" >> $GITHUB_OUTPUT
-          echo "📦 Version: $NEW"
+          echo "📦 Version: $NEW (build #$BUILD)"
 
-      - name: Update Android version
+      - name: Update Android version in build.gradle
         run: |
-          sed -i "s/versionCode [0-9]*/versionCode ${{ steps.versioning.outputs.build }}/" android/app/build.gradle
-          sed -i "s/versionName \"[^\"]*\"/versionName \"${{ steps.versioning.outputs.base }}\"/" android/app/build.gradle
+          BUILD="${{ steps.versioning.outputs.build }}"
+          BASE="${{ steps.versioning.outputs.base }}"
+          sed -i "s/versionCode [0-9]*/versionCode ${BUILD}/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${BASE}\"/" android/app/build.gradle
+          echo "✅ versionCode=$BUILD versionName=$BASE"
+          grep -E "versionCode|versionName" android/app/build.gradle
 
       - name: Setup keystore
         env:
@@ -118,16 +160,17 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_FILE" ]; then
             printf '%s' "$KEYSTORE_FILE" | tr -d '[:space:]' | base64 -d > android/app/carsai.keystore
-            echo "HAS_KEYSTORE=true" >> $GITHUB_ENV
+            keytool -list -keystore android/app/carsai.keystore \
+              -storepass "$KEYSTORE_PASSWORD" -alias "$KEYSTORE_ALIAS" -noprompt \
+              && echo "HAS_KEYSTORE=true" >> $GITHUB_ENV \
+              || { echo "⚠️ Keystore inválido"; echo "HAS_KEYSTORE=false" >> $GITHUB_ENV; }
           else
             echo "HAS_KEYSTORE=false" >> $GITHUB_ENV
+            echo "⚠️ Sem keystore — build não assinada"
           fi
 
       - name: Configure signing
         if: env.HAS_KEYSTORE == 'true'
-        env:
-          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           cat >> android/app/build.gradle << 'GRADLE'
 
@@ -145,6 +188,7 @@ jobs:
               }
           }
           GRADLE
+          echo "✅ Signing configured"
 
       - name: Build APK + AAB
         working-directory: android
@@ -154,15 +198,23 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew assembleRelease bundleRelease --no-daemon
+          echo "✅ Build complete"
+          find app/build/outputs -name "*.apk" -o -name "*.aab" | xargs ls -lh
 
       - name: Set final version
         id: final
         run: |
-          if   [ "${{ github.event_name }}" = "release" ];           then V="${{ github.ref_name }}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then V="${{ inputs.tag }}"
-          elif [ "${{ github.ref_type }}" = "tag" ];                  then V="${{ github.ref_name }}"
-          else V="${{ steps.versioning.outputs.version }}"; fi
+          if   [ "${{ github.event_name }}" = "release" ]; then
+            V="${{ github.ref_name }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
+            V="${{ inputs.tag }}"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            V="${{ github.ref_name }}"
+          else
+            V="${{ steps.versioning.outputs.version }}"
+          fi
           echo "version=$V" >> $GITHUB_OUTPUT
+          echo "🏷️ Final version: $V"
 
       - name: Prepare artifacts
         id: artifacts
@@ -176,13 +228,16 @@ jobs:
           cp "$AAB" "$BNAME"
           echo "apk=$ANAME" >> $GITHUB_OUTPUT
           echo "aab=$BNAME" >> $GITHUB_OUTPUT
+          echo "📦 APK: $(ls -lh $ANAME | awk '{print $5}')"
+          echo "📦 AAB: $(ls -lh $BNAME | awk '{print $5}')"
 
       - name: Create tag (on push to main)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           V="${{ steps.final.outputs.version }}"
-          git tag -a "$V" -m "Build #${{ steps.versioning.outputs.build }}"
+          git tag -a "$V" -m "🚀 Build #${{ steps.versioning.outputs.build }}"
           git push origin "$V"
+          echo "🏷️ Tag $V created"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

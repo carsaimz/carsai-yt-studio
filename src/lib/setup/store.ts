@@ -8,6 +8,7 @@ export type FirebaseConfig = {
   appId: string;
   messagingSenderId?: string;
   storageBucket?: string;
+  measurementId?: string;
 };
 
 export type YouTubeConfig = {

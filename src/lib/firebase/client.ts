@@ -22,6 +22,7 @@ function envConfig(): FirebaseConfig | null {
     appId: env.VITE_FIREBASE_APP_ID,
     messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
     storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
+    measurementId: env.VITE_FIREBASE_MEASUREMENT_ID,
   };
 }
 
