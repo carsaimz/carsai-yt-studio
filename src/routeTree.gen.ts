@@ -30,6 +30,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as IndexRouteImport } from './routes/index'
 
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -137,6 +138,11 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthCallbackRoute = OauthCallbackRouteImport.update({
+  id: '/oauth/callback',
+  path: '/oauth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/help': typeof HelpRoute
   '/notifications': typeof NotificationsRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/security': typeof SecurityRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/help': typeof HelpRoute
   '/notifications': typeof NotificationsRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/security': typeof SecurityRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/help': typeof HelpRoute
   '/notifications': typeof NotificationsRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/security': typeof SecurityRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/help'
     | '/notifications'
+    | '/oauth/callback'
     | '/privacy'
     | '/profile'
     | '/security'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/help'
     | '/notifications'
+    | '/oauth/callback'
     | '/privacy'
     | '/profile'
     | '/security'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/help'
     | '/notifications'
+    | '/oauth/callback'
     | '/privacy'
     | '/profile'
     | '/security'
@@ -304,6 +316,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   HelpRoute: typeof HelpRoute
   NotificationsRoute: typeof NotificationsRoute
+  OauthCallbackRoute: typeof OauthCallbackRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   SecurityRoute: typeof SecurityRoute
@@ -318,6 +331,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/oauth/callback': {
+      id: '/oauth/callback'
+      path: '/oauth/callback'
+      fullPath: '/oauth/callback'
+      preLoaderRoute: typeof OauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/welcome': {
       id: '/welcome'
       path: '/welcome'
@@ -488,6 +508,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   HelpRoute: HelpRoute,
   NotificationsRoute: NotificationsRoute,
+  OauthCallbackRoute: OauthCallbackRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   SecurityRoute: SecurityRoute,

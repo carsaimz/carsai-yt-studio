@@ -35,7 +35,7 @@ const sections = [
 
 function DocsPage() {
   return (
-    <PublicShell>
+    <PublicShell title="Documentação">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <FloatingArt />
         <div className="relative z-10 mb-10 text-center">
@@ -58,7 +58,7 @@ function DocsPage() {
         <div className="space-y-10">
 
           {/* Primeiros passos */}
-          <SectionCard id="inicio" number={1} title="Primeiros passos" icon={<Sparkles className="h-4 w-4" />}>
+          <div id="inicio"><SectionCard number={1} title="Primeiros passos" icon={<Sparkles className="h-4 w-4" />}>
             <Steps items={[
               "Acesse o app e passe pelo assistente de configuração em /welcome → /setup.",
               "Configure o Firebase (gratuito) para autenticação.",
@@ -72,9 +72,10 @@ function DocsPage() {
               </Button>
             </div>
           </SectionCard>
+          </div>
 
           {/* Firebase */}
-          <SectionCard id="firebase" number={2} title="Configurar Firebase" icon={<Shield className="h-4 w-4" />}>
+          <div id="firebase"><SectionCard number={2} title="Configurar Firebase" icon={<Shield className="h-4 w-4" />}>
             <Steps items={[
               "Acesse console.firebase.google.com e clique em 'Adicionar projecto'.",
               "Crie um projecto (ex: carsaiplay-project). Analytics é opcional.",
@@ -89,9 +90,10 @@ function DocsPage() {
               As regras de segurança do Firestore/Auth controlam o acesso real.
             </InfoBox>
           </SectionCard>
+          </div>
 
           {/* YouTube API Key */}
-          <SectionCard id="youtube-api" number={3} title="YouTube Data API Key" icon={<Youtube className="h-4 w-4" />}>
+          <div id="youtube-api"><SectionCard number={3} title="YouTube Data API Key" icon={<Youtube className="h-4 w-4" />}>
             <Steps items={[
               "Acesse console.cloud.google.com e crie um projecto (ou reutilize o do Firebase).",
               "Em APIs & Services → Library, pesquise 'YouTube Data API v3' e clique em Enable.",
@@ -106,9 +108,10 @@ function DocsPage() {
               Solicite aumento em quotas.cloud.google.com se necessário.
             </InfoBox>
           </SectionCard>
+          </div>
 
           {/* OAuth 2.0 */}
-          <SectionCard id="oauth" number={4} title="OAuth 2.0 — passo a passo" icon={<KeyRound className="h-4 w-4" />}>
+          <div id="oauth"><SectionCard number={4} title="OAuth 2.0 — passo a passo" icon={<KeyRound className="h-4 w-4" />}>
             <p className="text-sm text-muted-foreground mb-3">
               OAuth 2.0 é necessário para upload de vídeos, edição, playlists, comentários e YouTube Analytics.
               Usa o fluxo PKCE — seguro sem expor segredos no browser.
@@ -147,9 +150,10 @@ function DocsPage() {
                 fix="Adicione localhost:3000 e o seu domínio de preview aos Authorized origins e redirect URIs." />
             </div>
           </SectionCard>
+          </div>
 
           {/* IA Providers */}
-          <SectionCard id="ia" number={5} title="Provedores de IA" icon={<Bot className="h-4 w-4" />}>
+          <div id="ia"><SectionCard number={5} title="Provedores de IA" icon={<Bot className="h-4 w-4" />}>
             <p className="text-sm text-muted-foreground mb-3">
               O app suporta qualquer provedor com API compatível com OpenAI (endpoint /chat/completions).
             </p>
@@ -189,9 +193,10 @@ function DocsPage() {
               "Na página IA & Agentes, o chat usará o provedor com maior prioridade que tenha API Key preenchida.",
             ]} />
           </SectionCard>
+          </div>
 
           {/* Mobile */}
-          <SectionCard id="mobile" number={6} title="Android" icon={<Smartphone className="h-4 w-4" />}>
+          <div id="mobile"><SectionCard number={6} title="Android" icon={<Smartphone className="h-4 w-4" />}>
             <Steps items={[
               "Cada push de tag (ex: git tag v1.0.0 && git push origin v1.0.0) gera APK e AAB automaticamente.",
               "Para assinar o APK, configure os secrets KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS e KEY_PASSWORD no repositório.",
@@ -201,9 +206,10 @@ function DocsPage() {
               "O APK gerado (não assinado) pode ser instalado manualmente via adb install ou enviado para o dispositivo.",
             ]} />
           </SectionCard>
+          </div>
 
           {/* Desktop */}
-          <SectionCard id="desktop" number={7} title="Desktop (Tauri v2)" icon={<Server className="h-4 w-4" />}>
+          <div id="desktop"><SectionCard number={7} title="Desktop (Tauri v2)" icon={<Server className="h-4 w-4" />}>
             <Steps items={[
               "Cada push de tag gera instaladores para Windows (.msi/.exe), macOS (.dmg) e Linux (.AppImage/.deb).",
               "O src-tauri/ é criado automaticamente em CI se não existir no repositório.",
@@ -211,9 +217,10 @@ function DocsPage() {
               "Requer Rust instalado: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh",
             ]} />
           </SectionCard>
+          </div>
 
           {/* Erros comuns */}
-          <SectionCard id="erros" number={8} title="Erros comuns" icon={<AlertTriangle className="h-4 w-4" />}>
+          <div id="erros"><SectionCard number={8} title="Erros comuns" icon={<AlertTriangle className="h-4 w-4" />}>
             <div className="space-y-3">
               <ErrorItem code="quotaExceeded / 403"
                 desc="Cota diária da YouTube API esgotada (10.000 unidades)."
@@ -235,9 +242,10 @@ function DocsPage() {
                 fix="Em Configurações → Provedores IA, após preencher as API Keys, clique em 'Guardar provedores de IA'. O botão de guardar é obrigatório." />
             </div>
           </SectionCard>
+          </div>
 
           {/* Atalhos */}
-          <SectionCard id="atalhos" number={9} title="Atalhos de teclado" icon={<Zap className="h-4 w-4" />}>
+          <div id="atalhos"><SectionCard number={9} title="Atalhos de teclado" icon={<Zap className="h-4 w-4" />}>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {[
                 ["g d", "Ir para Dashboard"],
@@ -256,9 +264,10 @@ function DocsPage() {
               ))}
             </div>
           </SectionCard>
+          </div>
 
           {/* Changelog */}
-          <SectionCard id="changelog" number={10} title="Changelog & Releases" icon={<ListChecks className="h-4 w-4" />}>
+          <div id="changelog"><SectionCard number={10} title="Changelog & Releases" icon={<ListChecks className="h-4 w-4" />}>
             <p className="text-sm text-muted-foreground">
               Veja o histórico completo de versões em{" "}
               <Link to="/changelog" className="text-primary underline">Changelog</Link>{" "}
@@ -276,6 +285,7 @@ function DocsPage() {
 git push origin v1.0.0`}
             </pre>
           </SectionCard>
+          </div>
 
         </div>
       </div>

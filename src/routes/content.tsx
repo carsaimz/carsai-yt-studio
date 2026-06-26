@@ -42,7 +42,7 @@ function UploadDialog({ onClose }: { onClose: () => void }) {
     try {
       const uri = await youtube.initiateUpload({
         title, description: desc,
-        tags: tags.split(",").map(t => t.trim()).filter(Boolean),
+        tags: tags.split(",").map((t: string) => t.trim()).filter(Boolean),
         privacyStatus: privacy,
       });
       await youtube.uploadChunk(uri, file, setProgress);
@@ -136,7 +136,7 @@ function EditVideoDialog({ video, onClose }: { video: any; onClose: () => void }
     try {
       await youtube.updateVideo(
         video.id,
-        { title, description: desc, tags: tags.split(",").map(t => t.trim()).filter(Boolean) },
+        { title, description: desc, tags: tags.split(",").map((t: string) => t.trim()).filter(Boolean) },
         { privacyStatus: privacy as any },
       );
       toast.success("Vídeo actualizado!");

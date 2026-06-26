@@ -43,6 +43,7 @@ const PUBLIC = [
   "/changelog",
   "/about",
   "/offline",
+  "/oauth",
 ];
 
 function isPublic(pathname: string) {

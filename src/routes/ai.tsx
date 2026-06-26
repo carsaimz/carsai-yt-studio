@@ -75,7 +75,6 @@ function AIPage() {
   const recentTitles = (detailsQ.data?.items ?? [])
     .map((v: any) => v.snippet?.title).filter(Boolean).join("\n");
 
-  const setup = getSetup();
   const activeProvider = selectProvider(setup.ai?.providers ?? []);
 
   useEffect(() => {

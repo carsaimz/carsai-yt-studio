@@ -187,7 +187,7 @@ export function UpdateCard({ compact = false }: { compact?: boolean }) {
       saveBlob(blob, assetName);
       if (!expected) {
         setVerifications((s) => ({ ...s, [assetName]: { status: "no-manifest", hash } }));
-        toast.message("Download concluído", { description: "Sem manifesto de checksums nesta release." });
+        toast.info("Download concluído — sem manifesto de checksums nesta release.");
       } else if (expected === hash) {
         setVerifications((s) => ({ ...s, [assetName]: { status: "ok", hash, expected } }));
         toast.success("Integridade verificada (SHA-256 confere)");
