@@ -4,12 +4,16 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": null,
-  "build": {
-    "env": {
-      "NITRO_PRESET": "vercel"
-    }
   },
   "rewrites": [
+    {
+      "source": "/assets/:path*",
+      "destination": "/dist/client/assets/:path*"
+    },
+    {
+      "source": "/:file(.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|webmanifest|txt|xml|json))",
+      "destination": "/dist/client/:file"
+    },
     {
       "source": "/(.*)",
       "destination": "/api/index"
