@@ -20,17 +20,33 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          git checkout -b sync-temp
-
-          # Remove this workflow from the sync branch (don't expose it publicly)
-          git rm --cached .github/workflows/sync.yml 2>/dev/null || true
-          git commit -m "chore: sync from pro [skip ci]" || true
-
+          # Add destination remote
           git remote add destination \
             https://x-access-token:${{ secrets.SYNC_TOKEN }}@github.com/carsaimz/carsai-yt-studio.git
 
-          git push destination sync-temp:main --force
+          # Create orphan-style approach: clone current state, remove sync.yml, force push
+          # Work in a temp directory to avoid branch confusion
+          TMPDIR=$(mktemp -d)
+          git worktree add "$TMPDIR/sync-branch" HEAD
 
-          git checkout main
-          git branch -D sync-temp
+          cd "$TMPDIR/sync-branch"
+
+          # Remove the sync workflow file from the copy
+          rm -f .github/workflows/sync.yml
+
+          # Configure git identity
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage the removal and commit
+          git add -A
+          git commit -m "chore: sync from pro [skip ci]" || echo "Nothing to commit"
+
+          # Push to destination
+          git push destination HEAD:main --force
           echo "✅ Synced to carsaimz/carsai-yt-studio"
+
+          # Cleanup
+          cd "$GITHUB_WORKSPACE"
+          git worktree remove "$TMPDIR/sync-branch" --force 2>/dev/null || true
+          rm -rf "$TMPDIR"
