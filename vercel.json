@@ -4,6 +4,10 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": null,
+  "build": {
+    // "env": {
+      // "NITRO_PRESET": "node-server"
+    // }
   },
   "rewrites": [
     {
