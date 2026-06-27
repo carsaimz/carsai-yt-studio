@@ -145,3 +145,39 @@
 .Toastify__progress-bar--error   { background: oklch(0.62 0.24 25) !important; }
 .Toastify__progress-bar--warning { background: oklch(0.82 0.17 80) !important; }
 .Toastify__progress-bar--info    { background: oklch(0.72 0.14 240) !important; }
+
+/* ── Mobile-first responsive overrides ───────────────────────────────────── */
+
+/* Page containers: full width on mobile */
+@media (max-width: 639px) {
+  .mx-auto { margin-left: auto; margin-right: auto; }
+  .px-4    { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .py-6    { padding-top: 1rem; padding-bottom: 1rem; }
+
+  /* Tables always scroll horizontally */
+  table    { min-width: max-content; }
+
+  /* Hide desktop-only topbar text */
+  .hide-mobile { display: none !important; }
+
+  /* Tabs scroll horizontally */
+  [role="tablist"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  [role="tablist"]::-webkit-scrollbar { display: none; }
+}
+
+/* Wrap every table in scroll container automatically */
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sidebar is hidden on mobile by default (JS handles show/hide) */
+
+/* Search bar responsive */
+@media (max-width: 480px) {
+  .search-wrap { display: none; }
+}

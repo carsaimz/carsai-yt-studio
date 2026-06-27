@@ -33,7 +33,7 @@
 
 ---
 
-## <a name="português"></a>🇧🇷 Português
+## <a id="português"></a>🇧🇷 Português
 
 ### O que é?
 
@@ -83,7 +83,7 @@ Leia [CONTRIBUTING.md](CONTRIBUTING.md) e [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.m
 
 ---
 
-## <a name="english"></a>🇺🇸 English
+## <a id="english"></a>🇺🇸 English
 
 ### What is it?
 
@@ -142,7 +142,7 @@ MIT © [carsaimz](https://github.com/carsaimz)
 
 ---
 
-## <a name="español"></a>🇪🇸 Español
+## <a id="español"></a>🇪🇸 Español
 
 ### ¿Qué es?
 

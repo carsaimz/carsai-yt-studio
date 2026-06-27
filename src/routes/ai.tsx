@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { youtube } from "@/lib/youtube/client";
-import { getSetup } from "@/lib/setup/store";
+import { useSetup, getSetup } from "@/lib/setup/store";
 import { callAI, selectProvider } from "@/lib/ai/providers";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "@/lib/notifications";

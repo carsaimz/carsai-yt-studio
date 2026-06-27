@@ -9,12 +9,14 @@
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 800,
-      "backgroundColor": "#1a1410",
+      "launchShowDuration": 500,
       "launchAutoHide": true,
+      "backgroundColor": "#1a1410",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_INSIDE",
       "showSpinner": false,
-      "splashFullScreen": true,
-      "splashImmersive": true
+      "splashFullScreen": false,
+      "splashImmersive": false
     },
     "StatusBar": {
       "style": "DARK",
