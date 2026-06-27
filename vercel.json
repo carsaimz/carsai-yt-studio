@@ -4,7 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/client",
   "installCommand": "npm install",
-  "framework": "vite"
+  "framework": "vite",
   "build": {
     "env": {
       "NITRO_PRESET": "node-server"
