@@ -7,7 +7,7 @@
   "framework": "vite",
   "build": {
     "env": {
-      "NITRO_PRESET": "node-server"
+      "NITRO_PRESET": "vercel"
     }
   },
   "rewrites": [
