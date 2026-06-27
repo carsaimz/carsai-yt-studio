@@ -1,0 +1,17 @@
+labels: [idea]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        🇧🇷 Compartilhe suas ideias para melhorar o Carsai YT Studio!
+        🇺🇸 Share your ideas to improve Carsai YT Studio!
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea / Ideia
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / Contexto

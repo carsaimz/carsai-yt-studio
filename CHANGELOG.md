@@ -46,7 +46,7 @@ versionamento segue [Semantic Versioning](https://semver.org/).
 - Caminhos relativos (`./assets/`) no `index.html` gerado para Capacitor (absolutos falhavam com `capacitor://localhost`)
 - Condições `if: ${{ secrets.X != '' }}` substituídas por `$GITHUB_ENV` (secrets não são expostos em condições)
 - `BUILD_TARGET=mobile` via `cross-env` para compatibilidade com PowerShell (Windows runners)
-- Repositório renomeado de `carsaimz/carsai-yt-studio` para `carsaimz/carsai-yt-studio-pro`
+- Repositório renomeado de `carsaimz/carsai-yt-studio` para `carsaimz/carsai-yt-studio`
 
 ---
 
@@ -86,7 +86,7 @@ versionamento segue [Semantic Versioning](https://semver.org/).
 - shadcn/ui como biblioteca de componentes base
 - Framer Motion para animações
 
-[Unreleased]: https://github.com/carsaimz/carsai-yt-studio-pro/compare/v0.3.0...HEAD
-[0.3.0]: https://github.com/carsaimz/carsai-yt-studio-pro/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/carsaimz/carsai-yt-studio-pro/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/carsaimz/carsai-yt-studio-pro/releases/tag/v0.1.0
+[Unreleased]: https://github.com/carsaimz/carsai-yt-studio/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/carsaimz/carsai-yt-studio/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/carsaimz/carsai-yt-studio/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/carsaimz/carsai-yt-studio/releases/tag/v0.1.0

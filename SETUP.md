@@ -9,7 +9,7 @@ Este erro acontece quando o domínio de deploy **não está autorizado** no Fire
 1. Acesse [Firebase Console](https://console.firebase.google.com) → seu projecto
 2. **Authentication** → **Settings** → **Authorized domains**
 3. Clique em **Add domain** e adicione:
-   - `carsai-yt-studio-pro.vercel.app` (ou o seu domínio Vercel)
+   - `carsai-yt-studio.vercel.app` (ou o seu domínio Vercel)
    - `localhost` (para desenvolvimento — já deve estar)
    - Qualquer domínio personalizado que use
 

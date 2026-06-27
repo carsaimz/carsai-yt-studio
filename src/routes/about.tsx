@@ -77,8 +77,8 @@ function About() {
             <p className="mt-3">
               Código no GitHub:{" "}
               <a className="inline-flex items-center gap-1 text-primary hover:underline"
-                href="https://github.com/carsaimz/carsai-yt-studio-pro" target="_blank" rel="noreferrer">
-                <Github className="h-3.5 w-3.5" /> carsaimz/carsai-yt-studio-pro
+                href="https://github.com/carsaimz/carsai-yt-studio" target="_blank" rel="noreferrer">
+                <Github className="h-3.5 w-3.5" /> carsaimz/carsai-yt-studio
               </a>
             </p>
           </SectionCard>
@@ -95,7 +95,7 @@ function About() {
 
           <SectionCard title="Contribua" icon={<Github className="h-4 w-4" />}>
             <ul className="ml-4 list-disc space-y-1">
-              <li>Abra <a className="text-primary hover:underline" href="https://github.com/carsaimz/carsai-yt-studio-pro/issues" target="_blank" rel="noreferrer">issues</a> com bugs ou ideias.</li>
+              <li>Abra <a className="text-primary hover:underline" href="https://github.com/carsaimz/carsai-yt-studio/issues" target="_blank" rel="noreferrer">issues</a> com bugs ou ideias.</li>
               <li>Mande pull requests — guia em <code>CONTRIBUTING.md</code>.</li>
               <li>Traduções, temas e plugins são bem-vindos.</li>
             </ul>

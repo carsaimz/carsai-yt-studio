@@ -3,12 +3,13 @@ name: Android — APK + AAB
 on:
   push:
     branches: [main]
+    tags: ['v*']
   release:
     types: [published, created]
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Tag opcional (ex: v1.2.3)"
+      version:
+        description: "Versão do app (ex: 1.2.0). Vazio = usa package.json"
         required: false
         default: ""
 
@@ -44,6 +45,54 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Resolve version
+        id: ver
+        run: |
+          # Priority: manual input > tag > package.json
+          if [ -n "${{ inputs.version }}" ]; then
+            BASE="${{ inputs.version }}"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            BASE="${{ github.ref_name }}"
+            BASE="${BASE#v}"
+          else
+            BASE=$(node -p "require('./package.json').version")
+          fi
+
+          # Calculate build number from tags
+          LAST=$(git tag -l "v${BASE}*" --sort=-v:refname | head -n1)
+          if [ -z "$LAST" ]; then BUILD=1
+          elif [[ "$LAST" =~ build\.([0-9]+)$ ]]; then BUILD=$(( ${BASH_REMATCH[1]} + 1 ))
+          else BUILD=1; fi
+
+          TAG="v${BASE}-build.${BUILD}"
+          echo "base=$BASE"   >> $GITHUB_OUTPUT
+          echo "build=$BUILD" >> $GITHUB_OUTPUT
+          echo "tag=$TAG"     >> $GITHUB_OUTPUT
+          echo "📦 Version: $BASE | Build: $BUILD | Tag: $TAG"
+
+      - name: Update version in package.json and capacitor.config.json
+        run: |
+          BASE="${{ steps.ver.outputs.base }}"
+          BUILD="${{ steps.ver.outputs.build }}"
+
+          # package.json
+          node -e "
+            const fs = require('fs');
+            const p = JSON.parse(fs.readFileSync('package.json'));
+            p.version = '$BASE';
+            fs.writeFileSync('package.json', JSON.stringify(p, null, 2));
+          "
+
+          # capacitor.config.json
+          node -e "
+            const fs = require('fs');
+            const c = JSON.parse(fs.readFileSync('capacitor.config.json'));
+            c.appVersion = '$BASE';
+            c.appVersionCode = $BUILD;
+            fs.writeFileSync('capacitor.config.json', JSON.stringify(c, null, 2));
+          "
+          echo "✅ package.json → $BASE | capacitor.config.json → $BASE (code $BUILD)"
+
       - name: Build web (mobile)
         run: npm run build:mobile
         env:
@@ -60,8 +109,7 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install \
-            @capacitor/core @capacitor/cli @capacitor/android \
-            @capacitor/assets \
+            @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets \
             @capacitor/push-notifications @capacitor/splash-screen \
             @capacitor/status-bar @capacitor/camera @capacitor/filesystem \
             @capacitor/preferences @capacitor/network @capacitor/device
@@ -74,40 +122,42 @@ jobs:
           [ -d android ] || npx cap add android
           npx cap sync android
 
-      - name: Generate app icons and splash (via @capacitor/assets)
+      - name: Generate icons + splash via @capacitor/assets
         run: |
-          # @capacitor/assets reads icon.png + splash.png from resources/ folder
           mkdir -p resources
           cp public/icon-512.png resources/icon.png
           cp public/icon-512.png resources/icon-foreground.png
-          # Create a simple dark background for adaptive icon
-          convert public/icon-512.png -resize 512x512 \
-            -background "#1a1410" -gravity center -extent 512x512 \
-            resources/icon-background.png 2>/dev/null || cp public/icon-512.png resources/icon-background.png
-          # Use icon as splash too
-          convert public/icon-512.png -resize 512x512 \
-            -background "#1a1410" -gravity center -extent 2732x2732 \
-            resources/splash.png 2>/dev/null || cp public/icon-512.png resources/splash.png
+          convert public/icon-512.png -background "#1a1410" -gravity center \
+            -extent 512x512 resources/icon-background.png 2>/dev/null \
+            || cp public/icon-512.png resources/icon-background.png
+          convert public/icon-512.png -background "#1a1410" -gravity center \
+            -extent 2732x2732 resources/splash.png 2>/dev/null \
+            || cp public/icon-512.png resources/splash.png
 
           npx @capacitor/assets generate --android \
             --iconBackgroundColor "#1a1410" \
             --iconBackgroundColorDark "#1a1410" \
             --splashBackgroundColor "#1a1410" \
             --splashBackgroundColorDark "#1a1410" \
-            || echo "⚠️ @capacitor/assets partial failure — continuing"
+            || echo "⚠️ assets partial — continuing"
 
-      - name: Apply AndroidManifest
+      - name: Patch AndroidManifest + version
         run: |
+          BASE="${{ steps.ver.outputs.base }}"
+          BUILD="${{ steps.ver.outputs.build }}"
+
+          # Update build.gradle version
+          sed -i "s/versionCode [0-9]*/versionCode ${BUILD}/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${BASE}\"/" android/app/build.gradle
+          echo "✅ build.gradle: versionCode=$BUILD versionName=$BASE"
+
+          # Patch permissions
           python3 << 'PY'
           import re
-
           path = "android/app/src/main/AndroidManifest.xml"
           with open(path) as f:
               content = f.read()
-
-          # Remove existing permissions
           content = re.sub(r'\s*<uses-permission[^/]*/>', '', content)
-
           perms = """
               <uses-permission android:name="android.permission.INTERNET"/>
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -120,48 +170,20 @@ jobs:
               <uses-permission android:name="android.permission.VIBRATE"/>
               <uses-permission android:name="android.permission.WAKE_LOCK"/>
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>"""
-
           content = re.sub(r'(<manifest[^>]*>)', r'\1' + perms, content, count=1)
-
           with open(path, 'w') as f:
               f.write(content)
-
-          print("✅ AndroidManifest patched")
+          print("✅ Permissions patched")
           PY
-
-      - name: Calculate version
-        id: versioning
-        run: |
-          BASE=$(node -p "require('./package.json').version")
-          LAST=$(git tag -l "v${BASE}*" --sort=-v:refname | head -n1)
-          if [ -z "$LAST" ]; then BUILD=1
-          elif [[ "$LAST" =~ build\.([0-9]+)$ ]]; then BUILD=$(( ${BASH_REMATCH[1]} + 1 ))
-          else BUILD=1; fi
-          NEW="v${BASE}-build.${BUILD}"
-          echo "base=$BASE"  >> $GITHUB_OUTPUT
-          echo "build=$BUILD" >> $GITHUB_OUTPUT
-          echo "version=$NEW" >> $GITHUB_OUTPUT
-          echo "📦 Version: $NEW (build #$BUILD)"
-
-      - name: Update Android version in build.gradle
-        run: |
-          BUILD="${{ steps.versioning.outputs.build }}"
-          BASE="${{ steps.versioning.outputs.base }}"
-          sed -i "s/versionCode [0-9]*/versionCode ${BUILD}/" android/app/build.gradle
-          sed -i "s/versionName \"[^\"]*\"/versionName \"${BASE}\"/" android/app/build.gradle
-          echo "✅ versionCode=$BUILD versionName=$BASE"
-          grep -E "versionCode|versionName" android/app/build.gradle
 
       - name: Setup keystore
         env:
           KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           if [ -n "$KEYSTORE_FILE" ]; then
             printf '%s' "$KEYSTORE_FILE" | tr -d '[:space:]' | base64 -d > android/app/carsai.keystore
             keytool -list -keystore android/app/carsai.keystore \
-              -storepass "$KEYSTORE_PASSWORD" -alias "$KEYSTORE_ALIAS" -noprompt \
+              -storepass "carsaidev" -alias "carsaidev" -noprompt \
               && echo "HAS_KEYSTORE=true" >> $GITHUB_ENV \
               || { echo "⚠️ Keystore inválido"; echo "HAS_KEYSTORE=false" >> $GITHUB_ENV; }
           else
@@ -178,9 +200,9 @@ jobs:
               signingConfigs {
                   release {
                       storeFile file('carsai.keystore')
-                      storePassword System.getenv("KEYSTORE_PASSWORD")
-                      keyAlias System.getenv("KEYSTORE_ALIAS")
-                      keyPassword System.getenv("KEYSTORE_PASSWORD")
+                      storePassword "carsaidev"
+                      keyAlias "carsaidev"
+                      keyPassword "carsaidev"
                   }
               }
               buildTypes {
@@ -188,76 +210,53 @@ jobs:
               }
           }
           GRADLE
-          echo "✅ Signing configured"
 
       - name: Build APK + AAB
         working-directory: android
-        env:
-          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           chmod +x ./gradlew
           ./gradlew assembleRelease bundleRelease --no-daemon
-          echo "✅ Build complete"
           find app/build/outputs -name "*.apk" -o -name "*.aab" | xargs ls -lh
-
-      - name: Set final version
-        id: final
-        run: |
-          if   [ "${{ github.event_name }}" = "release" ]; then
-            V="${{ github.ref_name }}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
-            V="${{ inputs.tag }}"
-          elif [ "${{ github.ref_type }}" = "tag" ]; then
-            V="${{ github.ref_name }}"
-          else
-            V="${{ steps.versioning.outputs.version }}"
-          fi
-          echo "version=$V" >> $GITHUB_OUTPUT
-          echo "🏷️ Final version: $V"
 
       - name: Prepare artifacts
         id: artifacts
         run: |
+          V="${{ steps.ver.outputs.tag }}"
           APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n1)
           AAB=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -n1)
-          V="${{ steps.final.outputs.version }}"
           ANAME="carsai-yt-studio-${V}.apk"
           BNAME="carsai-yt-studio-${V}.aab"
           cp "$APK" "$ANAME"
           cp "$AAB" "$BNAME"
-          echo "apk=$ANAME" >> $GITHUB_OUTPUT
-          echo "aab=$BNAME" >> $GITHUB_OUTPUT
-          echo "📦 APK: $(ls -lh $ANAME | awk '{print $5}')"
-          echo "📦 AAB: $(ls -lh $BNAME | awk '{print $5}')"
+          echo "apk=$ANAME"  >> $GITHUB_OUTPUT
+          echo "aab=$BNAME"  >> $GITHUB_OUTPUT
+          echo "tag=${V}"    >> $GITHUB_OUTPUT
 
-      - name: Create tag (on push to main)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      - name: Commit version bump + create tag
         run: |
-          V="${{ steps.final.outputs.version }}"
-          git tag -a "$V" -m "🚀 Build #${{ steps.versioning.outputs.build }}"
-          git push origin "$V"
-          echo "🏷️ Tag $V created"
+          TAG="${{ steps.ver.outputs.tag }}"
+          git add package.json capacitor.config.json
+          git commit -m "chore: bump version to ${{ steps.ver.outputs.base }} (build ${{ steps.ver.outputs.build }}) [skip ci]" || true
+          git tag -a "$TAG" -m "🚀 Android build ${{ steps.ver.outputs.build }} — v${{ steps.ver.outputs.base }}"
+          git push origin HEAD:main "$TAG" || git push origin "$TAG" || true
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: android-apk-${{ steps.final.outputs.version }}
+          name: android-apk-${{ steps.ver.outputs.tag }}
           path: ${{ steps.artifacts.outputs.apk }}
           retention-days: 30
 
-      - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: android-aab-${{ steps.final.outputs.version }}
+          name: android-aab-${{ steps.ver.outputs.tag }}
           path: ${{ steps.artifacts.outputs.aab }}
           retention-days: 30
 
       - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.final.outputs.version }}
-          name: "Carsai YT Studio ${{ steps.final.outputs.version }}"
+          tag_name: ${{ steps.artifacts.outputs.tag }}
+          name: "Carsai YT Studio ${{ steps.artifacts.outputs.tag }}"
           generate_release_notes: true
           files: |
             ${{ steps.artifacts.outputs.apk }}

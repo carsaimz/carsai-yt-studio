@@ -1,0 +1,13 @@
+labels: [general]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        🇧🇷 Bem-vindo às discussões do Carsai YT Studio!
+        🇺🇸 Welcome to Carsai YT Studio discussions!
+  - type: textarea
+    id: content
+    attributes:
+      label: Your message / Sua mensagem
+    validations:
+      required: true

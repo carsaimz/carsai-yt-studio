@@ -1,259 +1,183 @@
 <div align="center">
-  <img src="public/icon-192.png" alt="Carsai YT Studio" width="96" height="96" />
+  <img src="public/icon-192.png" alt="Carsai YT Studio" width="120" height="120" />
+
   <h1>Carsai YT Studio</h1>
-  <p>Plataforma híbrida para criadores YouTube — análise, SEO, comunidade e agentes de IA.</p>
 
   <p>
-    <a href="https://github.com/carsaimz/carsai-yt-studio-pro/actions/workflows/web.yml">
-      <img src="https://github.com/carsaimz/carsai-yt-studio-pro/actions/workflows/web.yml/badge.svg" alt="Web Build" />
+    <strong>🇧🇷 Plataforma completa para criadores YouTube com IA integrada</strong><br/>
+    <strong>🇺🇸 Complete YouTube creator platform with integrated AI</strong><br/>
+    <strong>🇪🇸 Plataforma completa para creadores de YouTube con IA integrada</strong>
+  </p>
+
+  <p>
+    <a href="https://github.com/carsaimz/carsai-yt-studio/actions/workflows/web.yml">
+      <img src="https://github.com/carsaimz/carsai-yt-studio/actions/workflows/web.yml/badge.svg" alt="Web Build" />
     </a>
-    <a href="https://github.com/carsaimz/carsai-yt-studio-pro/actions/workflows/android.yml">
-      <img src="https://github.com/carsaimz/carsai-yt-studio-pro/actions/workflows/android.yml/badge.svg" alt="Android Build" />
+    <a href="https://github.com/carsaimz/carsai-yt-studio/actions/workflows/android.yml">
+      <img src="https://github.com/carsaimz/carsai-yt-studio/actions/workflows/android.yml/badge.svg" alt="Android Build" />
     </a>
-    <a href="https://github.com/carsaimz/carsai-yt-studio-pro/actions/workflows/desktop.yml">
-      <img src="https://github.com/carsaimz/carsai-yt-studio-pro/actions/workflows/desktop.yml/badge.svg" alt="Desktop Build" />
+    <a href="https://github.com/carsaimz/carsai-yt-studio/actions/workflows/desktop.yml">
+      <img src="https://github.com/carsaimz/carsai-yt-studio/actions/workflows/desktop.yml/badge.svg" alt="Desktop Build" />
     </a>
-    <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License" />
+    <img src="https://img.shields.io/github/license/carsaimz/carsai-yt-studio?color=blue" alt="MIT" />
     <img src="https://img.shields.io/badge/node-22+-green" alt="Node 22+" />
+    <img src="https://img.shields.io/badge/platforms-Web%20%7C%20Android%20%7C%20Desktop-orange" alt="Platforms" />
+  </p>
+
+  <p>
+    <a href="#português">🇧🇷 Português</a> •
+    <a href="#english">🇺🇸 English</a> •
+    <a href="#español">🇪🇸 Español</a>
   </p>
 </div>
 
 ---
 
-## Visão geral
+## <a name="português"></a>🇧🇷 Português
 
-**Carsai YT Studio** é uma aplicação multi-plataforma (Web, Android, iOS, Windows, macOS, Linux) que centraliza a gestão de canais YouTube com inteligência artificial integrada.
+### O que é?
 
-| Funcionalidade | Descrição |
-|---|---|
-| 📊 **Analytics** | Métricas de crescimento, visualizações e inscritos |
-| 🎬 **Estúdio** | Ferramentas de criação e edição de conteúdo |
-| 🔍 **SEO** | Optimização de títulos, descrições e tags |
-| 💬 **Comunidade** | Gestão de comentários e engagement |
-| 🤖 **IA & Agentes** | Automações e assistentes multi-provedor |
-| 🔔 **Notificações** | Alertas em tempo real do canal |
+Carsai YT Studio é uma alternativa ao YouTube Studio com superpoderes de IA. Gere o seu canal, analise métricas, responda comentários, faça uploads e muito mais — tudo numa só aplicação que funciona no browser, Android e desktop.
 
----
+### Funcionalidades
 
-## Stack técnica
+| | Funcionalidade | Descrição |
+|--|---|---|
+| 📊 | **Analytics avançada** | Views, likes, retenção e watch time — dados reais da YouTube API |
+| 🎬 | **Gestão de conteúdo** | Upload de vídeos, edição de metadados, thumbnails, playlists |
+| 💬 | **Comunidade** | Responder, editar, moderar e eliminar comentários em tempo real |
+| 🔍 | **SEO** | Tags reais do canal, pesquisa de concorrentes, optimizador de títulos |
+| 🤖 | **IA & Agentes** | Chat, roteiros, thumbnails — Gemini, Groq, OpenAI, Claude e mais |
+| 🎨 | **Estúdio** | Editor de vídeo, analytics detalhada, branding do canal |
+| 🌍 | **Multi-idioma** | Português, English, Español |
+| 📱 | **Multi-plataforma** | Web, Android, Windows, macOS, Linux |
 
-| Camada | Tecnologia |
-|---|---|
-| Framework | React 19 + TanStack Start (SSR) |
-| Router | TanStack Router (file-based) |
-| Build | Vite 8 + Nitro |
-| Estilo | Tailwind CSS v4 |
-| Auth | Firebase Authentication |
-| DB | Firestore |
-| Ícones | Font Awesome 6 |
-| Notificações | React Toastify + SweetAlert2 |
-| Animações | Framer Motion |
-| Gráficos | Recharts |
-| Mobile | Capacitor (Android + iOS) |
-| Desktop | Tauri v2 (Win + Mac + Linux) |
-
----
-
-## Início rápido
+### Início Rápido
 
 ```bash
-# 1. Clonar
-git clone https://github.com/carsaimz/carsai-yt-studio-pro.git
-cd carsai-yt-studio-pro
-
-# 2. Instalar dependências
+git clone https://github.com/carsaimz/carsai-yt-studio.git
+cd carsai-yt-studio
 npm install
-
-# 3. Configurar variáveis de ambiente
 cp .env.example .env
-# Editar .env com as suas chaves Firebase e YouTube API
-
-# 4. Iniciar em desenvolvimento
+# Preencher .env com chaves Firebase
 npm run dev
 ```
 
-A app abre em `http://localhost:3000`.
+> ⚠️ **Importante:** Adicione o seu domínio em Firebase Console → Authentication → Authorized domains.
+
+### Tecnologias
+
+React 19 · TanStack Start · Vite · Tailwind CSS v4 · Firebase · YouTube Data API v3 · Capacitor · Tauri v2
+
+### Download
+
+| Plataforma | Link |
+|---|---|
+| 🌐 Web | [carsai-yt-studio.vercel.app](https://carsai-yt-studio.vercel.app) |
+| 📱 Android APK | [Releases](https://github.com/carsaimz/carsai-yt-studio/releases/latest) |
+| 🖥️ Desktop | [Releases](https://github.com/carsaimz/carsai-yt-studio/releases/latest) |
+
+### Contribuir
+
+Leia [CONTRIBUTING.md](CONTRIBUTING.md) e [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ---
 
-## Variáveis de ambiente
+## <a name="english"></a>🇺🇸 English
 
-Criar `.env` na raiz com:
+### What is it?
+
+Carsai YT Studio is a YouTube Studio alternative with AI superpowers. Manage your channel, analyze metrics, reply to comments, upload videos and much more — all in one app that works on browser, Android and desktop.
+
+### Features
+
+| | Feature | Description |
+|--|---|---|
+| 📊 | **Advanced Analytics** | Views, likes, retention and watch time — real YouTube API data |
+| 🎬 | **Content Management** | Video upload, metadata editing, thumbnails, playlists |
+| 💬 | **Community** | Reply, edit, moderate and delete comments in real time |
+| 🔍 | **SEO** | Real channel tags, competitor search, title optimizer |
+| 🤖 | **AI & Agents** | Chat, scripts, thumbnails — Gemini, Groq, OpenAI, Claude and more |
+| 🎨 | **Studio** | Video editor, detailed analytics, channel branding |
+| 🌍 | **Multi-language** | Portuguese, English, Spanish |
+| 📱 | **Multi-platform** | Web, Android, Windows, macOS, Linux |
+
+### Quick Start
+
+```bash
+git clone https://github.com/carsaimz/carsai-yt-studio.git
+cd carsai-yt-studio
+npm install
+cp .env.example .env
+# Fill .env with Firebase keys
+npm run dev
+```
+
+> ⚠️ **Important:** Add your domain in Firebase Console → Authentication → Authorized domains.
+
+### Tech Stack
+
+React 19 · TanStack Start · Vite · Tailwind CSS v4 · Firebase · YouTube Data API v3 · Capacitor · Tauri v2
+
+### Environment Variables
 
 ```env
-# Firebase
 VITE_FIREBASE_API_KEY=
 VITE_FIREBASE_AUTH_DOMAIN=
 VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
-
-# YouTube Data API v3 (opcional — pode configurar dentro da app)
+VITE_FIREBASE_MEASUREMENT_ID=
 VITE_YOUTUBE_API_KEY=
 ```
 
----
+### Contributing
 
-## Scripts disponíveis
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
-```bash
-npm run dev          # Servidor de desenvolvimento
-npm run build        # Build de produção (Nitro SSR)
-npm run build:web    # Build web com detecção automática de output
-npm run build:mobile # Build para Capacitor (Android/iOS)
-npm run preview      # Preview do build de produção
-npm run lint         # ESLint
-npm run typecheck    # TypeScript sem emit
-npm run format       # Prettier
-```
-
----
-
-## Deploy
-
-### Vercel (recomendado)
-
-Ligar o repositório à Vercel. O `vercel.json` já está configurado com `NITRO_PRESET=node-server` e as rotas SSR correctas.
-
-### Netlify
-
-```bash
-# Build command
-npm run build
-
-# Publish directory
-dist/client
-```
-
-### Docker / Self-hosted
-
-```bash
-docker compose up --build
-```
-
----
-
-## Mobile (Android / iOS)
-
-O GitHub Actions compila automaticamente ao criar uma tag `v*`.
-
-Para compilar localmente:
-
-```bash
-# Instalar Capacitor
-npm install @capacitor/core @capacitor/cli @capacitor/android
-
-# Build web + sync
-npm run build:mobile
-npx cap sync android
-
-# Abrir no Android Studio
-npx cap open android
-```
-
-### Assinar o APK (GitHub Actions)
-
-Criar os secrets no repositório via Termux:
-
-```bash
-# Gerar keystore (uma vez)
-keytool -genkeypair -v \
-  -keystore carsai-release.jks \
-  -alias carsai -keyalg RSA -keysize 2048 -validity 10000
-
-# Criar secrets
-gh secret set KEYSTORE_BASE64 < <(base64 -w 0 carsai-release.jks)
-gh secret set KEYSTORE_PASSWORD
-gh secret set KEY_ALIAS
-gh secret set KEY_PASSWORD
-```
-
----
-
-## Desktop (Tauri v2)
-
-O workflow `desktop.yml` gera instaladores para Windows (`.msi`, `.exe`), macOS (`.dmg`) e Linux (`.AppImage`, `.deb`).
-
-O `src-tauri/` é criado automaticamente em CI se não existir no repositório.
-
----
-
-## Notificações (uso interno)
-
-```ts
-import { toast, confirm, confirmDelete, alert, prompt } from "@/lib/notifications";
-
-toast.success("Guardado!");
-toast.error("Algo correu mal.");
-
-const ok = await confirm({ title: "Tem a certeza?", icon: "warning" });
-const del = await confirmDelete("vídeo");
-const nome = await prompt({ title: "Nome do canal" });
-```
-
----
-
-## Ícones (Font Awesome)
-
-```tsx
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
-<FontAwesomeIcon icon={["fas", "chart-line"]} />
-<FontAwesomeIcon icon={["fab", "youtube"]} />
-```
-
-A biblioteca é registada globalmente em `__root.tsx` — não é necessário importar ícones individuais.
-
----
-
-## Estrutura do projecto
-
-```
-src/
-├── components/       # Componentes reutilizáveis
-│   ├── ui/           # shadcn/ui primitivos
-│   └── app-sidebar   # Navegação lateral
-├── lib/
-│   ├── firebase/     # Auth + Firestore
-│   ├── youtube/      # YouTube Data API client
-│   ├── notifications # Toast + SweetAlert2
-│   └── updates/      # Verificador de actualizações
-├── routes/           # Páginas (file-based routing)
-└── styles.css        # Tema global (Tailwind v4 + CSS vars)
-
-public/
-├── icon-*.png        # Ícones web (PWA)
-├── android-icons/    # Mipmap densities para Android
-├── tauri-icons/      # Ícones para Tauri desktop
-└── manifest.webmanifest
-
-scripts/
-├── build-web.mjs     # Build universal (detecta output Nitro)
-├── cap-sync.mjs      # Build + sync Capacitor
-└── version-bump.mjs  # Bump de versão semântica
-```
-
----
-
-## Contribuir
-
-1. Fork → branch `feat/minha-funcionalidade`
-2. Commit seguindo [Conventional Commits](https://www.conventionalcommits.org/)
-3. Pull Request para `main`
-
----
-
-## Licença
+### License
 
 MIT © [carsaimz](https://github.com/carsaimz)
 
-## Criar primeira tag (release)
+---
+
+## <a name="español"></a>🇪🇸 Español
+
+### ¿Qué es?
+
+Carsai YT Studio es una alternativa a YouTube Studio con superpoderes de IA. Gestiona tu canal, analiza métricas, responde comentarios, sube vídeos y mucho más — todo en una sola aplicación que funciona en el navegador, Android y escritorio.
+
+### Funcionalidades
+
+| | Funcionalidad | Descripción |
+|--|---|---|
+| 📊 | **Analytics avanzada** | Datos reales de la YouTube API |
+| 🎬 | **Gestión de contenido** | Subida de vídeos, edición de metadatos, miniaturas, listas |
+| 💬 | **Comunidad** | Responder, editar, moderar y eliminar comentarios |
+| 🔍 | **SEO** | Etiquetas reales, búsqueda de competidores |
+| 🤖 | **IA & Agentes** | Chat, guiones — Gemini, Groq, OpenAI, Claude y más |
+
+### Inicio Rápido
 
 ```bash
-# No Termux, dentro do repositório
-git tag -a v0.1.0 -m "Release inicial v0.1.0"
-git push origin v0.1.0
+git clone https://github.com/carsaimz/carsai-yt-studio.git
+cd carsai-yt-studio
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-Isto dispara os workflows `android.yml`, `desktop.yml` e `release.yml` automaticamente.
+### Contribuir
+
+Lee [CONTRIBUTING.md](CONTRIBUTING.md) y [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+### Licencia
+
+MIT © [carsaimz](https://github.com/carsaimz)
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/carsaimz">carsaimz</a></sub>
+</div>

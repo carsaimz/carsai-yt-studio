@@ -1,0 +1,36 @@
+name: Sync to carsai-yt-studio (public)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source (pro)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN }}
+
+      - name: Sync to public repo (without sync.yml)
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b sync-temp
+
+          # Remove this workflow from the sync branch (don't expose it publicly)
+          git rm --cached .github/workflows/sync.yml 2>/dev/null || true
+          git commit -m "chore: sync from pro [skip ci]" || true
+
+          git remote add destination \
+            https://x-access-token:${{ secrets.SYNC_TOKEN }}@github.com/carsaimz/carsai-yt-studio.git
+
+          git push destination sync-temp:main --force
+
+          git checkout main
+          git branch -D sync-temp
+          echo "✅ Synced to carsaimz/carsai-yt-studio"

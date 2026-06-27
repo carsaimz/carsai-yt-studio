@@ -115,4 +115,6 @@ export function useFirebaseUser() {
   return { user, loading };
 }
 
-export { logoutUser } from "./auth-compat";
+
+/** Alias for backward compatibility */
+export const logoutUser = logout;

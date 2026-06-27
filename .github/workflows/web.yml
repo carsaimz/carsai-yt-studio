@@ -7,6 +7,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build
@@ -33,7 +36,7 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
-      - name: Upload artifact (dist/client — assets estáticos)
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: web-build
@@ -41,26 +44,39 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-  deploy-pages:
-    name: Deploy to GitHub Pages
+  # Trigger Android and Desktop builds on push to main
+  trigger-android:
+    name: Trigger Android build
     needs: build
-    if: github.ref == 'refs/heads/main' && vars.DEPLOY_TARGET == 'pages'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Dispatch Android workflow
+        uses: actions/github-script@v7
         with:
-          name: web-build
-          path: dist/client
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'android.yml',
+              ref: 'main'
+            })
+            console.log('✅ Android workflow triggered')
+
+  trigger-desktop:
+    name: Trigger Desktop build
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Desktop workflow
+        uses: actions/github-script@v7
         with:
-          path: dist/client
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'desktop.yml',
+              ref: 'main'
+            })
+            console.log('✅ Desktop workflow triggered')
