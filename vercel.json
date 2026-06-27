@@ -5,9 +5,9 @@
   "installCommand": "npm install",
   "framework": null,
   "build": {
-    // "env": {
-      // "NITRO_PRESET": "node-server"
-    // }
+    "env": {
+      "NITRO_PRESET": "node-server"
+    }
   },
   "rewrites": [
     {
