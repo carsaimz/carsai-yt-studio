@@ -2,7 +2,7 @@
   "appId": "com.carsai.ytstudio",
   "appName": "Carsai YT Studio",
   "webDir": "dist/client",
-  "appVersion": "1.0.0",
+  "appVersion": "1.0.1",
   "appVersionCode": 1,
   "server": {
     "androidScheme": "https",
@@ -31,7 +31,11 @@
       "overlaysWebView": false
     },
     "PushNotifications": {
-      "presentationOptions": ["badge", "sound", "alert"]
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
     },
     "Preferences": {
       "group": "CarsaiSecureStore"
