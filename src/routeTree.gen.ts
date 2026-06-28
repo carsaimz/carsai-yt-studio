@@ -30,8 +30,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as AboutRouteImport } from './routes/about'
-import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -138,14 +138,14 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OauthCallbackRoute = OauthCallbackRouteImport.update({
-  id: '/oauth/callback',
-  path: '/oauth/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthCallbackRoute = OauthCallbackRouteImport.update({
+  id: '/oauth/callback',
+  path: '/oauth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -162,7 +162,6 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/help': typeof HelpRoute
   '/notifications': typeof NotificationsRoute
-  '/oauth/callback': typeof OauthCallbackRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/security': typeof SecurityRoute
@@ -173,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
+  '/oauth/callback': typeof OauthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -187,7 +187,6 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/help': typeof HelpRoute
   '/notifications': typeof NotificationsRoute
-  '/oauth/callback': typeof OauthCallbackRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/security': typeof SecurityRoute
@@ -198,6 +197,7 @@ export interface FileRoutesByTo {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
+  '/oauth/callback': typeof OauthCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -213,7 +213,6 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/help': typeof HelpRoute
   '/notifications': typeof NotificationsRoute
-  '/oauth/callback': typeof OauthCallbackRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/security': typeof SecurityRoute
@@ -224,6 +223,7 @@ export interface FileRoutesById {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
+  '/oauth/callback': typeof OauthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -240,7 +240,6 @@ export interface FileRouteTypes {
     | '/docs'
     | '/help'
     | '/notifications'
-    | '/oauth/callback'
     | '/privacy'
     | '/profile'
     | '/security'
@@ -251,6 +250,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/welcome'
+    | '/oauth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -265,7 +265,6 @@ export interface FileRouteTypes {
     | '/docs'
     | '/help'
     | '/notifications'
-    | '/oauth/callback'
     | '/privacy'
     | '/profile'
     | '/security'
@@ -276,6 +275,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/welcome'
+    | '/oauth/callback'
   id:
     | '__root__'
     | '/'
@@ -290,7 +290,6 @@ export interface FileRouteTypes {
     | '/docs'
     | '/help'
     | '/notifications'
-    | '/oauth/callback'
     | '/privacy'
     | '/profile'
     | '/security'
@@ -301,6 +300,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/welcome'
+    | '/oauth/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -316,7 +316,6 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   HelpRoute: typeof HelpRoute
   NotificationsRoute: typeof NotificationsRoute
-  OauthCallbackRoute: typeof OauthCallbackRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   SecurityRoute: typeof SecurityRoute
@@ -327,17 +326,11 @@ export interface RootRouteChildren {
   StudioRoute: typeof StudioRoute
   TermsRoute: typeof TermsRoute
   WelcomeRoute: typeof WelcomeRoute
+  OauthCallbackRoute: typeof OauthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/oauth/callback': {
-      id: '/oauth/callback'
-      path: '/oauth/callback'
-      fullPath: '/oauth/callback'
-      preLoaderRoute: typeof OauthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/welcome': {
       id: '/welcome'
       path: '/welcome'
@@ -492,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oauth/callback': {
+      id: '/oauth/callback'
+      path: '/oauth/callback'
+      fullPath: '/oauth/callback'
+      preLoaderRoute: typeof OauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -508,7 +508,6 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   HelpRoute: HelpRoute,
   NotificationsRoute: NotificationsRoute,
-  OauthCallbackRoute: OauthCallbackRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   SecurityRoute: SecurityRoute,
@@ -519,7 +518,18 @@ const rootRouteChildren: RootRouteChildren = {
   StudioRoute: StudioRoute,
   TermsRoute: TermsRoute,
   WelcomeRoute: WelcomeRoute,
+  OauthCallbackRoute: OauthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

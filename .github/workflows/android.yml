@@ -94,10 +94,9 @@ jobs:
           echo "✅ package.json → $BASE | capacitor.config.json → $BASE (code $BUILD)"
 
       - name: Build web (mobile)
-        run: npm run build:mobile
+        run: node scripts/build-web.mjs
         env:
           BUILD_TARGET: mobile
-          NITRO_PRESET: node-server
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
@@ -252,14 +251,13 @@ jobs:
           path: ${{ steps.artifacts.outputs.aab }}
           retention-days: 30
 
-      - name: Publish Release
+      - name: Attach APK + AAB to existing release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.artifacts.outputs.tag }}
-          name: "Carsai YT Studio ${{ steps.artifacts.outputs.tag }}"
-          generate_release_notes: true
+          tag_name: v${{ steps.ver.outputs.base }}
           files: |
             ${{ steps.artifacts.outputs.apk }}
             ${{ steps.artifacts.outputs.aab }}
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

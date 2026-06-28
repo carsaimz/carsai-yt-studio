@@ -146,13 +146,18 @@ jobs:
             cp public/tauri-icons/icon.ico src-tauri/icons/ 2>/dev/null || true
           fi
 
+      - name: Get current version
+        id: ver
+        run: echo "tag=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: Carsai YT Studio ${{ github.ref_name }}
+          tagName: ${{ steps.ver.outputs.tag }}
+          releaseName: Carsai YT Studio ${{ steps.ver.outputs.tag }}
           releaseDraft: false
           prerelease: false
+          updaterJsonKeepUniversal: true
           args: ${{ matrix.args }}
