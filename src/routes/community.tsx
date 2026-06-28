@@ -7,10 +7,9 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { youtube, hasOAuth, startOAuthPKCE } from "@/lib/youtube/client";
 import { getSetup } from "@/lib/setup/store";
-import { toast, confirm, confirmDelete } from "@/lib/notifications";
+import { toast, confirmDelete } from "@/lib/notifications";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +33,6 @@ function CommunityPage() {
   const [editOpen, setEditOpen] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [sending, setSending] = useState(false);
-  const [modTab, setModTab] = useState<"heldForReview" | "published" | "rejected">("published");
 
   const channelQ = useQuery({
     enabled: !!channelId,
@@ -96,10 +94,10 @@ function CommunityPage() {
   }
 
   async function handleDeleteComment(id: string) {
-    if (!await confirmDelete("este comentário")) return;
+    if (!await confirmDelete(t("community.deleteConfirm"))) return;
     try {
       await youtube.deleteComment(id);
-      toast.success(t("common.success") + ".");
+      toast.success(t("community.deletedOk"));
       qc.invalidateQueries({ queryKey: ["comments", activeVideoId] });
     } catch (e) { toast.error((e as Error).message); }
   }
@@ -107,8 +105,12 @@ function CommunityPage() {
   async function handleModerate(id: string, status: "heldForReview" | "published" | "rejected") {
     try {
       await youtube.setCommentModerationStatus([id], status);
-      const labels = { heldForReview: "em análise", published: "publicado", rejected: "rejeitado" };
-      toast.success(`Comentário marcado como ${labels[status]}.`);
+      const labels = {
+        heldForReview: t("community.moderation.held"),
+        published: t("community.moderation.published"),
+        rejected: t("community.moderation.rejected"),
+      };
+      toast.success(t("community.markedAs", { label: labels[status] }));
       qc.invalidateQueries({ queryKey: ["comments", activeVideoId] });
     } catch (e) { toast.error((e as Error).message); }
   }
@@ -116,10 +118,11 @@ function CommunityPage() {
   if (!channelId) {
     return (
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
-        <PageHeader title="Comunidade" description="Configure o canal." />
+        <PageHeader title={t("community.title")} description={t("errors.noChannel")} />
         <Card className="mt-6 p-6">
           <p className="text-sm text-muted-foreground">
-            Configure em <Link to="/settings" className="text-primary underline">Definições → YouTube</Link>.
+            {t("errors.configFirst")}{" "}
+            <Link to="/settings" className="text-primary underline">{t("nav.settings")}</Link>
           </p>
         </Card>
       </div>
@@ -129,20 +132,20 @@ function CommunityPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
-        title="Comunidade"
-        description={oauthOk ? "Responder, editar, eliminar e moderar comentários." : "Conecte OAuth para moderar comentários."}
+        title={t("community.title")}
+        description={oauthOk ? t("community.subtitle") : t("community.subtitleNoOAuth")}
         actions={
           !oauthOk ? (
             <Button variant="outline" size="sm"
               onClick={() => startOAuthPKCE().catch(e => toast.error(e.message))}>
               <FontAwesomeIcon icon={["fab", "google"]} className="mr-1.5" />
-              Conectar OAuth
+              {t("content.connectOAuth")}
             </Button>
           ) : (
             <Button variant="outline" size="sm"
               onClick={() => { commentsQ.refetch(); toast.success(t("common.loading")); }}>
               <FontAwesomeIcon icon={["fas", "rotate-right"]} className="mr-1.5" />
-              Actualizar
+              {t("common.refresh")}
             </Button>
           )
         }
@@ -151,10 +154,10 @@ function CommunityPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Total de comentários", value: totalComments.toLocaleString("pt-BR") },
-          { label: "Neste vídeo", value: comments.length.toString() },
-          { label: "Vídeos com comentários", value: videos.filter((v: any) => parseInt(v.statistics?.commentCount ?? "0") > 0).length.toString() },
-          { label: "Vídeos carregados", value: videos.length.toString() },
+          { label: t("community.stats.total"), value: totalComments.toLocaleString() },
+          { label: t("community.stats.inVideo"), value: comments.length.toString() },
+          { label: t("community.stats.withComments"), value: videos.filter((v: any) => parseInt(v.statistics?.commentCount ?? "0") > 0).length.toString() },
+          { label: t("community.stats.loaded"), value: videos.length.toString() },
         ].map(s => (
           <Card key={s.label} className="p-4">
             <p className="text-xs text-muted-foreground">{s.label}</p>
@@ -183,7 +186,7 @@ function CommunityPage() {
 
       {commentsQ.isLoading && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <FontAwesomeIcon icon={["fas", "spinner"]} spin />A carregar comentários…
+          <FontAwesomeIcon icon={["fas", "spinner"]} spin />{t("community.loadingComments")}
         </div>
       )}
 
@@ -206,7 +209,7 @@ function CommunityPage() {
                       {top?.authorDisplayName}
                     </a>
                     <span className="text-xs text-muted-foreground">
-                      {top?.publishedAt ? new Date(top.publishedAt).toLocaleDateString("pt-BR") : ""}
+                      {top?.publishedAt ? new Date(top.publishedAt).toLocaleDateString() : ""}
                     </span>
                     {top?.likeCount > 0 && (
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -224,9 +227,9 @@ function CommunityPage() {
                         <Button size="sm" className="gradient-brand text-primary-foreground"
                           disabled={sending} onClick={() => handleEditComment(topId)}>
                           {sending ? <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-1" /> : null}
-                          Guardar
+                          {t("common.save")}
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setEditOpen(null)}>Cancelar</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditOpen(null)}>{t("common.cancel")}</Button>
                       </div>
                     </div>
                   ) : (
@@ -253,16 +256,16 @@ function CommunityPage() {
               {replyOpen === c.id && (
                 <div className="ml-12 space-y-2">
                   <textarea value={replyText} onChange={e => setReplyText(e.target.value)}
-                    rows={2} placeholder="Escreva uma resposta…"
+                    rows={2} placeholder={t("community.typeReply")}
                     className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary/40" />
                   <div className="flex gap-2">
                     <Button size="sm" className="gradient-brand text-primary-foreground"
                       disabled={sending || !replyText.trim()} onClick={() => handleReply(topId)}>
                       {sending ? <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-1" /> : null}
-                      Publicar
+                      {t("common.publish")}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => { setReplyOpen(null); setReplyText(""); }}>
-                      Cancelar
+                      {t("common.cancel")}
                     </Button>
                   </div>
                 </div>
@@ -275,30 +278,30 @@ function CommunityPage() {
                     <Button size="sm" variant="outline"
                       onClick={() => { setReplyOpen(replyOpen === c.id ? null : c.id); setReplyText(""); }}>
                       <FontAwesomeIcon icon={["fas", "reply"]} className="mr-1.5" />
-                      Responder
+                      {t("community.reply")}
                     </Button>
                     <Button size="sm" variant="ghost"
                       onClick={() => { setEditOpen(editOpen === topId ? null : topId); setEditText(top?.textOriginal ?? top?.textDisplay ?? ""); }}>
                       <FontAwesomeIcon icon={["fas", "pen"]} className="mr-1.5" />
-                      Editar
+                      {t("common.edit")}
                     </Button>
                     <Button size="sm" variant="ghost"
                       onClick={() => handleModerate(topId, "heldForReview")}>
                       <FontAwesomeIcon icon={["fas", "eye-slash"]} className="mr-1.5" />
-                      Reter
+                      {t("community.hold")}
                     </Button>
                     <Button size="sm" variant="ghost"
                       className="text-destructive hover:text-destructive"
                       onClick={() => handleDeleteComment(topId)}>
                       <FontAwesomeIcon icon={["fas", "trash"]} className="mr-1.5" />
-                      Eliminar
+                      {t("common.delete")}
                     </Button>
                   </>
                 )}
                 {replies.length > 0 && (
                   <Badge variant="secondary" className="ml-auto">
                     <FontAwesomeIcon icon={["fas", "comments"]} className="mr-1" />
-                    {replies.length} {replies.length === 1 ? "resposta" : "respostas"}
+                    {replies.length} {replies.length === 1 ? t("community.replyLabel") : t("community.repliesLabel")}
                   </Badge>
                 )}
               </div>
@@ -309,9 +312,10 @@ function CommunityPage() {
         {!commentsQ.isLoading && comments.length === 0 && activeVideoId && (
           <Card className="p-10 text-center">
             <FontAwesomeIcon icon={["fas", "comments"]} size="2x" className="text-muted-foreground" />
-            <p className="mt-3 text-sm text-muted-foreground">Nenhum comentário encontrado.</p>
+            <p className="mt-3 text-sm text-muted-foreground">{t("community.noComments")}</p>
           </Card>
         )}
+
       </div>
     </div>
   );

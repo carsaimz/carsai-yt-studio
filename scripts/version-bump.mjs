@@ -17,8 +17,14 @@ const next = /^\d+\.\d+\.\d+$/.test(arg)
 pkg.version = next;
 writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
 
-// Sync Capacitor / Tauri / Android / iOS where applicable
-try { execSync(`git add package.json && git commit -m "chore: release v${next}"`, { stdio: "inherit" }); } catch {}
+// Propagate to capacitor / android etc.
+try {
+  execSync("node scripts/sync-version.mjs", { stdio: "inherit" });
+} catch (e) {
+  console.error("sync-version failed:", e?.message);
+}
+
+try { execSync(`git add package.json capacitor.config.json android-template/app/build.gradle 2>/dev/null; git commit -m "chore: release v${next}"`, { stdio: "inherit", shell: "/bin/bash" }); } catch {}
 try { execSync(`git tag v${next}`, { stdio: "inherit" }); } catch {}
 
 console.log(`\n✓ Bumped to v${next}. Push with:  git push && git push --tags`);

@@ -279,24 +279,16 @@ function TopBar({ onToggle }: { onToggle: () => void }) {
       <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:5 }}>
         <LangPicker />
 
-        <a href="https://studio.youtube.com" target="_blank" rel="noreferrer"
-          style={{ display:"flex", alignItems:"center", justifyContent:"center", width:34, height:34, borderRadius:8, border:`1px solid ${BORDER}`, background:"rgba(255,255,255,0.04)", color:"#ef4444", textDecoration:"none" }}>
-          <FontAwesomeIcon icon={["fab","youtube"]} style={{ fontSize:14 }} />
-        </a>
-
         <Link to="/notifications"
           style={{ display:"flex", alignItems:"center", justifyContent:"center", width:34, height:34, borderRadius:8, border:`1px solid ${BORDER}`, background:"rgba(255,255,255,0.04)", color:TEXT, textDecoration:"none", position:"relative" }}>
           <FontAwesomeIcon icon={["fas","bell"]} style={{ fontSize:14 }} />
           <span style={{ position:"absolute", top:6, right:6, width:6, height:6, borderRadius:"50%", background:"#ff6b35", border:"2px solid #111009" }} />
         </Link>
 
-        <Link to="/profile"
-          style={{ display:"flex", alignItems:"center", gap:6, height:34, padding:"0 8px", borderRadius:8, border:`1px solid ${BORDER}`, background:"rgba(255,255,255,0.04)", color:TEXT, textDecoration:"none", fontSize:13 }}>
+        <Link to="/profile" aria-label={user?.displayName ?? user?.email ?? "Conta"}
+          style={{ display:"flex", alignItems:"center", justifyContent:"center", width:34, height:34, borderRadius:"50%", border:`1px solid ${BORDER}`, background:"rgba(255,255,255,0.04)", textDecoration:"none", overflow:"hidden", flexShrink:0 }}>
           <img src={avatar} alt=""
-            style={{ width:22, height:22, borderRadius:"50%", objectFit:"cover", flexShrink:0 }} />
-          <span style={{ maxWidth:80, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", display:"block" }}>
-            {user?.displayName ?? user?.email?.split("@")[0] ?? "Conta"}
-          </span>
+            style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
         </Link>
       </div>
     </header>

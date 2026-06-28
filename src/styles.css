@@ -20,8 +20,8 @@
     --card-foreground:  oklch(0.97 0.005 80);
     --muted:            oklch(0.25 0.012 60);
     --muted-foreground: oklch(0.62 0.018 70);
-    --border:           oklch(1 0 0 / 9%);
-    --input:            oklch(1 0 0 / 9%);
+    --border:           oklch(1 0 0 / 18%);
+    --input:            oklch(1 0 0 / 28%);
     --ring:             oklch(0.68 0.21 35 / 50%);
     --primary:          oklch(0.68 0.21 35);
     --primary-foreground: oklch(0.99 0.005 80);

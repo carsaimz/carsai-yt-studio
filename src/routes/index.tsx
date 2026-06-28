@@ -103,27 +103,23 @@ function Dashboard() {
     <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
         title={channel ? t("dashboard.welcome", { name: channel.snippet?.title ?? "" }) : t("dashboard.welcomeFallback")}
-        description={
-          channel
-            ? t("dashboard.subtitle")
-            : "Conecte seu canal em Configurações → YouTube para ver dados reais aqui."
-        }
+        description={channel ? t("dashboard.subtitle") : t("dashboard.noChannel")}
         actions={
           <>
             <Button variant="outline" size="sm" onClick={handleRefresh}>
               <FontAwesomeIcon icon={["fas", "rotate-right"]} className="mr-1.5 h-3.5 w-3.5" />
-              Actualizar
+              {t("dashboard.refresh")}
             </Button>
             <Button asChild variant="outline" size="sm">
               <Link to="/settings">
                 <FontAwesomeIcon icon={["fas", "sliders"]} className="mr-1.5 h-3.5 w-3.5" />
-                Config
+                {t("dashboard.config")}
               </Link>
             </Button>
             <Button asChild size="sm" className="gradient-brand text-primary-foreground hover:opacity-90">
               <Link to="/studio">
                 <FontAwesomeIcon icon={["fas", "wand-magic-sparkles"]} className="mr-1.5 h-3.5 w-3.5" />
-                Estúdio
+                {t("dashboard.studio")}
               </Link>
             </Button>
           </>
@@ -135,15 +131,12 @@ function Dashboard() {
           <div className="flex items-start gap-3">
             <FontAwesomeIcon icon={["fas", "triangle-exclamation"]} className="mt-0.5 h-5 w-5 text-warning flex-shrink-0" />
             <div>
-              <p className="font-semibold">Conecte seu canal YouTube</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Em Configurações → YouTube cole sua API Key e (opcional) conecte sua conta Google
-                para listar seus canais e escolher o canal padrão.
-              </p>
+              <p className="font-semibold">{t("dashboard.connectCard")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.connectCardHint")}</p>
               <Button asChild className="mt-4 gradient-brand text-primary-foreground hover:opacity-90">
                 <Link to="/settings">
                   <FontAwesomeIcon icon={["fas", "arrow-right"]} className="mr-1.5" />
-                  Abrir configurações
+                  {t("dashboard.openSettings")}
                 </Link>
               </Button>
             </div>
@@ -156,13 +149,10 @@ function Dashboard() {
           <div className="flex items-start gap-3">
             <FontAwesomeIcon icon={["fas", "circle-info"]} className="mt-0.5 h-5 w-5 text-info flex-shrink-0" />
             <div>
-              <p className="font-semibold">Defina seu canal padrão</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Em Configurações, cole o ID do canal (começa com UC…) ou conecte sua conta Google
-                para escolher na lista.
-              </p>
+              <p className="font-semibold">{t("dashboard.defineChannel")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.defineChannelHint")}</p>
               <Button asChild className="mt-4" variant="outline">
-                <Link to="/settings">Ir para Configurações</Link>
+                <Link to="/settings">{t("dashboard.goSettings")}</Link>
               </Button>
             </div>
           </div>
@@ -172,21 +162,19 @@ function Dashboard() {
       {channel && (
         <>
           <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <StatCard label="Inscritos" value={fmt(channel.statistics?.subscriberCount)} delta="" />
-            <StatCard label="Visualizações" value={fmt(channel.statistics?.viewCount)} delta="" />
-            <StatCard label="Vídeos" value={fmt(channel.statistics?.videoCount)} delta="" />
-            <StatCard label="País" value={channel.snippet?.country ?? "—"} delta="" />
+            <StatCard label={t("common.subscribers")} value={fmt(channel.statistics?.subscriberCount)} delta="" />
+            <StatCard label={t("common.views")} value={fmt(channel.statistics?.viewCount)} delta="" />
+            <StatCard label={t("common.videos")} value={fmt(channel.statistics?.videoCount)} delta="" />
+            <StatCard label={t("dashboard.country")} value={channel.snippet?.country ?? "—"} delta="" />
           </section>
 
           <section className="grid gap-4 lg:grid-cols-3">
             <Card className="lg:col-span-2 p-5">
               <h2 className="font-display text-lg font-semibold flex items-center gap-2">
                 <FontAwesomeIcon icon={["fas", "chart-area"]} className="text-primary" />
-                Crescimento recente
+                {t("dashboard.growth")}
               </h2>
-              <p className="text-xs text-muted-foreground">
-                Estimativa baseada nas estatísticas atuais (Analytics API exige OAuth).
-              </p>
+              <p className="text-xs text-muted-foreground">{t("dashboard.growthHint")}</p>
               <div className="mt-4 h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={generateTrend(channel.statistics?.viewCount)}>
@@ -208,7 +196,7 @@ function Dashboard() {
             <Card className="p-5">
               <h2 className="font-display text-lg font-semibold flex items-center gap-2">
                 <FontAwesomeIcon icon={["fab", "youtube"]} className="text-red-500" />
-                Sobre o canal
+                {t("dashboard.channelInfo")}
               </h2>
               <img src={channel.snippet?.thumbnails?.medium?.url} alt="" className="mt-3 h-20 w-20 rounded-full ring-2 ring-border" />
               <p className="mt-3 font-semibold">{channel.snippet?.title}</p>
@@ -216,7 +204,7 @@ function Dashboard() {
               <a href={`https://youtube.com/channel/${channel.id}`} target="_blank" rel="noreferrer"
                 className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
                 <FontAwesomeIcon icon={["fab", "youtube"]} />
-                Abrir no YouTube
+                {t("dashboard.openYoutube")}
               </a>
             </Card>
           </section>
@@ -225,7 +213,7 @@ function Dashboard() {
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold flex items-center gap-2">
                 <FontAwesomeIcon icon={["fas", "film"]} className="text-primary" />
-                Últimos uploads
+                {t("dashboard.recentUploads")}
               </h2>
               <Badge variant="secondary">
                 <FontAwesomeIcon icon={["fas", "video"]} className="mr-1" />
@@ -233,27 +221,31 @@ function Dashboard() {
               </Badge>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {items.slice(0, 8).map((it: any, i: number) => (
-                <motion.a key={it.id}
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                  href={`https://youtu.be/${it.contentDetails?.videoId}`} target="_blank" rel="noreferrer"
-                  className="group overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/40 hover:shadow-lg">
-                  <div className="relative aspect-video overflow-hidden">
-                    <img src={it.snippet?.thumbnails?.medium?.url} alt={it.snippet?.title}
-                      className="h-full w-full object-cover transition group-hover:scale-105" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition bg-black/40">
-                      <FontAwesomeIcon icon={["fab", "youtube"]} size="2x" className="text-white drop-shadow" />
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    <p className="line-clamp-2 text-sm font-medium leading-snug">{it.snippet?.title}</p>
-                    <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-                      <FontAwesomeIcon icon={["fas", "calendar"]} className="h-3 w-3" />
-                      {new Date(it.snippet?.publishedAt).toLocaleDateString("pt-BR")}
-                    </p>
-                  </div>
-                </motion.a>
-              ))}
+              {items.slice(0, 8).map((it: any, i: number) => {
+                const vid = it.contentDetails?.videoId;
+                return (
+                  <motion.div key={it.id}
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                    <Link to="/content/$videoId" params={{ videoId: vid }}
+                      className="group block overflow-hidden rounded-2xl border border-border bg-card transition hover:border-primary/40 hover:shadow-lg">
+                      <div className="relative aspect-video overflow-hidden">
+                        <img src={it.snippet?.thumbnails?.medium?.url} alt={it.snippet?.title}
+                          className="h-full w-full object-cover transition group-hover:scale-105" />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition bg-black/40">
+                          <FontAwesomeIcon icon={["fas", "arrow-up-right-from-square"]} size="2x" className="text-white drop-shadow" />
+                        </div>
+                      </div>
+                      <div className="p-3">
+                        <p className="line-clamp-2 text-sm font-medium leading-snug">{it.snippet?.title}</p>
+                        <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                          <FontAwesomeIcon icon={["fas", "calendar"]} className="h-3 w-3" />
+                          {new Date(it.snippet?.publishedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
             </div>
           </section>
         </>
@@ -264,12 +256,13 @@ function Dashboard() {
           <div className="flex items-start gap-3">
             <FontAwesomeIcon icon={["fas", "circle-xmark"]} className="mt-0.5 h-5 w-5 text-destructive flex-shrink-0" />
             <div>
-              <p className="font-semibold">Erro ao buscar canal</p>
+              <p className="font-semibold">{t("dashboard.errChannel")}</p>
               <p className="mt-1 text-sm text-muted-foreground">{(channelQ.error as Error).message}</p>
             </div>
           </div>
         </Card>
       )}
+
     </div>
   );
 }

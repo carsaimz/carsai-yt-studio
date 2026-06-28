@@ -25,15 +25,16 @@
   </p>
 
   <p>
-    <a href="#português">🇧🇷 Português</a> •
-    <a href="#english">🇺🇸 English</a> •
-    <a href="#español">🇪🇸 Español</a>
+    <a href="#-portugues">🇧🇷 Português</a> •
+    <a href="#-english">🇺🇸 English</a> •
+    <a href="#-espanol">🇪🇸 Español</a>
   </p>
 </div>
 
 ---
 
-## <a name="português"></a>🇧🇷 Português
+<a id="-portugues"></a>
+## 🇧🇷 Português
 
 ### O que é?
 
@@ -79,11 +80,12 @@ React 19 · TanStack Start · Vite · Tailwind CSS v4 · Firebase · YouTube Dat
 
 ### Contribuir
 
-Leia [CONTRIBUTING.md](CONTRIBUTING.md) e [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Leia [CONTRIBUTING.md](https://github.com/carsaimz/carsai-yt-studio/blob/main/CONTRIBUTING.md) e [CODE_OF_CONDUCT.md](https://github.com/carsaimz/carsai-yt-studio/blob/main/CODE_OF_CONDUCT.md).
 
 ---
 
-## <a name="english"></a>🇺🇸 English
+<a id="-english"></a>
+## 🇺🇸 English
 
 ### What is it?
 
@@ -134,7 +136,7 @@ VITE_YOUTUBE_API_KEY=
 
 ### Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Read [CONTRIBUTING.md](https://github.com/carsaimz/carsai-yt-studio/blob/main/CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](https://github.com/carsaimz/carsai-yt-studio/blob/main/CODE_OF_CONDUCT.md).
 
 ### License
 
@@ -142,7 +144,8 @@ MIT © [carsaimz](https://github.com/carsaimz)
 
 ---
 
-## <a name="español"></a>🇪🇸 Español
+<a id="-espanol"></a>
+## 🇪🇸 Español
 
 ### ¿Qué es?
 
@@ -170,7 +173,7 @@ npm run dev
 
 ### Contribuir
 
-Lee [CONTRIBUTING.md](CONTRIBUTING.md) y [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Lee [CONTRIBUTING.md](https://github.com/carsaimz/carsai-yt-studio/blob/main/CONTRIBUTING.md) y [CODE_OF_CONDUCT.md](https://github.com/carsaimz/carsai-yt-studio/blob/main/CODE_OF_CONDUCT.md).
 
 ### Licencia
 

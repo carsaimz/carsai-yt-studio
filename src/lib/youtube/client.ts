@@ -503,4 +503,82 @@ export const youtube = {
     ytFetch<any>("/subscriptions", {
       part: "snippet", mine: true, forChannelId: channelId,
     }, { auth: true }),
+
+  // ── ANALYTICS helpers (YouTube Analytics API) ───────────────────────────────
+
+  /** Per-video time-series for views, likes, comments, watch time, avg view duration. */
+  videoAnalytics: (channelId: string, videoId: string, startDate: string, endDate: string) =>
+    ytFetch<any>("/reports", {
+      ids: `channel==${channelId}`,
+      startDate, endDate,
+      metrics: "views,estimatedMinutesWatched,averageViewDuration,likes,comments,shares,subscribersGained",
+      dimensions: "day",
+      filters: `video==${videoId}`,
+      sort: "day",
+    }, { auth: true, base: ANALYTICS }),
+
+  /** Country breakdown for a channel (or single video if videoId provided). */
+  geographyReport: (channelId: string, startDate: string, endDate: string, videoId?: string) =>
+    ytFetch<any>("/reports", {
+      ids: `channel==${channelId}`,
+      startDate, endDate,
+      metrics: "views,estimatedMinutesWatched,averageViewDuration",
+      dimensions: "country",
+      sort: "-views",
+      maxResults: 25,
+      ...(videoId ? { filters: `video==${videoId}` } : {}),
+    }, { auth: true, base: ANALYTICS }),
+
+  /** Device-type breakdown (mobile, desktop, tablet, tv). */
+  deviceReport: (channelId: string, startDate: string, endDate: string, videoId?: string) =>
+    ytFetch<any>("/reports", {
+      ids: `channel==${channelId}`,
+      startDate, endDate,
+      metrics: "views,estimatedMinutesWatched",
+      dimensions: "deviceType",
+      sort: "-views",
+      ...(videoId ? { filters: `video==${videoId}` } : {}),
+    }, { auth: true, base: ANALYTICS }),
+
+  /** Traffic source types (search, suggested, browse, external, etc.). */
+  trafficSourceReport: (channelId: string, startDate: string, endDate: string, videoId?: string) =>
+    ytFetch<any>("/reports", {
+      ids: `channel==${channelId}`,
+      startDate, endDate,
+      metrics: "views,estimatedMinutesWatched",
+      dimensions: "insightTrafficSourceType",
+      sort: "-views",
+      ...(videoId ? { filters: `video==${videoId}` } : {}),
+    }, { auth: true, base: ANALYTICS }),
+
+  /** Age + gender demographic breakdown. */
+  audienceReport: (channelId: string, startDate: string, endDate: string, videoId?: string) =>
+    ytFetch<any>("/reports", {
+      ids: `channel==${channelId}`,
+      startDate, endDate,
+      metrics: "viewerPercentage",
+      dimensions: "ageGroup,gender",
+      ...(videoId ? { filters: `video==${videoId}` } : {}),
+    }, { auth: true, base: ANALYTICS }),
+
+  /** Top videos for a channel (uses Analytics API). */
+  topVideosReport: (channelId: string, startDate: string, endDate: string, max = 25) =>
+    ytFetch<any>("/reports", {
+      ids: `channel==${channelId}`,
+      startDate, endDate,
+      metrics: "views,estimatedMinutesWatched,likes,subscribersGained",
+      dimensions: "video",
+      sort: "-views",
+      maxResults: max,
+    }, { auth: true, base: ANALYTICS }),
+
+  /** Estimated revenue (requires partner monetization). */
+  revenueReport: (channelId: string, startDate: string, endDate: string, videoId?: string) =>
+    ytFetch<any>("/reports", {
+      ids: `channel==${channelId}`,
+      startDate, endDate,
+      metrics: "estimatedRevenue,estimatedAdRevenue,cpm,playbackBasedCpm,adImpressions",
+      dimensions: "day",
+      ...(videoId ? { filters: `video==${videoId}` } : {}),
+    }, { auth: true, base: ANALYTICS }),
 };

@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { youtube, hasOAuth, startOAuthPKCE } from "@/lib/youtube/client";
 import { getSetup } from "@/lib/setup/store";
 import { toast, confirmDelete, confirm } from "@/lib/notifications";
+import { useI18n } from "@/lib/i18n";
+import { exportCsv, dateStamp } from "@/lib/export";
 
 export const Route = createFileRoute("/content")({
   head: () => ({
@@ -282,6 +284,7 @@ function PlaylistDialog({ playlist, onClose }: { playlist?: any; onClose: () => 
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 function ContentPage() {
+  const { t } = useI18n();
   const { youtube: yt } = getSetup();
   const channelId = yt?.defaultChannelId;
   const qc = useQueryClient();
@@ -346,14 +349,30 @@ function ContentPage() {
   if (!channelId) {
     return (
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
-        <PageHeader title="Conteúdo" description="Configure o canal para gerir conteúdo." />
+        <PageHeader title={t("content.title")} description={t("errors.noChannel")} />
         <Card className="mt-6 p-6">
           <p className="text-sm text-muted-foreground">
-            Configure em <Link to="/settings" className="text-primary underline">Definições → YouTube</Link>.
+            {t("errors.configFirst")}{" "}
+            <Link to="/settings" className="text-primary underline">{t("nav.settings")}</Link>.
           </p>
         </Card>
       </div>
     );
+  }
+
+  function handleExportVideos() {
+    const rows = videos.map((v: any) => ({
+      id: v.id,
+      title: v.snippet?.title,
+      publishedAt: v.snippet?.publishedAt,
+      privacy: v.status?.privacyStatus,
+      views: v.statistics?.viewCount,
+      likes: v.statistics?.likeCount,
+      comments: v.statistics?.commentCount,
+      duration: v.contentDetails?.duration,
+      tags: (v.snippet?.tags ?? []).join("|"),
+    }));
+    if (!exportCsv(`videos-${dateStamp()}.csv`, rows)) toast.error(t("export.empty"));
   }
 
   return (
@@ -364,23 +383,26 @@ function ContentPage() {
       {showNewPlaylist && <PlaylistDialog onClose={() => setShowNewPlaylist(false)} />}
 
       <PageHeader
-        title="Conteúdo"
-        description={oauthOk ? "Gestão completa — upload, edição e playlists." : "Conecte OAuth para upload e edição."}
+        title={t("content.title")}
+        description={oauthOk ? t("content.subtitleOAuth") : t("content.subtitleNoOAuth")}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportVideos}>
+              <FontAwesomeIcon icon={["fas", "file-csv"]} className="mr-1.5" />
+              {t("common.exportCsv")}
+            </Button>
             {!oauthOk && (
               <Button variant="outline" size="sm" onClick={() => startOAuthPKCE().catch(e => toast.error(e.message))}>
                 <FontAwesomeIcon icon={["fab", "google"]} className="mr-1.5" />
-                Conectar OAuth
+                {t("content.connectOAuth")}
               </Button>
             )}
             {oauthOk && (
               <Button size="sm" className="gradient-brand text-primary-foreground hover:opacity-90"
                 onClick={() => setShowUpload(true)}>
                 <FontAwesomeIcon icon={["fas", "cloud-arrow-up"]} className="mr-1.5" />
-                Enviar vídeo
-              </Button>
-            )}
+                {t("content.uploadVideo")}
+              </Button>)}
           </div>
         }
       />
@@ -390,10 +412,10 @@ function ContentPage() {
           <div className="flex items-start gap-3">
             <FontAwesomeIcon icon={["fas", "triangle-exclamation"]} className="mt-0.5 text-warning flex-shrink-0" />
             <div>
-              <p className="text-sm font-medium">OAuth não conectado</p>
+              <p className="text-sm font-medium">{t("content.oauthMissing")}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Upload, edição de vídeos e playlists requerem OAuth.
-                Configure o Client ID em <Link to="/settings" className="text-primary underline">Definições</Link> e clique em "Conectar OAuth".
+                {t("content.oauthMissingHint")}{" "}
+                <Link to="/settings" className="text-primary underline">{t("nav.settings")}</Link>
               </p>
             </div>
           </div>
@@ -404,11 +426,11 @@ function ContentPage() {
         <TabsList>
           <TabsTrigger value="videos">
             <FontAwesomeIcon icon={["fas", "film"]} className="mr-1.5" />
-            Vídeos {videos.length > 0 && `(${videos.length})`}
+            {t("content.videos")} {videos.length > 0 && `(${videos.length})`}
           </TabsTrigger>
           <TabsTrigger value="playlists">
             <FontAwesomeIcon icon={["fas", "list"]} className="mr-1.5" />
-            Playlists {playlists.length > 0 && `(${playlists.length})`}
+            {t("content.playlists")} {playlists.length > 0 && `(${playlists.length})`}
           </TabsTrigger>
         </TabsList>
 
@@ -418,12 +440,12 @@ function ContentPage() {
               className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               className="h-9 w-full rounded-lg border border-border bg-card/60 pl-9 pr-3 text-sm outline-none focus:border-primary/40"
-              placeholder="Filtrar vídeos…" />
+              placeholder={t("content.filterVideos")} />
           </div>
 
           {(videosQ.isLoading || detailsQ.isLoading) && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
-              <FontAwesomeIcon icon={["fas", "spinner"]} spin />A carregar…
+              <FontAwesomeIcon icon={["fas", "spinner"]} spin />{t("common.loading")}
             </div>
           )}
 
@@ -433,28 +455,31 @@ function ContentPage() {
               <table className="w-full min-w-[640px] text-sm">
                 <thead className="bg-card/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
-                    <th className="p-3">Vídeo</th>
-                    <th className="p-3 hidden md:table-cell">Visibilidade</th>
-                    <th className="p-3 hidden md:table-cell">Views</th>
-                    <th className="p-3 hidden lg:table-cell">Likes</th>
-                    <th className="p-3 hidden lg:table-cell">Comentários</th>
-                    <th className="p-3">Acções</th>
+                    <th className="p-3">{t("content.cols.video")}</th>
+                    <th className="p-3 hidden md:table-cell">{t("content.cols.visibility")}</th>
+                    <th className="p-3 hidden md:table-cell">{t("content.cols.views")}</th>
+                    <th className="p-3 hidden lg:table-cell">{t("content.cols.likes")}</th>
+                    <th className="p-3 hidden lg:table-cell">{t("content.cols.comments")}</th>
+                    <th className="p-3">{t("content.cols.actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {videos.map((v: any) => (
                     <tr key={v.id} className="border-t border-border hover:bg-accent/30">
                       <td className="p-3">
-                        <div className="flex items-center gap-3">
+                        <Link to="/content/$videoId" params={{ videoId: v.id }}
+                          className="flex items-center gap-3 group">
                           <img src={v.snippet?.thumbnails?.default?.url} alt=""
                             className="h-12 w-20 rounded object-cover flex-shrink-0 bg-muted" />
-                          <span className="line-clamp-2 font-medium leading-snug">{v.snippet?.title}</span>
-                        </div>
+                          <span className="line-clamp-2 font-medium leading-snug group-hover:text-primary transition">
+                            {v.snippet?.title}
+                          </span>
+                        </Link>
                       </td>
                       <td className="p-3 hidden md:table-cell">
                         <Badge variant={v.status?.privacyStatus === "private" ? "secondary" : "default"} className="text-xs">
-                          {v.status?.privacyStatus === "private" ? "Privado"
-                            : v.status?.privacyStatus === "unlisted" ? "Não listado" : "Público"}
+                          {v.status?.privacyStatus === "private" ? t("common.private")
+                            : v.status?.privacyStatus === "unlisted" ? t("common.unlisted") : t("common.public")}
                         </Badge>
                       </td>
                       <td className="p-3 hidden md:table-cell">{fmt(v.statistics?.viewCount)}</td>
@@ -462,18 +487,23 @@ function ContentPage() {
                       <td className="p-3 hidden lg:table-cell">{fmt(v.statistics?.commentCount)}</td>
                       <td className="p-3">
                         <div className="flex gap-1">
+                          <Link to="/content/$videoId" params={{ videoId: v.id }}>
+                            <Button size="sm" variant="ghost" title={t("content.actions.view")}>
+                              <FontAwesomeIcon icon={["fas", "arrow-up-right-from-square"]} />
+                            </Button>
+                          </Link>
                           <a href={`https://youtu.be/${v.id}`} target="_blank" rel="noreferrer">
-                            <Button size="sm" variant="ghost" title="Ver no YouTube">
+                            <Button size="sm" variant="ghost" title={t("content.actions.openYt")}>
                               <FontAwesomeIcon icon={["fab", "youtube"]} className="text-red-500" />
                             </Button>
                           </a>
                           {oauthOk && (
                             <>
-                              <Button size="sm" variant="ghost" title="Editar"
+                              <Button size="sm" variant="ghost" title={t("common.edit")}
                                 onClick={() => setEditVideo(v)}>
                                 <FontAwesomeIcon icon={["fas", "pen"]} />
                               </Button>
-                              <Button size="sm" variant="ghost" title="Eliminar"
+                              <Button size="sm" variant="ghost" title={t("common.delete")}
                                 className="text-destructive hover:text-destructive"
                                 onClick={() => handleDeleteVideo(v)}>
                                 <FontAwesomeIcon icon={["fas", "trash"]} />
@@ -494,11 +524,12 @@ function ContentPage() {
             <Card className="p-10 text-center">
               <FontAwesomeIcon icon={["fas", "film"]} size="2x" className="text-muted-foreground" />
               <p className="mt-3 text-sm text-muted-foreground">
-                {search ? "Nenhum vídeo corresponde à busca." : "Nenhum vídeo encontrado."}
+                {search ? t("content.noMatch") : t("content.noVideos")}
               </p>
             </Card>
           )}
         </TabsContent>
+
 
         <TabsContent value="playlists" className="space-y-3">
           {oauthOk && (
@@ -506,14 +537,14 @@ function ContentPage() {
               <Button size="sm" className="gradient-brand text-primary-foreground hover:opacity-90"
                 onClick={() => setShowNewPlaylist(true)}>
                 <FontAwesomeIcon icon={["fas", "plus"]} className="mr-1.5" />
-                Nova playlist
+                {t("content.newPlaylist")}
               </Button>
             </div>
           )}
 
           {playlistsQ.isLoading && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
-              <FontAwesomeIcon icon={["fas", "spinner"]} spin />A carregar playlists…
+              <FontAwesomeIcon icon={["fas", "spinner"]} spin />{t("common.loading")}
             </div>
           )}
 
@@ -527,7 +558,7 @@ function ContentPage() {
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-display font-semibold line-clamp-1 flex-1">{p.snippet?.title}</h3>
                       <Badge variant="secondary" className="flex-shrink-0 text-xs">
-                        {p.contentDetails?.itemCount ?? 0} vídeos
+                        {p.contentDetails?.itemCount ?? 0} {t("common.videos").toLowerCase()}
                       </Badge>
                     </div>
                     {p.snippet?.description && (
@@ -537,14 +568,14 @@ function ContentPage() {
                       <a href={`https://www.youtube.com/playlist?list=${p.id}`} target="_blank" rel="noreferrer">
                         <Button variant="outline" size="sm">
                           <FontAwesomeIcon icon={["fab", "youtube"]} className="mr-1.5 text-red-500" />
-                          Ver
+                          {t("common.view")}
                         </Button>
                       </a>
                       {oauthOk && (
                         <>
                           <Button variant="ghost" size="sm" onClick={() => setEditPlaylist(p)}>
                             <FontAwesomeIcon icon={["fas", "pen"]} className="mr-1.5" />
-                            Editar
+                            {t("common.edit")}
                           </Button>
                           <Button variant="ghost" size="sm"
                             className="text-destructive hover:text-destructive ml-auto"
@@ -561,7 +592,7 @@ function ContentPage() {
           ) : !playlistsQ.isLoading && oauthOk && (
             <Card className="p-10 text-center">
               <FontAwesomeIcon icon={["fas", "list"]} size="2x" className="text-muted-foreground" />
-              <p className="mt-3 text-sm text-muted-foreground">Sem playlists. Crie uma acima.</p>
+              <p className="mt-3 text-sm text-muted-foreground">{t("content.noPlaylists")}</p>
             </Card>
           )}
         </TabsContent>
@@ -569,3 +600,4 @@ function ContentPage() {
     </div>
   );
 }
+

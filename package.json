@@ -1,6 +1,7 @@
 {
   "name": "carsai-yt-studio",
   "private": true,
+  "version": "1.0.0",
   "sideEffects": false,
   "type": "module",
   "scripts": {
@@ -12,7 +13,10 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "build:mobile": "cross-env BUILD_TARGET=mobile node scripts/build-web.mjs",
-    "build:web": "node scripts/build-web.mjs"
+    "build:web": "node scripts/build-web.mjs",
+    "sync:version": "node scripts/sync-version.mjs",
+    "prebuild": "node scripts/sync-version.mjs",
+    "predev": "node scripts/sync-version.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
