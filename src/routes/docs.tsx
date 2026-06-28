@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useI18n } from "@/lib/i18n";
 import {
   ArrowRight, BookOpen, KeyRound, Youtube, Bot, Shield, Smartphone,
   Server, Sparkles, Zap, ListChecks, ChevronRight, AlertTriangle,
@@ -34,6 +35,7 @@ const sections = [
 ];
 
 function DocsPage() {
+  const { t, lang } = useI18n();
   return (
     <PublicShell title="Documentação">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">

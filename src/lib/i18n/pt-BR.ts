@@ -146,4 +146,43 @@ export default {
     success: "Arquivo gerado.", empty: "Nada para exportar.",
   },
   topbar: { notifications: "Notificações", account: "Conta" },
+
+  // Páginas públicas
+  public: {
+    welcome: {
+      title: "Bem-vindo ao Carsai YT Studio",
+      subtitle: "Plataforma completa para criadores YouTube com IA integrada.",
+      getStarted: "Começar",
+      signIn: "Entrar",
+      features: "Funcionalidades",
+    },
+    about: {
+      title: "Sobre",
+      subtitle: "Carsai YT Studio — criado para criadores de conteúdo.",
+      madeBy: "Feito com ❤️ por",
+      version: "Versão",
+      openSource: "Código aberto",
+      license: "Licença MIT",
+    },
+    help: {
+      title: "Ajuda & FAQ",
+      subtitle: "Respostas às perguntas mais frequentes.",
+      contact: "Contacto",
+      docs: "Documentação completa",
+      noAnswer: "Não encontrou resposta?",
+      openIssue: "Abrir uma issue no GitHub",
+    },
+    docs: {
+      title: "Documentação",
+      subtitle: "Guia completo de configuração e utilização.",
+      quickStart: "Início rápido",
+      firebase: "Configurar Firebase",
+      youtubeApi: "YouTube API Key",
+      oauth: "OAuth 2.0",
+      aiProviders: "Provedores de IA",
+      android: "Android",
+      desktop: "Desktop",
+      errors: "Erros comuns",
+    },
+  },
 };

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowRight, BarChart3, Bot, Film, Search, Shield, Sparkles, Wand2 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +27,7 @@ const features = [
 ];
 
 function WelcomePage() {
+  const { t, lang } = useI18n();
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />

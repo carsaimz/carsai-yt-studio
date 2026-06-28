@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Info, Heart, Code2, Rocket, Github } from "lucide-react";
 import { motion } from "framer-motion";
+import { useI18n } from "@/lib/i18n";
 
 import { PublicShell, SectionCard, FloatingArt } from "@/components/public/public-shell";
 import { UpdateCard } from "@/components/updates/update-card";
@@ -29,6 +30,7 @@ const PLATFORMS = [
 ];
 
 function About() {
+  const { t, lang } = useI18n();
   return (
     <PublicShell
       eyebrow="Sobre"

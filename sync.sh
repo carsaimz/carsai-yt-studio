@@ -30,10 +30,10 @@ git config user.email "github-actions[bot]@users.noreply.github.com"
 
 echo ">>> 5. Removendo.github/workflows/sync.yml"
 rm -f -- .github/workflows/sync.yml
-rm sync.sh
+# rm sync.sh
 
 echo ">>> 6. Commitando a remoção"
-git add -A
+git add .
 git commit -m "chore: sync from pro [skip ci]" || echo "Nada para commitar"
 
 echo ">>> 7. Push force para o repo publico"

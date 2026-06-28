@@ -10,15 +10,17 @@ import {
   onAuthStateChanged,
   type User,
 } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getFirebaseAuth } from "./client";
 
-// ── Detect mobile / WebView (Capacitor) ──────────────────────────────────────
-function isMobileOrCapacitor(): boolean {
-  if (typeof window === "undefined") return false;
-  const isCapacitor = !!(window as any).Capacitor?.isNativePlatform?.();
-  const isMobileUA = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  return isCapacitor || isMobileUA;
+const provider = new GoogleAuthProvider();
+provider.addScope("https://www.googleapis.com/auth/userinfo.email");
+provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
+
+// Capacitor native context detection
+function isCapacitorNative(): boolean {
+  return typeof window !== "undefined" &&
+    !!(window as any).Capacitor?.isNativePlatform?.();
 }
 
 // ── Auth methods ──────────────────────────────────────────────────────────────
@@ -38,38 +40,27 @@ export async function registerEmail(email: string, password: string) {
 export async function loginGoogle() {
   const auth = getFirebaseAuth();
   if (!auth) throw new Error("Firebase não configurado.");
-  const provider = new GoogleAuthProvider();
-  provider.addScope("https://www.googleapis.com/auth/userinfo.email");
-  provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
 
-  // Use redirect on mobile/Capacitor — popup is blocked in WebViews
-  if (isMobileOrCapacitor()) {
+  // Always use redirect on Capacitor native (popup is blocked in WebView)
+  if (isCapacitorNative()) {
     await signInWithRedirect(auth, provider);
-    return; // Page will redirect — result handled by checkRedirectResult()
+    return null; // page will reload
   }
 
-  // Use popup on desktop/web
+  // Web: try popup first, fallback to redirect
   try {
-    return await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    return result;
   } catch (e: any) {
-    // Fallback to redirect if popup is blocked
-    if (e.code === "auth/popup-blocked" || e.code === "auth/popup-closed-by-user") {
+    if (
+      e.code === "auth/popup-blocked" ||
+      e.code === "auth/popup-closed-by-user" ||
+      e.code === "auth/cancelled-popup-request"
+    ) {
       await signInWithRedirect(auth, provider);
-      return;
+      return null;
     }
     throw e;
-  }
-}
-
-// Call this once on app load to handle redirect result
-export async function checkRedirectResult() {
-  const auth = getFirebaseAuth();
-  if (!auth) return null;
-  try {
-    return await getRedirectResult(auth);
-  } catch (e) {
-    console.warn("[Auth] Redirect result error:", e);
-    return null;
   }
 }
 
@@ -85,11 +76,15 @@ export async function logout() {
   return signOut(auth);
 }
 
+/** Alias */
+export const logoutUser = logout;
+
 // ── React hook ────────────────────────────────────────────────────────────────
 
 export function useFirebaseUser() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const redirectChecked = useRef(false);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
@@ -98,13 +93,23 @@ export function useFirebaseUser() {
       return;
     }
 
-    // Handle OAuth redirect result on mount (mobile flow)
-    checkRedirectResult().then((result) => {
-      if (result?.user) {
-        setUser(result.user);
-      }
-    });
+    // Check redirect result ONCE on mount (handles Google sign-in after redirect)
+    if (!redirectChecked.current) {
+      redirectChecked.current = true;
+      getRedirectResult(auth)
+        .then((result) => {
+          if (result?.user) {
+            setUser(result.user);
+            setLoading(false);
+          }
+        })
+        .catch((e) => {
+          // Ignore — onAuthStateChanged handles the actual state
+          console.warn("[Auth] Redirect result:", e?.code ?? e?.message);
+        });
+    }
 
+    // Primary auth state listener
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
@@ -114,7 +119,3 @@ export function useFirebaseUser() {
 
   return { user, loading };
 }
-
-
-/** Alias for backward compatibility */
-export const logoutUser = logout;

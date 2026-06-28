@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, HelpCircle, MessageCircle, BookOpen, Github } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 import { PublicShell, SectionCard, FloatingArt } from "@/components/public/public-shell";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ export const Route = createFileRoute("/help")({
 });
 
 function Help() {
+  const { t, lang } = useI18n();
   const [q, setQ] = useState("");
   const [active, setActive] = useState<string | null>(null);
 
