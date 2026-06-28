@@ -32,6 +32,7 @@ import { Route as AiRouteImport } from './routes/ai'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
+import { Route as ContentVideoIdRouteImport } from './routes/content.$videoId'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -148,6 +149,11 @@ const OauthCallbackRoute = OauthCallbackRouteImport.update({
   path: '/oauth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContentVideoIdRoute = ContentVideoIdRouteImport.update({
+  id: '/$videoId',
+  path: '/$videoId',
+  getParentRoute: () => ContentRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -157,7 +163,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/community': typeof CommunityRoute
-  '/content': typeof ContentRoute
+  '/content': typeof ContentRouteWithChildren
   '/cookies': typeof CookiesRoute
   '/docs': typeof DocsRoute
   '/help': typeof HelpRoute
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
+  '/content/$videoId': typeof ContentVideoIdRoute
   '/oauth/callback': typeof OauthCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -182,7 +189,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/community': typeof CommunityRoute
-  '/content': typeof ContentRoute
+  '/content': typeof ContentRouteWithChildren
   '/cookies': typeof CookiesRoute
   '/docs': typeof DocsRoute
   '/help': typeof HelpRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
+  '/content/$videoId': typeof ContentVideoIdRoute
   '/oauth/callback': typeof OauthCallbackRoute
 }
 export interface FileRoutesById {
@@ -208,7 +216,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/community': typeof CommunityRoute
-  '/content': typeof ContentRoute
+  '/content': typeof ContentRouteWithChildren
   '/cookies': typeof CookiesRoute
   '/docs': typeof DocsRoute
   '/help': typeof HelpRoute
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
+  '/content/$videoId': typeof ContentVideoIdRoute
   '/oauth/callback': typeof OauthCallbackRoute
 }
 export interface FileRouteTypes {
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/welcome'
+    | '/content/$videoId'
     | '/oauth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/welcome'
+    | '/content/$videoId'
     | '/oauth/callback'
   id:
     | '__root__'
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/welcome'
+    | '/content/$videoId'
     | '/oauth/callback'
   fileRoutesById: FileRoutesById
 }
@@ -311,7 +323,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ChangelogRoute: typeof ChangelogRoute
   CommunityRoute: typeof CommunityRoute
-  ContentRoute: typeof ContentRoute
+  ContentRoute: typeof ContentRouteWithChildren
   CookiesRoute: typeof CookiesRoute
   DocsRoute: typeof DocsRoute
   HelpRoute: typeof HelpRoute
@@ -492,8 +504,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OauthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/content/$videoId': {
+      id: '/content/$videoId'
+      path: '/$videoId'
+      fullPath: '/content/$videoId'
+      preLoaderRoute: typeof ContentVideoIdRouteImport
+      parentRoute: typeof ContentRoute
+    }
   }
 }
+
+interface ContentRouteChildren {
+  ContentVideoIdRoute: typeof ContentVideoIdRoute
+}
+
+const ContentRouteChildren: ContentRouteChildren = {
+  ContentVideoIdRoute: ContentVideoIdRoute,
+}
+
+const ContentRouteWithChildren =
+  ContentRoute._addFileChildren(ContentRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -503,7 +533,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ChangelogRoute: ChangelogRoute,
   CommunityRoute: CommunityRoute,
-  ContentRoute: ContentRoute,
+  ContentRoute: ContentRouteWithChildren,
   CookiesRoute: CookiesRoute,
   DocsRoute: DocsRoute,
   HelpRoute: HelpRoute,

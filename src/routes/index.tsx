@@ -35,18 +35,8 @@ function IndexGate() {
 }
 
 function AuthedDashboard() {
-  const { user, loading } = useFirebaseUser();
-  if (loading) {
-    return (
-      <div className="grid min-h-[60vh] place-items-center">
-        <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground">
-          <FontAwesomeIcon icon={["fas", "spinner"]} spin size="2x" className="text-primary" />
-          <span>Carregando…</span>
-        </div>
-      </div>
-    );
-  }
-  if (!user) return <Navigate to="/auth" />;
+  // AppGate in __root.tsx already handles auth guard and loading
+  // This component only runs when user is confirmed authenticated
   return <Dashboard />;
 }
 

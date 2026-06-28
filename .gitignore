@@ -15,8 +15,7 @@ lerna-debug.log*
 .tanstack/**
 .nitro
 *.local
-*.sh
-sync.sh
+
 
 # Wrangler / Cloudflare
 .wrangler/

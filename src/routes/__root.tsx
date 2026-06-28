@@ -379,11 +379,14 @@ function AppLayout() {
 
 function AppGate({ children }: { children: ReactNode }) {
   const { user, loading } = useFirebaseUser();
+  // Show minimal spinner only while Firebase resolves auth state
+  // Avoid covering the whole screen - just a small top bar indicator
   if (loading) {
     return (
-      <div style={C.center}>
-        <FontAwesomeIcon icon={["fas","spinner"]} spin size="2x" style={{ color:"#ff6b35" }} />
-        <span style={{ color:MUTED, fontSize:14 }}>Carregando…</span>
+      <div style={{ display:"flex", minHeight:"100vh", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:"0.75rem" }}>
+        <div style={{ width:42, height:42, borderRadius:"50%", background:"rgba(255,107,53,0.1)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <FontAwesomeIcon icon={["fas","spinner"]} spin style={{ color:"#ff6b35", fontSize:18 }} />
+        </div>
       </div>
     );
   }
