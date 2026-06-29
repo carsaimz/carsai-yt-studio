@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/page-header";
+import { useI18n } from "@/lib/i18n";
 import { useLS } from "@/lib/storage/kv";
 
 export const Route = createFileRoute("/notifications")({
@@ -23,14 +24,15 @@ function seed(): N[] {
 }
 
 function NotificationsPage() {
+  const { t } = useI18n();
   const [list, setList] = useLS<N[]>("notifications", seed());
   const unread = list.filter((n) => !n.read).length;
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:py-8">
       <PageHeader
-        title="Notificações"
-        description={`${unread} não ${unread === 1 ? "lida" : "lidas"}`}
+        title={t("page.notifications.title")}
+        description={t("page.notifications.desc")}
         actions={
           <Button variant="outline" size="sm" onClick={() => setList(list.map((n) => ({ ...n, read: true })))}>
             <CheckCheck className="mr-1 h-4 w-4" /> Marcar tudo como lido

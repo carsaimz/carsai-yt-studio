@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { BookOpen, HelpCircle, History, Info, Shield } from "lucide-react";
 import type { ReactNode } from "react";
+import { LangPicker } from "@/components/lang-picker";
 
 type Props = {
   title: string;
@@ -33,20 +34,23 @@ export function PublicShell({ title, subtitle, eyebrow, icon, art, children }: P
             </div>
             <span className="font-display font-bold">Carsai YT Studio</span>
           </Link>
-          <nav className="hidden gap-1 text-sm sm:flex">
-            {NAV.map((n) => (
-              <Link key={n.to} to={n.to}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
-                activeProps={{ className: "bg-accent/60 text-foreground" }}>
-                <n.icon className="h-3.5 w-3.5" /> {n.label}
-              </Link>
-            ))}
-          </nav>
-          <nav className="flex gap-3 text-xs text-muted-foreground sm:hidden">
-            {NAV.map((n) => (
-              <Link key={n.to} to={n.to} className="hover:text-foreground">{n.label}</Link>
-            ))}
-          </nav>
+          <div className="flex items-center gap-2">
+            <nav className="hidden gap-1 text-sm sm:flex">
+              {NAV.map((n) => (
+                <Link key={n.to} to={n.to}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+                  activeProps={{ className: "bg-accent/60 text-foreground" }}>
+                  <n.icon className="h-3.5 w-3.5" /> {n.label}
+                </Link>
+              ))}
+            </nav>
+            <nav className="flex gap-3 text-xs text-muted-foreground sm:hidden">
+              {NAV.map((n) => (
+                <Link key={n.to} to={n.to} className="hover:text-foreground">{n.label}</Link>
+              ))}
+            </nav>
+            <LangPicker />
+          </div>
         </div>
       </header>
 

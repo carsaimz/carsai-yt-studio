@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowRight, BarChart3, Bot, Film, Search, Shield, Sparkles, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LangPicker } from "@/components/lang-picker";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/welcome")({
@@ -37,9 +38,12 @@ function WelcomePage() {
           <Link to="/help" className="hover:text-foreground">{t("nav.help")}</Link>
           <Link to="/changelog" className="hover:text-foreground">Changelog</Link>
         </nav>
-        <Button asChild size="sm" className="gradient-brand text-primary-foreground hover:opacity-90">
-          <Link to="/setup">{t("welcome.getStarted")}</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <LangPicker />
+          <Button asChild size="sm" className="gradient-brand text-primary-foreground hover:opacity-90">
+            <Link to="/setup">{t("welcome.getStarted")}</Link>
+          </Button>
+        </div>
       </header>
 
       <main className="relative z-10 mx-auto max-w-6xl px-4 pb-20">

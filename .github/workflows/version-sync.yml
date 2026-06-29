@@ -1,13 +1,34 @@
-name: Version Sync Check
+name: Version Sync / Bump
+
+# Item 6: este workflow é a forma OFICIAL de mudar versão e criar tag.
+# - Em push para main: apenas verifica/sincroniza versões (sem criar tag).
+# - Em workflow_dispatch (manual): aceita uma versão; quando omitida, usa a
+#   versão actual de package.json. Sempre commita mudanças e cria a tag
+#   correspondente (v<versão>) que dispara release.yml e os builds.
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versão (ex: 1.2.0). Vazio = usa a actual de package.json"
+        required: false
+        default: ""
+      create_tag:
+        description: "Criar tag v<versão> e dar push (dispara release/builds)"
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: write
 
 jobs:
   check:
+    if: github.event_name != 'workflow_dispatch'
     name: Verify package.json ↔ capacitor.config.json
     runs-on: ubuntu-latest
     steps:
@@ -26,3 +47,56 @@ jobs:
           git add capacitor.config.json android-template/app/build.gradle 2>/dev/null || true
           git commit -m "chore: sync version across platforms [skip ci]" || exit 0
           git push
+
+  bump:
+    if: github.event_name == 'workflow_dispatch'
+    name: Bump version + tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Resolve version
+        id: ver
+        run: |
+          INPUT="${{ inputs.version }}"
+          if [ -n "$INPUT" ]; then
+            V="${INPUT#v}"
+          else
+            V=$(node -p "require('./package.json').version")
+          fi
+          echo "version=$V" >> $GITHUB_OUTPUT
+          echo "tag=v$V"    >> $GITHUB_OUTPUT
+          echo "📦 Versão escolhida: $V"
+
+      - name: Update package.json + sync platforms
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json'));p.version='$V';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
+          node scripts/sync-version.mjs
+
+      - name: Commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json capacitor.config.json android-template/app/build.gradle 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "chore(release): ${{ steps.ver.outputs.tag }} [skip ci]"
+          git push || true
+
+      - name: Create + push tag
+        if: ${{ inputs.create_tag }}
+        run: |
+          TAG="${{ steps.ver.outputs.tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG já existe — pulando criação"
+          else
+            git tag -a "$TAG" -m "Carsai YT Studio $TAG"
+            git push origin "$TAG"
+            echo "✅ Tag $TAG criada"
+          fi

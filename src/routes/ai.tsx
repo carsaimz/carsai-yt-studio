@@ -142,10 +142,10 @@ function AIPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
-        title="IA & Agentes"
+        title={t("page.ai.title")}
         description={activeProvider
-          ? `Provedor activo: ${activeProvider.name} · modelo: ${activeProvider.model ?? "padrão"}`
-          : "Configure um provedor de IA em Configurações → Provedores IA"}
+          ? `${t("page.ai.desc")} · ${activeProvider.name}${activeProvider.model ? " · " + activeProvider.model : ""}`
+          : t("page.ai.desc")}
       />
 
       {!activeProvider && (

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { PageHeader } from "@/components/page-header";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { youtube } from "@/lib/youtube/client";
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/profile")({
 });
 
 function fmt(n: string | number | undefined) {
+  const { t } = useI18n();
   if (!n) return "—";
   const num = typeof n === "string" ? parseInt(n, 10) : n;
   return isNaN(num) ? "—" : num.toLocaleString("pt-BR");
@@ -56,7 +58,7 @@ function ProfilePage() {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-      <PageHeader title="Perfil" description="Canal conectado e conta Firebase." />
+      <PageHeader title={t("page.profile.title")} description={t("page.profile.desc")} />
 
       {/* Firebase user */}
       <Card className="flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left">

@@ -5,6 +5,7 @@ import { Wand2 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { PageHeader } from "@/components/page-header";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/studio")({
 });
 
 function StudioPage() {
+  const { t } = useI18n();
   const { youtube: yt } = getSetup();
   const channelId = yt?.defaultChannelId;
   const qc = useQueryClient();
@@ -132,7 +134,7 @@ function StudioPage() {
   if (!channelId) {
     return (
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
-        <PageHeader title="Estúdio" description="Configure o canal." />
+        <PageHeader title={t("page.studio.title")} description={t("page.studio.desc")} />
         <Card className="mt-6 p-6">
           <p className="text-sm text-muted-foreground">
             Configure em <Link to="/settings" className="text-primary underline">Definições → YouTube</Link>.
@@ -145,8 +147,8 @@ function StudioPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
-        title="Estúdio de criação"
-        description={oauthOk ? "Edição de vídeos, thumbnails e análise avançada." : "Conecte OAuth para edição completa."}
+        title={t("page.studio.title")}
+        description={oauthOk ? t("page.studio.desc") : t("page.studio.desc")}
         actions={
           !oauthOk && (
             <Button variant="outline" size="sm"

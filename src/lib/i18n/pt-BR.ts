@@ -1,4 +1,11 @@
 export default {
+  page: {
+    settings: { title: "Configurações", desc: "API keys, provedores de IA e preferências." },
+    studio: { title: "Estúdio", desc: "Configure o canal." },
+    ai: { title: "IA & Agentes", desc: "Chat com IA e agentes especializados." },
+    profile: { title: "Perfil", desc: "Canal conectado e conta Firebase." },
+    notifications: { title: "Notificações", desc: "Centro de notificações e alertas." },
+  },
   nav: {
     dashboard: "Dashboard", analytics: "Análise", content: "Conteúdo", studio: "Estúdio",
     seo: "SEO", community: "Comunidade", ai: "IA & Agentes", profile: "Perfil",

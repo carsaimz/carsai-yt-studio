@@ -1,13 +1,14 @@
 {
   "appId": "com.carsai.ytstudio",
   "appName": "Carsai YT Studio",
-  "webDir": "dist/client",
+  "webDir": ".output/public",
   "appVersion": "1.0.0",
   "appVersionCode": 1,
   "server": {
     "androidScheme": "https",
     "iosScheme": "https",
-    "hostname": "app"
+    "hostname": "app",
+    "errorPath": "index.html"
   },
   "android": {
     "allowMixedContent": false,

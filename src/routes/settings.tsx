@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useI18n, LOCALES, type Locale } from "@/lib/i18n";
+import { useI18n, LOCALES, t, type Locale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, Trash2, KeyRound, Shield, Globe, Palette, Bell, Youtube as YoutubeIcon, LogOut, Loader2, Download, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4 px-4 py-6 sm:px-6 sm:py-8">
-      <PageHeader title="Configurações" description="API keys, provedores de IA e preferências." />
+      <PageHeader title={t("page.settings.title")} description={t("page.settings.desc")} />
       <Tabs defaultValue="youtube" className="w-full">
         <div className="overflow-x-auto">
           <TabsList className="mb-0 inline-flex w-max min-w-full">
@@ -113,12 +113,30 @@ function YouTubeSettings() {
         ...(setup.youtube ?? {}),
         apiKey,
         oauthClientId: clientId,
+        oauthClientSecret: clientSecret,
         defaultChannelId: channelId,
       },
     });
     qc.invalidateQueries({ queryKey: ["channel"] });
     toast.success("Configurações do YouTube guardadas!");
   }
+
+  // Item 1: persist clientId/clientSecret immediately on change so that
+  // OAuth flow (which reads from storage on callback) always has fresh values
+  // even if user clicks "Conectar" without saving first.
+  useEffect(() => {
+    const cur = setup.youtube ?? {} as any;
+    if (cur.oauthClientId === clientId && cur.oauthClientSecret === clientSecret) return;
+    setSetup({
+      ...setup,
+      youtube: {
+        ...cur,
+        oauthClientId: clientId,
+        oauthClientSecret: clientSecret,
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientId, clientSecret]);
 
   return (
     <div className="space-y-4">

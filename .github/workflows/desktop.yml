@@ -1,5 +1,10 @@
 name: Desktop — Tauri (Win + Mac + Linux)
 
+# Item 6 + 7: este workflow não muta versão no repo. Descobre o último tag e
+# anexa os bundles a esse tag. Em Windows, além do upload do tauri-action,
+# anexamos explicitamente os .msi/.exe encontrados em src-tauri/target —
+# isso resolve o bug em que os assets de Windows não apareciam no release.
+
 on:
   push:
     tags: ['v*']
@@ -26,6 +31,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -45,6 +52,27 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Resolve latest tag
+        id: ver
+        shell: bash
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+          else
+            TAG=$(git tag --sort=-v:refname | grep "^v" | head -n1)
+          fi
+          [ -z "$TAG" ] && TAG="v$(node -p "require('./package.json').version")"
+          echo "tag=$TAG"        >> $GITHUB_OUTPUT
+          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+          echo "📦 Tag alvo: $TAG"
+
+      - name: Apply version to build files (no commit)
+        shell: bash
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json'));p.version='$V';fs.writeFileSync('package.json',JSON.stringify(p,null,2));"
+          node scripts/sync-version.mjs || true
 
       - name: Build web
         run: npm run build:mobile
@@ -151,9 +179,19 @@ jobs:
             cp public/tauri-icons/icon.ico src-tauri/icons/ 2>/dev/null || true
           fi
 
-      - name: Get current version
-        id: ver
-        run: echo "tag=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+      - name: Sync version into Tauri config + Cargo.toml
+        shell: bash
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          node -e "const fs=require('fs');const p='src-tauri/tauri.conf.json';const c=JSON.parse(fs.readFileSync(p));c.version='$V';fs.writeFileSync(p,JSON.stringify(c,null,2));"
+          # Cargo.toml version line (first occurrence only — root [package])
+          python3 - << PY
+          import re, pathlib
+          path = pathlib.Path("src-tauri/Cargo.toml")
+          src = path.read_text()
+          src = re.sub(r'(?m)^version\s*=\s*"[^"]+"', f'version = "$V"', src, count=1)
+          path.write_text(src)
+          PY
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
@@ -166,3 +204,36 @@ jobs:
           prerelease: false
           updaterJsonKeepUniversal: true
           args: ${{ matrix.args }}
+
+      # Item 7 — fallback explícito para garantir que assets de Windows ficam
+      # anexados ao release mesmo quando o tauri-action não os envia.
+      - name: Collect Windows bundles
+        if: matrix.os == 'windows-latest'
+        id: winbundles
+        shell: bash
+        run: |
+          mkdir -p win-out
+          find src-tauri/target -type f \( -name "*.msi" -o -name "*.exe" \) \
+            -path "*/release/bundle/*" -print0 \
+            | xargs -0 -I{} cp "{}" win-out/ 2>/dev/null || true
+          ls -la win-out || true
+          COUNT=$(ls win-out 2>/dev/null | wc -l)
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+
+      - name: Upload Windows artifacts
+        if: matrix.os == 'windows-latest' && steps.winbundles.outputs.count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: win-out/*
+          retention-days: 30
+
+      - name: Attach Windows installers to release
+        if: matrix.os == 'windows-latest' && steps.winbundles.outputs.count != '0'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          files: win-out/*
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

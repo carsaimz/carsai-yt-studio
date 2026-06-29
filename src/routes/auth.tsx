@@ -11,6 +11,7 @@ import { loginEmail, loginGoogle, registerEmail, resetPassword } from "@/lib/fir
 import { isSetupCompleted } from "@/lib/setup/store";
 import { toast, alert } from "@/lib/notifications";
 import { useI18n } from "@/lib/i18n";
+import { LangPicker } from "@/components/lang-picker";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -168,6 +169,7 @@ function AuthPage() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
+      <div className="absolute right-4 top-4 z-50"><LangPicker /></div>
       <div className="absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
       <div className="absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-warning/10 blur-3xl" />
       <div className="relative w-full max-w-md rounded-3xl border border-border bg-card/80 p-8 backdrop-blur">

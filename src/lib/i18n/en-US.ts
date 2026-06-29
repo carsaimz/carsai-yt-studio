@@ -1,4 +1,11 @@
 export default {
+  page: {
+    settings: { title: "Settings", desc: "API keys, AI providers and preferences." },
+    studio: { title: "Studio", desc: "Configure your channel." },
+    ai: { title: "AI & Agents", desc: "Chat with AI and specialised agents." },
+    profile: { title: "Profile", desc: "Connected channel and Firebase account." },
+    notifications: { title: "Notifications", desc: "Notification centre and alerts." },
+  },
   nav: {
     dashboard: "Dashboard", analytics: "Analytics", content: "Content", studio: "Studio",
     seo: "SEO", community: "Community", ai: "AI & Agents", profile: "Profile",

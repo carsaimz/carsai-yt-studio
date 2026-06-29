@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Versão do app (ex: 1.2.0)"
+        description: "(IGNORADO) Use o workflow Version Sync / Bump para mudar versão."
         required: false
         default: ""
 
@@ -42,26 +42,26 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Resolve version
+      - name: Resolve latest tag (item 6 — sem mutar versão)
         id: ver
         run: |
-          if [ -n "${{ inputs.version }}" ]; then
-            BASE="${{ inputs.version }}"
-          elif [ "${{ github.ref_type }}" = "tag" ]; then
-            BASE="${{ github.ref_name }}"
-            BASE="${BASE#v}"
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
           else
-            BASE=$(node -p "require('./package.json').version")
+            TAG=$(git tag --sort=-v:refname | grep "^v" | head -n1)
           fi
+          [ -z "$TAG" ] && TAG="v$(node -p "require('./package.json').version")"
+          BASE="${TAG#v}"
           LAST=$(git tag -l "v${BASE}*" --sort=-v:refname | head -n1)
           if [ -z "$LAST" ]; then BUILD=1
           elif [[ "$LAST" =~ build\.([0-9]+)$ ]]; then BUILD=$(( ${BASH_REMATCH[1]} + 1 ))
           else BUILD=1; fi
           echo "base=$BASE"   >> $GITHUB_OUTPUT
           echo "build=$BUILD" >> $GITHUB_OUTPUT
-          echo "📦 $BASE (build $BUILD)"
+          echo "tag=$TAG"     >> $GITHUB_OUTPUT
+          echo "📦 Anexando ao tag $TAG (build $BUILD)"
 
-      - name: Update versions
+      - name: Apply version to build files only (no commit)
         run: |
           BASE="${{ steps.ver.outputs.base }}"
           BUILD="${{ steps.ver.outputs.build }}"
@@ -186,7 +186,7 @@ jobs:
           cp "$AAB" "carsai-yt-studio-${V}.aab"
           echo "apk=carsai-yt-studio-${V}.apk" >> $GITHUB_OUTPUT
           echo "aab=carsai-yt-studio-${V}.aab" >> $GITHUB_OUTPUT
-          echo "vtag=v${{ steps.ver.outputs.base }}" >> $GITHUB_OUTPUT
+          echo "vtag=${{ steps.ver.outputs.tag }}" >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v4
         with:
