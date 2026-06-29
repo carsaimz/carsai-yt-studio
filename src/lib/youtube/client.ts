@@ -116,6 +116,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       client_id:     yt.oauthClientId,
+      ...(yt.oauthClientSecret ? { client_secret: yt.oauthClientSecret } : {}),
       code,
       code_verifier: pkce.verifier,
       grant_type:    "authorization_code",

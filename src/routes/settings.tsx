@@ -76,6 +76,7 @@ function YouTubeSettings() {
 
   const [apiKey,    setApiKey]    = useState(setup.youtube?.apiKey          ?? "");
   const [clientId,  setClientId]  = useState(setup.youtube?.oauthClientId   ?? "");
+  const [clientSecret, setClientSecret] = useState(setup.youtube?.oauthClientSecret ?? "");
   const [channelId, setChannelId] = useState(setup.youtube?.defaultChannelId ?? "");
   const [loadingChannels, setLoadingChannels] = useState(false);
   const [myChannels, setMyChannels] = useState<any[]>([]);
@@ -163,6 +164,15 @@ function YouTubeSettings() {
         description="Necessário para upload, edição, playlists, comentários e analytics. Crie um OAuth 2.0 Client ID (Web application) em console.cloud.google.com.">
         <Field label="OAuth Client ID" value={clientId} onChange={setClientId}
           placeholder="xxxx.apps.googleusercontent.com" />
+        <Field label="OAuth Client Secret (Web app type)" value={clientSecret} onChange={setClientSecret}
+          type="password" placeholder="GOCSPX-xxxxx (obrigatório se usar Web application)" />
+        <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs text-warning">
+          <strong>Atenção:</strong> Se receber erro <code>client_secret is missing</code>, tem duas opções:
+          <ul className="mt-1 ml-3 list-disc space-y-0.5">
+            <li>Use tipo <strong>Desktop application</strong> no Google Console (não precisa de client secret)</li>
+            <li>Ou use tipo <strong>Web application</strong> e preencha o Client Secret acima</li>
+          </ul>
+        </div>
         <div className="flex items-center justify-between rounded-xl border border-border bg-card/60 p-3">
           <div>
             <p className="text-sm font-medium">

@@ -22,7 +22,7 @@ jobs:
           - os: macos-latest
             args: '--target universal-apple-darwin'
           - os: windows-latest
-            args: ''
+            args: '--bundles nsis,msi'
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -137,7 +137,12 @@ jobs:
                 "icons/128x128@2x.png",
                 "icons/icon.ico",
                 "icons/icon.png"
-              ]
+              ],
+              "windows": {
+                "certificateThumbprint": null,
+                "digestAlgorithm": "sha256",
+                "timestampUrl": ""
+              }
             }
           }
           TAURICONF

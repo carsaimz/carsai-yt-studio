@@ -14,6 +14,7 @@ export type FirebaseConfig = {
 export type YouTubeConfig = {
   apiKey: string;
   oauthClientId?: string;
+  oauthClientSecret?: string;
   defaultChannelId?: string;
 };
 

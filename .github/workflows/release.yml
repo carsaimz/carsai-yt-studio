@@ -1,8 +1,8 @@
-name: Release — Changelog & GitHub Release
+name: Release — Changelog
 
 on:
   push:
-    branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -10,62 +10,47 @@ permissions:
 
 jobs:
   release:
-    name: Create / Update Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Get current version
+      - name: Get version from tag or package.json
         id: ver
         run: |
-          V=$(node -p "require('./package.json').version")
-          TAG="v${V}"
-          echo "version=$V" >> $GITHUB_OUTPUT
-          echo "tag=$TAG"   >> $GITHUB_OUTPUT
-          echo "📦 Version: $V → Tag: $TAG"
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+          else
+            TAG="v$(node -p "require('./package.json').version")"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      - name: Generate changelog body
-        id: changelog
+      - name: Generate changelog
+        id: cl
         run: |
           TAG="${{ steps.ver.outputs.tag }}"
-          V="${{ steps.ver.outputs.version }}"
-
-          # Previous tag for this version (for incremental changelog)
-          PREV_SAME=$(git tag -l "v${V}*" --sort=-v:refname | grep -v "^${TAG}$" | head -n1)
-          # Any previous tag
-          PREV_ANY=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -n1)
-
-          SINCE="${PREV_SAME:-${PREV_ANY}}"
-
-          if [ -n "$SINCE" ]; then
-            COMMITS=$(git log --pretty=format:"- %s (%an)" "${SINCE}..HEAD" 2>/dev/null || echo "")
-          else
-            COMMITS=$(git log --pretty=format:"- %s (%an)" -20 2>/dev/null || echo "")
-          fi
-
+          PREV=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | grep "^v" | head -n1)
           DATE=$(date +'%d/%m/%Y %H:%M UTC')
-
+          if [ -n "$PREV" ]; then
+            COMMITS=$(git log --pretty=format:"- %s" "${PREV}..HEAD" 2>/dev/null || echo "- Initial release")
+          else
+            COMMITS=$(git log --pretty=format:"- %s" -20 2>/dev/null || echo "- Initial release")
+          fi
           {
-            echo 'body<<BODYEOF'
-            echo "## 🚀 Carsai YT Studio v${V}"
+            echo 'body<<EOF'
+            echo "## 🚀 Carsai YT Studio ${TAG}"
             echo ""
             echo "**Data:** ${DATE}"
-            [ -n "$SINCE" ] && echo "**Desde:** \`${SINCE}\`"
+            [ -n "$PREV" ] && echo "**Desde:** \`${PREV}\`"
             echo ""
             echo "## 📝 Mudanças"
             echo ""
-            if [ -n "$COMMITS" ]; then
-              echo "$COMMITS"
-            else
-              echo "- Primeira release"
-            fi
+            echo "$COMMITS"
             echo ""
             echo "---"
             echo ""
@@ -73,21 +58,21 @@ jobs:
             echo ""
             echo "| Plataforma | Arquivo |"
             echo "|---|---|"
-            echo "| 🌐 Web | [Deploy automático na Vercel](https://carsai-yt-studio.vercel.app) |"
+            echo "| 🌐 Web | [Vercel](https://carsai-yt-studio.vercel.app) |"
             echo "| 📱 Android APK | Veja os assets abaixo |"
-            echo "| 📱 Android AAB | Veja os assets abaixo |"
+            echo "| 📱 Android AAB | Veja os assets abaixo (Play Store) |"
             echo "| 🖥️ Windows | Veja os assets abaixo |"
             echo "| 🖥️ macOS | Veja os assets abaixo |"
             echo "| 🖥️ Linux | Veja os assets abaixo |"
-            echo 'BODYEOF'
+            echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
-      - name: Create or update GitHub Release
+      - name: Create/Update Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: "Carsai YT Studio ${{ steps.ver.outputs.tag }}"
-          body: ${{ steps.changelog.outputs.body }}
+          body: ${{ steps.cl.outputs.body }}
           draft: false
           prerelease: false
           make_latest: true
