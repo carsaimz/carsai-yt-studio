@@ -1,0 +1,75 @@
+name: 🐛 Bug Report / Relatório de Bug
+description: Report a bug | Relatar um erro
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **🇧🇷 Português** | [🇺🇸 English below](#english)
+        Obrigado por reportar! Por favor, preencha as informações abaixo.
+
+        ---
+        <a name="english"></a>
+        Thanks for reporting! Please fill in the information below.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform / Plataforma
+      options:
+        - Web (Vercel/browser)
+        - Android (APK)
+        - Desktop (Windows)
+        - Desktop (macOS)
+        - Desktop (Linux)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Versão
+      placeholder: "ex: v0.3.0-build.5"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description / Descrição
+      description: |
+        🇧🇷 Descreva o problema claramente.
+        🇺🇸 Describe the issue clearly.
+      placeholder: |
+        🇧🇷 O que aconteceu? O que deveria ter acontecido?
+        🇺🇸 What happened? What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Passos para reproduzir
+      placeholder: |
+        1. Go to / Vá para '...'
+        2. Click / Clique em '...'
+        3. See error / Veja o erro
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Error messages
+      render: shell
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues / Pesquisei issues existentes
+          required: true
+        - label: I'm using the latest version / Estou usando a versão mais recente
+          required: true

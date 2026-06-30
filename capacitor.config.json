@@ -1,0 +1,40 @@
+{
+  "appId": "com.carsai.ytstudio",
+  "appName": "Carsai YT Studio",
+  "webDir": "dist/client",
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https",
+    "hostname": "app"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 800,
+      "launchAutoHide": true,
+      "backgroundColor": "#1a1410",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_INSIDE",
+      "showSpinner": false,
+      "splashFullScreen": false,
+      "splashImmersive": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#1a1410",
+      "overlaysWebView": false
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "Preferences": {
+      "group": "CarsaiSecureStore"
+    }
+  }
+}

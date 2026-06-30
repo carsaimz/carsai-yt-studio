@@ -9,38 +9,487 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StudioRouteImport } from './routes/studio'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SetupRouteImport } from './routes/setup'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SeoRouteImport } from './routes/seo'
+import { Route as SecurityRouteImport } from './routes/security'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as DocsRouteImport } from './routes/docs'
+import { Route as CookiesRouteImport } from './routes/cookies'
+import { Route as ContentRouteImport } from './routes/content'
+import { Route as CommunityRouteImport } from './routes/community'
+import { Route as ChangelogRouteImport } from './routes/changelog'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
+import { Route as AiRouteImport } from './routes/ai'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
+import { Route as ContentVideoIdRouteImport } from './routes/content.$videoId'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudioRoute = StudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeoRoute = SeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContentRoute = ContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiRoute = AiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthCallbackRoute = OauthCallbackRouteImport.update({
+  id: '/oauth/callback',
+  path: '/oauth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContentVideoIdRoute = ContentVideoIdRouteImport.update({
+  id: '/$videoId',
+  path: '/$videoId',
+  getParentRoute: () => ContentRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/ai': typeof AiRoute
+  '/analytics': typeof AnalyticsRoute
+  '/auth': typeof AuthRoute
+  '/changelog': typeof ChangelogRoute
+  '/community': typeof CommunityRoute
+  '/content': typeof ContentRouteWithChildren
+  '/cookies': typeof CookiesRoute
+  '/docs': typeof DocsRoute
+  '/help': typeof HelpRoute
+  '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/security': typeof SecurityRoute
+  '/seo': typeof SeoRoute
+  '/settings': typeof SettingsRoute
+  '/setup': typeof SetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio': typeof StudioRoute
+  '/terms': typeof TermsRoute
+  '/welcome': typeof WelcomeRoute
+  '/content/$videoId': typeof ContentVideoIdRoute
+  '/oauth/callback': typeof OauthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/ai': typeof AiRoute
+  '/analytics': typeof AnalyticsRoute
+  '/auth': typeof AuthRoute
+  '/changelog': typeof ChangelogRoute
+  '/community': typeof CommunityRoute
+  '/content': typeof ContentRouteWithChildren
+  '/cookies': typeof CookiesRoute
+  '/docs': typeof DocsRoute
+  '/help': typeof HelpRoute
+  '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/security': typeof SecurityRoute
+  '/seo': typeof SeoRoute
+  '/settings': typeof SettingsRoute
+  '/setup': typeof SetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio': typeof StudioRoute
+  '/terms': typeof TermsRoute
+  '/welcome': typeof WelcomeRoute
+  '/content/$videoId': typeof ContentVideoIdRoute
+  '/oauth/callback': typeof OauthCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/ai': typeof AiRoute
+  '/analytics': typeof AnalyticsRoute
+  '/auth': typeof AuthRoute
+  '/changelog': typeof ChangelogRoute
+  '/community': typeof CommunityRoute
+  '/content': typeof ContentRouteWithChildren
+  '/cookies': typeof CookiesRoute
+  '/docs': typeof DocsRoute
+  '/help': typeof HelpRoute
+  '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/security': typeof SecurityRoute
+  '/seo': typeof SeoRoute
+  '/settings': typeof SettingsRoute
+  '/setup': typeof SetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio': typeof StudioRoute
+  '/terms': typeof TermsRoute
+  '/welcome': typeof WelcomeRoute
+  '/content/$videoId': typeof ContentVideoIdRoute
+  '/oauth/callback': typeof OauthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/ai'
+    | '/analytics'
+    | '/auth'
+    | '/changelog'
+    | '/community'
+    | '/content'
+    | '/cookies'
+    | '/docs'
+    | '/help'
+    | '/notifications'
+    | '/privacy'
+    | '/profile'
+    | '/security'
+    | '/seo'
+    | '/settings'
+    | '/setup'
+    | '/sitemap.xml'
+    | '/studio'
+    | '/terms'
+    | '/welcome'
+    | '/content/$videoId'
+    | '/oauth/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/about'
+    | '/ai'
+    | '/analytics'
+    | '/auth'
+    | '/changelog'
+    | '/community'
+    | '/content'
+    | '/cookies'
+    | '/docs'
+    | '/help'
+    | '/notifications'
+    | '/privacy'
+    | '/profile'
+    | '/security'
+    | '/seo'
+    | '/settings'
+    | '/setup'
+    | '/sitemap.xml'
+    | '/studio'
+    | '/terms'
+    | '/welcome'
+    | '/content/$videoId'
+    | '/oauth/callback'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/ai'
+    | '/analytics'
+    | '/auth'
+    | '/changelog'
+    | '/community'
+    | '/content'
+    | '/cookies'
+    | '/docs'
+    | '/help'
+    | '/notifications'
+    | '/privacy'
+    | '/profile'
+    | '/security'
+    | '/seo'
+    | '/settings'
+    | '/setup'
+    | '/sitemap.xml'
+    | '/studio'
+    | '/terms'
+    | '/welcome'
+    | '/content/$videoId'
+    | '/oauth/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  AiRoute: typeof AiRoute
+  AnalyticsRoute: typeof AnalyticsRoute
+  AuthRoute: typeof AuthRoute
+  ChangelogRoute: typeof ChangelogRoute
+  CommunityRoute: typeof CommunityRoute
+  ContentRoute: typeof ContentRouteWithChildren
+  CookiesRoute: typeof CookiesRoute
+  DocsRoute: typeof DocsRoute
+  HelpRoute: typeof HelpRoute
+  NotificationsRoute: typeof NotificationsRoute
+  PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
+  SecurityRoute: typeof SecurityRoute
+  SeoRoute: typeof SeoRoute
+  SettingsRoute: typeof SettingsRoute
+  SetupRoute: typeof SetupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StudioRoute: typeof StudioRoute
+  TermsRoute: typeof TermsRoute
+  WelcomeRoute: typeof WelcomeRoute
+  OauthCallbackRoute: typeof OauthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/studio': {
+      id: '/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof StudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seo': {
+      id: '/seo'
+      path: '/seo'
+      fullPath: '/seo'
+      preLoaderRoute: typeof SeoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/content': {
+      id: '/content'
+      path: '/content'
+      fullPath: '/content'
+      preLoaderRoute: typeof ContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai': {
+      id: '/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +497,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oauth/callback': {
+      id: '/oauth/callback'
+      path: '/oauth/callback'
+      fullPath: '/oauth/callback'
+      preLoaderRoute: typeof OauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/content/$videoId': {
+      id: '/content/$videoId'
+      path: '/$videoId'
+      fullPath: '/content/$videoId'
+      preLoaderRoute: typeof ContentVideoIdRouteImport
+      parentRoute: typeof ContentRoute
+    }
   }
 }
 
+interface ContentRouteChildren {
+  ContentVideoIdRoute: typeof ContentVideoIdRoute
+}
+
+const ContentRouteChildren: ContentRouteChildren = {
+  ContentVideoIdRoute: ContentVideoIdRoute,
+}
+
+const ContentRouteWithChildren =
+  ContentRoute._addFileChildren(ContentRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  AiRoute: AiRoute,
+  AnalyticsRoute: AnalyticsRoute,
+  AuthRoute: AuthRoute,
+  ChangelogRoute: ChangelogRoute,
+  CommunityRoute: CommunityRoute,
+  ContentRoute: ContentRouteWithChildren,
+  CookiesRoute: CookiesRoute,
+  DocsRoute: DocsRoute,
+  HelpRoute: HelpRoute,
+  NotificationsRoute: NotificationsRoute,
+  PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
+  SecurityRoute: SecurityRoute,
+  SeoRoute: SeoRoute,
+  SettingsRoute: SettingsRoute,
+  SetupRoute: SetupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StudioRoute: StudioRoute,
+  TermsRoute: TermsRoute,
+  WelcomeRoute: WelcomeRoute,
+  OauthCallbackRoute: OauthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

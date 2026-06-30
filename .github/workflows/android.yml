@@ -1,0 +1,212 @@
+name: Android — APK + AAB
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versão do app (ex: 1.2.0)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            BASE="${{ inputs.version }}"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            BASE="${{ github.ref_name }}"
+            BASE="${BASE#v}"
+          else
+            BASE=$(node -p "require('./package.json').version")
+          fi
+          LAST=$(git tag -l "v${BASE}*" --sort=-v:refname | head -n1)
+          if [ -z "$LAST" ]; then BUILD=1
+          elif [[ "$LAST" =~ build\.([0-9]+)$ ]]; then BUILD=$(( ${BASH_REMATCH[1]} + 1 ))
+          else BUILD=1; fi
+          echo "base=$BASE"   >> $GITHUB_OUTPUT
+          echo "build=$BUILD" >> $GITHUB_OUTPUT
+          echo "📦 $BASE (build $BUILD)"
+
+      - name: Update versions
+        run: |
+          BASE="${{ steps.ver.outputs.base }}"
+          BUILD="${{ steps.ver.outputs.build }}"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json'));p.version='$BASE';fs.writeFileSync('package.json',JSON.stringify(p,null,2));"
+          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('capacitor.config.json'));c.appVersion='$BASE';c.appVersionCode=$BUILD;fs.writeFileSync('capacitor.config.json',JSON.stringify(c,null,2));"
+
+      - name: Build web (mobile)
+        run: BUILD_TARGET=mobile node scripts/build-web.mjs
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+
+      - name: Install Capacitor
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets \
+            @capacitor/push-notifications @capacitor/splash-screen \
+            @capacitor/status-bar @capacitor/preferences
+
+      - name: Setup Capacitor Android
+        run: |
+          if [ -d "android" ] && [ ! -f "android/app/src/main/AndroidManifest.xml" ]; then
+            rm -rf android
+          fi
+          [ -d android ] || npx cap add android
+          npx cap sync android
+
+      - name: Generate icons + splash
+        run: |
+          mkdir -p resources
+          cp public/icon-512.png resources/icon.png
+          cp public/icon-512.png resources/icon-foreground.png
+          cp public/icon-512.png resources/icon-background.png
+          cp public/icon-512.png resources/splash.png
+          npx @capacitor/assets generate --android \
+            --iconBackgroundColor "#1a1410" \
+            --iconBackgroundColorDark "#1a1410" \
+            --splashBackgroundColor "#1a1410" \
+            --splashBackgroundColorDark "#1a1410" || true
+
+      - name: Patch AndroidManifest
+        run: |
+          python3 << 'PY'
+          import re
+          path = "android/app/src/main/AndroidManifest.xml"
+          with open(path) as f:
+              c = f.read()
+          c = re.sub(r'\s*<uses-permission[^/]*/>', '', c)
+          perms = """
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+              <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
+              <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+              <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+              <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+              <uses-permission android:name="android.permission.CAMERA"/>
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+              <uses-permission android:name="android.permission.VIBRATE"/>
+              <uses-permission android:name="android.permission.WAKE_LOCK"/>
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>"""
+          c = re.sub(r'(<manifest[^>]*>)', r'\1' + perms, c, count=1)
+          with open(path, 'w') as f:
+              f.write(c)
+          print("✅ Permissions patched")
+          PY
+
+      - name: Update Gradle version
+        run: |
+          BUILD="${{ steps.ver.outputs.build }}"
+          BASE="${{ steps.ver.outputs.base }}"
+          sed -i "s/versionCode [0-9]*/versionCode ${BUILD}/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${BASE}\"/" android/app/build.gradle
+
+      - name: Setup keystore
+        env:
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+        run: |
+          if [ -n "$KEYSTORE_FILE" ]; then
+            printf '%s' "$KEYSTORE_FILE" | tr -d '[:space:]' | base64 -d > android/app/carsai.keystore
+            echo "HAS_KEYSTORE=true" >> $GITHUB_ENV
+          else
+            echo "HAS_KEYSTORE=false" >> $GITHUB_ENV
+          fi
+
+      - name: Configure signing
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          cat >> android/app/build.gradle << 'GRADLE'
+
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file('carsai.keystore')
+                      storePassword "carsaidev"
+                      keyAlias "carsaidev"
+                      keyPassword "carsaidev"
+                  }
+              }
+              buildTypes {
+                  release { signingConfig signingConfigs.release }
+              }
+          }
+          GRADLE
+
+      - name: Build APK + AAB
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease bundleRelease --no-daemon
+
+      - name: Prepare artifacts
+        id: art
+        run: |
+          V="v${{ steps.ver.outputs.base }}-build.${{ steps.ver.outputs.build }}"
+          APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n1)
+          AAB=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -n1)
+          cp "$APK" "carsai-yt-studio-${V}.apk"
+          cp "$AAB" "carsai-yt-studio-${V}.aab"
+          echo "apk=carsai-yt-studio-${V}.apk" >> $GITHUB_OUTPUT
+          echo "aab=carsai-yt-studio-${V}.aab" >> $GITHUB_OUTPUT
+          echo "vtag=v${{ steps.ver.outputs.base }}" >> $GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: ${{ steps.art.outputs.apk }}
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: ${{ steps.art.outputs.aab }}
+          retention-days: 30
+
+      - name: Attach to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.art.outputs.vtag }}
+          files: |
+            ${{ steps.art.outputs.apk }}
+            ${{ steps.art.outputs.aab }}
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,45 @@
+name: ✨ Feature Request / Pedido de Funcionalidade
+description: Suggest a new feature | Sugerir nova funcionalidade
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Problema
+      description: |
+        🇧🇷 Qual problema esta funcionalidade resolveria?
+        🇺🇸 What problem would this feature solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution / Solução proposta
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform / Plataforma
+      multiple: true
+      options:
+        - Web
+        - Android
+        - Desktop
+        - All / Todos
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered / Alternativas consideradas
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing feature requests / Pesquisei pedidos existentes
+          required: true
