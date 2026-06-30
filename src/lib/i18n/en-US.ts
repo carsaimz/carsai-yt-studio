@@ -170,6 +170,23 @@ export default {
       localDesc: "Keys and data stay on your device. You own it.",
     },
   },
+  about: {
+    title: "About & Updates",
+    subtitle: "Manage your version, download the latest builds for every platform, and learn about the project.",
+    projectTitle: "The project",
+    projectBody1: "Carsai YT Studio is an open-source (MIT) platform for creators to manage a YouTube channel with AI — analytics, SEO, community, automations and studio tools — without your data leaving your device.",
+    projectBody2: "Distributed as a web app, PWA, Android (APK/AAB), iOS (IPA), and desktop app (Tauri). It can be self-hosted on any static server or used locally.",
+    techTitle: "Technologies",
+    githubCode: "Code on GitHub:",
+    licenseTitle: "License & Credits",
+    licenseBody1: "Licensed under MIT. You may use, modify, distribute, and even commercialize it — while keeping the copyright notice.",
+    licenseBody2: "Built with 💛 by Carsai and the open-source community.",
+    contributeTitle: "Contribute",
+    contribute1: "Open issues with bugs or ideas.",
+    contribute2: "Send pull requests — see CONTRIBUTING.md.",
+    contribute3: "Translations, themes, and plugins are welcome.",
+  },
+  authExtra: {},
   // Footer
   footer: {
     privacy: "Privacy",

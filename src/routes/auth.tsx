@@ -11,6 +11,7 @@ import { loginEmail, loginGoogle, registerEmail, resetPassword } from "@/lib/fir
 import { isSetupCompleted } from "@/lib/setup/store";
 import { toast, alert } from "@/lib/notifications";
 import { useI18n } from "@/lib/i18n";
+import { LangPicker } from "@/components/lang-picker";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -166,6 +167,7 @@ function AuthPage() {
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
       <div className="absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
@@ -179,22 +181,21 @@ function Shell({ children }: { children: React.ReactNode }) {
             <p className="font-display text-xl font-bold">Carsai</p>
             <p className="text-xs uppercase tracking-widest text-muted-foreground">YT Studio</p>
           </div>
+          <LangPicker compact className="ml-auto" />
         </div>
         <div className="mt-6">{children}</div>
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Ao continuar você concorda com nossos{" "}
-          <Link to="/terms" className="underline">Termos</Link> e{" "}
-          <Link to="/privacy" className="underline">Privacidade</Link>.
+          {t("auth.termsPrefix")} <Link to="/terms" className="underline">{t("footer.terms")}</Link> {t("common.and")} <Link to="/privacy" className="underline">{t("footer.privacy")}</Link>.
         </p>
         <nav className="mt-4 flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground">
           <Link to="/docs" className="hover:text-foreground">
             <FontAwesomeIcon icon={["fas", "book-open"]} className="mr-1" />Docs
           </Link>
           <Link to="/help" className="hover:text-foreground">
-            <FontAwesomeIcon icon={["fas", "circle-question"]} className="mr-1" />Ajuda
+            <FontAwesomeIcon icon={["fas", "circle-question"]} className="mr-1" />{t("nav.help")}
           </Link>
           <Link to="/about" className="hover:text-foreground">
-            <FontAwesomeIcon icon={["fas", "circle-info"]} className="mr-1" />Sobre
+            <FontAwesomeIcon icon={["fas", "circle-info"]} className="mr-1" />{t("nav.about")}
           </Link>
           <Link to="/changelog" className="hover:text-foreground">
             <FontAwesomeIcon icon={["fas", "clock-rotate-left"]} className="mr-1" />Changelog
