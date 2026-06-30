@@ -1,0 +1,80 @@
+name: Release — Changelog
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Get version from tag or package.json
+        id: ver
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+          else
+            TAG="v$(node -p "require('./package.json').version")"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: cl
+        run: |
+          TAG="${{ steps.ver.outputs.tag }}"
+          PREV=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | grep "^v" | head -n1)
+          DATE=$(date +'%d/%m/%Y %H:%M UTC')
+          if [ -n "$PREV" ]; then
+            COMMITS=$(git log --pretty=format:"- %s" "${PREV}..HEAD" 2>/dev/null || echo "- Initial release")
+          else
+            COMMITS=$(git log --pretty=format:"- %s" -20 2>/dev/null || echo "- Initial release")
+          fi
+          {
+            echo 'body<<EOF'
+            echo "## 🚀 Carsai YT Studio ${TAG}"
+            echo ""
+            echo "**Data:** ${DATE}"
+            [ -n "$PREV" ] && echo "**Desde:** \`${PREV}\`"
+            echo ""
+            echo "## 📝 Mudanças"
+            echo ""
+            echo "$COMMITS"
+            echo ""
+            echo "---"
+            echo ""
+            echo "## 📦 Downloads"
+            echo ""
+            echo "| Plataforma | Arquivo |"
+            echo "|---|---|"
+            echo "| 🌐 Web | [Vercel](https://carsai-yt-studio.vercel.app) |"
+            echo "| 📱 Android APK | Veja os assets abaixo |"
+            echo "| 📱 Android AAB | Veja os assets abaixo (Play Store) |"
+            echo "| 🖥️ Windows | Veja os assets abaixo |"
+            echo "| 🖥️ macOS | Veja os assets abaixo |"
+            echo "| 🖥️ Linux | Veja os assets abaixo |"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create/Update Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: "Carsai YT Studio ${{ steps.ver.outputs.tag }}"
+          body: ${{ steps.cl.outputs.body }}
+          draft: false
+          prerelease: false
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussions (Q&A / Ideas)
+    url: https://github.com/carsaimz/carsai-yt-studio/discussions
+    about: Ask questions and share ideas | Tire dúvidas e compartilhe ideias
+  - name: 📖 Documentation / Documentação
+    url: https://github.com/carsaimz/carsai-yt-studio/wiki
+    about: Full documentation | Documentação completa
+  - name: 🔒 Security vulnerability / Vulnerabilidade de segurança
+    url: https://github.com/carsaimz/carsai-yt-studio/security/advisories/new
+    about: Report security issues privately | Reporte problemas de segurança em privado
