@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { youtube } from "@/lib/youtube/client";
 import { useSetup, getSetup } from "@/lib/setup/store";
-import { callAI, selectProvider } from "@/lib/ai/providers";
+import { callAI, generateThumbnailImage, selectProvider } from "@/lib/ai/providers";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "@/lib/notifications";
 
@@ -31,7 +31,7 @@ const iconMap = { FileText, Image: ImageIcon, TrendingUp, Sparkles };
 
 const agents = [
   { id: "scriptwriter", name: "Agente Roteirista", description: "Gera scripts com estrutura narrativa, ganchos e CTAs.", icon: "FileText" as const, prompt: "Você é um roteirista especialista em YouTube. Crie scripts envolventes." },
-  { id: "thumbnail", name: "Agente Thumbnail", description: "Sugere composições, copy e variações de thumbnail.", icon: "Image" as const, prompt: "Você é especialista em thumbnails de YouTube com alto CTR." },
+  { id: "thumbnail", name: "Agente Thumbnail", description: "Gera briefing, copy e, com provedor compatível, imagem 16:9 real.", icon: "Image" as const, prompt: "Você é especialista em thumbnails de YouTube com alto CTR." },
   { id: "trend", name: "Agente de Tendências", description: "Analisa tópicos em alta e cruza com o seu nicho.", icon: "TrendingUp" as const, prompt: "Você é um analista de tendências para criadores de conteúdo YouTube." },
   { id: "summary", name: "Agente de Resumo", description: "Cria descrições, posts para redes e capítulos.", icon: "Sparkles" as const, prompt: "Você é especialista em criar descrições e resumos para vídeos YouTube." },
 ];
@@ -48,7 +48,15 @@ function AIPage() {
   const [scriptInput, setScriptInput] = useState("");
   const [scriptResult, setScriptResult] = useState("");
   const [generatingScript, setGeneratingScript] = useState(false);
-  const [activeAgent, setActiveAgent] = useState<string | null>(null);
+  const configuredProviders = setup.ai?.providers ?? [];
+  const enabledProviders = configuredProviders.filter((p) => p.enabled && p.apiKey?.trim());
+  const defaultProvider = selectProvider(configuredProviders);
+  const [selectedProviderId, setSelectedProviderId] = useState(defaultProvider?.id ?? "");
+  const selectedProvider = enabledProviders.find((p) => p.id === selectedProviderId) ?? defaultProvider;
+  const [agentInputs, setAgentInputs] = useState<Record<string, string>>({});
+  const [agentResults, setAgentResults] = useState<Record<string, string>>({});
+  const [agentBusy, setAgentBusy] = useState<string | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const channelQ = useQuery({
@@ -75,14 +83,14 @@ function AIPage() {
   const recentTitles = (detailsQ.data?.items ?? [])
     .map((v: any) => v.snippet?.title).filter(Boolean).join("\n");
 
-  const activeProvider = selectProvider(setup.ai?.providers ?? []);
+  const activeProvider = selectedProvider;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs]);
 
   async function handleCallAI(userMsg: string, systemPrompt?: string): Promise<string> {
-    const provider = selectProvider(setup.ai?.providers ?? []);
+    const provider = selectedProvider;
     if (!provider) {
       throw new Error(t("ai.noProvider"));
     }
@@ -111,8 +119,7 @@ function AIPage() {
     setMsgs((prev) => [...prev, { role: "user", text: userText }]);
     setSending(true);
     try {
-      const agentDef = agents.find((a) => a.id === activeAgent);
-      const reply = await handleCallAI(userText, agentDef?.prompt);
+      const reply = await handleCallAI(userText);
       setMsgs((prev) => [...prev, { role: "assistant", text: reply }]);
     } catch (err) {
       toast.error((err as Error).message);
@@ -136,6 +143,31 @@ function AIPage() {
       toast.error((err as Error).message);
     } finally {
       setGeneratingScript(false);
+    }
+  }
+
+  async function runAgent(agentId: string) {
+    const agent = agents.find((a) => a.id === agentId)!;
+    const value = agentInputs[agentId]?.trim();
+    if (!value) return;
+    setAgentBusy(agentId);
+    setAgentResults((r) => ({ ...r, [agentId]: "" }));
+    if (agentId === "thumbnail") setThumbnailUrl("");
+    try {
+      const briefing = await handleCallAI(value, agent.prompt);
+      setAgentResults((r) => ({ ...r, [agentId]: briefing }));
+      if (agentId === "thumbnail" && activeProvider) {
+        const url = await generateThumbnailImage(activeProvider, `${briefing}\n\nYouTube thumbnail, 16:9, high CTR, bold composition, no illegible text.`);
+        setThumbnailUrl(url);
+      }
+    } catch (err) {
+      const message = (err as Error).message;
+      toast.error(message);
+      if (agentId === "thumbnail") {
+        setAgentResults((r) => ({ ...r, [agentId]: `${r[agentId] ? `${r[agentId]}\n\n` : ""}Sem thumbnail real neste provedor: ${message}` }));
+      }
+    } finally {
+      setAgentBusy(null);
     }
   }
 
@@ -164,6 +196,18 @@ function AIPage() {
       )}
 
       <Tabs defaultValue="chat">
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card/60 p-3">
+          <span className="text-xs font-medium text-muted-foreground">Provedor do chat e agentes</span>
+          <select
+            value={activeProvider?.id ?? ""}
+            onChange={(e) => setSelectedProviderId(e.target.value)}
+            className="h-9 min-w-[220px] rounded-lg border border-primary/45 bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+            disabled={enabledProviders.length === 0}
+          >
+            {enabledProviders.length === 0 && <option value="">Sem provedor ativo</option>}
+            {enabledProviders.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.model || "padrão"}</option>)}
+          </select>
+        </div>
         <TabsList>
           <TabsTrigger value="agents">Agentes</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
@@ -171,32 +215,39 @@ function AIPage() {
         </TabsList>
 
         <TabsContent value="agents">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {agents.map((a) => {
               const Icon = iconMap[a.icon as keyof typeof iconMap] ?? Bot;
               return (
                 <Card key={a.id}
-                  className={`relative overflow-hidden p-5 transition cursor-pointer hover:border-primary/40 ${activeAgent === a.id ? "border-primary bg-primary/5" : ""}`}
-                  onClick={() => setActiveAgent(activeAgent === a.id ? null : a.id)}>
+                  className="relative overflow-hidden p-5 transition hover:border-primary/40">
                   <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-brand">
                     <Icon className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <h3 className="mt-3 font-display text-lg font-semibold">{a.name}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">{a.description}</p>
-                  {activeAgent === a.id && (
-                    <Badge className="mt-3" variant="default">Activo no chat</Badge>
+                  {a.id === "thumbnail" && activeProvider?.provider !== "openai" && (
+                    <p className="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning">
+                      O provedor actual gera briefing/copy. Imagem real requer OpenAI com modelo de imagem.
+                    </p>
                   )}
+                  <textarea
+                    className="mt-3 h-24 w-full resize-none rounded-lg border border-border bg-background p-3 text-sm outline-none focus:border-primary/40"
+                    placeholder={a.id === "thumbnail" ? "Tema do vídeo, emoção, público e texto desejado…" : "Descreva o que este agente deve criar…"}
+                    value={agentInputs[a.id] ?? ""}
+                    onChange={(e) => setAgentInputs((s) => ({ ...s, [a.id]: e.target.value }))}
+                  />
+                  <Button className="mt-3 gradient-brand text-primary-foreground" disabled={!activeProvider || agentBusy === a.id || !agentInputs[a.id]?.trim()} onClick={() => runAgent(a.id)}>
+                    {agentBusy === a.id ? <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" /> : <Sparkles className="mr-1 h-4 w-4" />}
+                    {a.id === "thumbnail" ? "Gerar thumbnail/briefing" : "Executar agente"}
+                  </Button>
+                  {a.id === "thumbnail" && thumbnailUrl && <img src={thumbnailUrl} alt="Thumbnail gerada" className="mt-4 aspect-video w-full rounded-xl border border-border object-cover" />}
+                  {agentResults[a.id] && <div className="mt-3 rounded-xl border border-border bg-card/60 p-3 text-sm whitespace-pre-wrap">{agentResults[a.id]}</div>}
                 </Card>
               );
             })}
           </div>
-          {activeAgent && (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Agente <strong>{agents.find(a => a.id === activeAgent)?.name}</strong> activo —{" "}
-              vá para o <strong>Chat</strong> para interagir.
-            </p>
-          )}
         </TabsContent>
 
         <TabsContent value="chat">
@@ -208,7 +259,7 @@ function AIPage() {
                     <FontAwesomeIcon icon={["fas", "robot"]} size="2x" className="text-muted-foreground" />
                     <p className="mt-2 text-sm text-muted-foreground">
                       {activeProvider
-                        ? `${activeAgent ? agents.find(a => a.id === activeAgent)?.name + " activo — " : ""}Comece a conversar.`
+                        ? "Chat livre — escolha o provedor acima e converse sem agentes."
                         : "Configure um provedor de IA para começar."}
                     </p>
                   </div>

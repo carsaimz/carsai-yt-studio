@@ -216,6 +216,38 @@ export async function callAI(
   }
 }
 
+export async function generateThumbnailImage(
+  provider: AIProviderConfig,
+  prompt: string,
+): Promise<string> {
+  if (provider.provider !== "openai") {
+    throw new Error("Este provedor só gera texto. Para thumbnails reais, ative OpenAI com modelo de imagem (ex.: gpt-image-1) ou use o agente para gerar briefing/copy.");
+  }
+  const base = provider.baseUrl || BASE_URLS.openai;
+  const res = await fetch(`${base.replace(/\/$/, "")}/images/generations`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${provider.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: provider.model && provider.model.includes("image") ? provider.model : "gpt-image-1",
+      prompt,
+      size: "1280x720",
+      n: 1,
+    }),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e?.error?.message ?? `Image API ${res.status}`);
+  }
+  const data = await res.json();
+  const item = data.data?.[0];
+  if (item?.url) return item.url;
+  if (item?.b64_json) return `data:image/png;base64,${item.b64_json}`;
+  throw new Error("O provedor não devolveu uma imagem.");
+}
+
 // Select best available provider
 export function selectProvider(providers: AIProviderConfig[]): AIProviderConfig | null {
   return providers
