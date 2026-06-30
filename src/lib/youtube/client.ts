@@ -15,7 +15,7 @@
 
 import { getSetup } from "@/lib/setup/store";
 import { trackQuota } from "./quota";
-import { lsGet, lsSet } from "@/lib/storage/kv";
+import { lsGet, lsSet, lsDel } from "@/lib/storage/kv";
 
 const BASE      = "https://www.googleapis.com/youtube/v3";
 const UPLOAD    = "https://www.googleapis.com/upload/youtube/v3";
@@ -23,6 +23,14 @@ const ANALYTICS = "https://youtubeanalytics.googleapis.com/v2";
 
 export const YT_OAUTH_TOKEN_KEY  = "yt.oauth.token";
 export const YT_OAUTH_PKCE_KEY   = "yt.oauth.pkce";
+
+type OAuthPKCEState = {
+  verifier: string;
+  state: string;
+  clientId: string;
+  clientSecret?: string;
+  redirectUri: string;
+};
 
 export type OAuthToken = {
   access_token:  string;
@@ -45,8 +53,15 @@ export function setYtToken(t: OAuthToken) {
 }
 
 export function clearYtToken() {
+  lsDel(YT_OAUTH_TOKEN_KEY);
+  lsDel(YT_OAUTH_PKCE_KEY);
+  // Legacy cleanup for older builds that wrote un-namespaced keys.
   localStorage.removeItem(YT_OAUTH_TOKEN_KEY);
   localStorage.removeItem(YT_OAUTH_PKCE_KEY);
+}
+
+export function hasStoredOAuth(): boolean {
+  return lsGet<OAuthToken | null>(YT_OAUTH_TOKEN_KEY, null) !== null;
 }
 
 export function hasOAuth(): boolean {
@@ -79,19 +94,24 @@ const SCOPES = [
   "https://www.googleapis.com/auth/yt-analytics.readonly",
 ].join(" ");
 
-export async function startOAuthPKCE(): Promise<void> {
+export async function startOAuthPKCE(overrides?: { clientId?: string; clientSecret?: string }): Promise<void> {
   const { youtube: yt } = getSetup();
-  if (!yt?.oauthClientId) throw new Error("OAuth Client ID não configurado em Definições → YouTube.");
+  const clientId = overrides?.clientId?.trim() || yt?.oauthClientId?.trim();
+  const clientSecret = overrides?.clientSecret?.trim() || yt?.oauthClientSecret?.trim() || undefined;
+  if (!clientId) throw new Error("OAuth Client ID não configurado em Definições → YouTube.");
 
   const verifier  = randomString(64);
   const challenge = base64url(await sha256(verifier));
   const state     = randomString(16);
+  const redirectUri = `${location.origin}/oauth/callback`;
 
-  lsSet(YT_OAUTH_PKCE_KEY, { verifier, state });
+  // Store the exact client credentials used to start the flow so the callback
+  // never depends on React state or a later settings read with an empty secret.
+  lsSet<OAuthPKCEState>(YT_OAUTH_PKCE_KEY, { verifier, state, clientId, clientSecret, redirectUri });
 
   const params = new URLSearchParams({
-    client_id:             yt.oauthClientId,
-    redirect_uri:          `${location.origin}/oauth/callback`,
+    client_id:             clientId,
+    redirect_uri:          redirectUri,
     response_type:         "code",
     scope:                 SCOPES,
     state,
@@ -106,21 +126,25 @@ export async function startOAuthPKCE(): Promise<void> {
 
 export async function handleOAuthCallback(code: string, state: string): Promise<void> {
   const { youtube: yt } = getSetup();
-  if (!yt?.oauthClientId) throw new Error("OAuth Client ID não configurado.");
 
-  const pkce = lsGet<{ verifier: string; state: string } | null>(YT_OAUTH_PKCE_KEY, null);
+  const pkce = lsGet<OAuthPKCEState | null>(YT_OAUTH_PKCE_KEY, null);
   if (!pkce || pkce.state !== state) throw new Error("Estado OAuth inválido.");
+
+  const clientId = pkce.clientId || yt?.oauthClientId?.trim();
+  const clientSecret = pkce.clientSecret || yt?.oauthClientSecret?.trim() || undefined;
+  const redirectUri = pkce.redirectUri || `${location.origin}/oauth/callback`;
+  if (!clientId) throw new Error("OAuth Client ID não configurado.");
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      client_id:     yt.oauthClientId,
-      ...(yt.oauthClientSecret ? { client_secret: yt.oauthClientSecret } : {}),
+      client_id:     clientId,
+      ...(clientSecret ? { client_secret: clientSecret } : {}),
       code,
       code_verifier: pkce.verifier,
       grant_type:    "authorization_code",
-      redirect_uri:  `${location.origin}/oauth/callback`,
+      redirect_uri:  redirectUri,
     }),
   });
 
@@ -137,7 +161,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     scope:         data.scope,
   });
 
-  localStorage.removeItem(YT_OAUTH_PKCE_KEY);
+  lsDel(YT_OAUTH_PKCE_KEY);
 }
 
 export async function refreshOAuthToken(): Promise<boolean> {
@@ -151,6 +175,7 @@ export async function refreshOAuthToken(): Promise<boolean> {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       client_id:     yt.oauthClientId,
+      ...(yt.oauthClientSecret ? { client_secret: yt.oauthClientSecret } : {}),
       refresh_token: stored.refresh_token,
       grant_type:    "refresh_token",
     }),

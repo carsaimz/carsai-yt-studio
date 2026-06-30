@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PROVIDER_PRESETS, useLocalState, type AIProviderConfig } from "@/lib/local-store";
 import { useSetup } from "@/lib/setup/store";
 import { useFirebaseUser, logout } from "@/lib/firebase/auth";
-import { youtube, hasOAuth, startOAuthPKCE, clearYtToken } from "@/lib/youtube/client";
+import { youtube, hasOAuth, hasStoredOAuth, startOAuthPKCE, clearYtToken } from "@/lib/youtube/client";
 import { UpdateCard } from "@/components/updates/update-card";
 
 export const Route = createFileRoute("/settings")({
@@ -28,29 +28,30 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
+  const { t } = useI18n();
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4 px-4 py-6 sm:px-6 sm:py-8">
-      <PageHeader title="Configurações" description="API keys, provedores de IA e preferências." />
+      <PageHeader title={t("settings.title")} description={t("settings.subtitle")} />
       <Tabs defaultValue="youtube" className="w-full">
         <div className="overflow-x-auto">
           <TabsList className="mb-0 inline-flex w-max min-w-full">
             <TabsTrigger value="youtube" className="flex-shrink-0">
-              <YoutubeIcon className="mr-1.5 h-4 w-4" />YouTube
+              <YoutubeIcon className="mr-1.5 h-4 w-4" />{t("settings.youtube")}
             </TabsTrigger>
             <TabsTrigger value="ai" className="flex-shrink-0">
-              <FontAwesomeIcon icon={["fas", "robot"]} className="mr-1.5" />IA
+              <FontAwesomeIcon icon={["fas", "robot"]} className="mr-1.5" />{t("settings.ai")}
             </TabsTrigger>
             <TabsTrigger value="general" className="flex-shrink-0">
-              <Palette className="mr-1.5 h-4 w-4" />Geral
+              <Palette className="mr-1.5 h-4 w-4" />{t("settings.general")}
             </TabsTrigger>
             <TabsTrigger value="integrations" className="flex-shrink-0">
-              <Globe className="mr-1.5 h-4 w-4" />Integrações
+              <Globe className="mr-1.5 h-4 w-4" />{t("settings.integrations")}
             </TabsTrigger>
             <TabsTrigger value="security" className="flex-shrink-0">
-              <Shield className="mr-1.5 h-4 w-4" />Segurança
+              <Shield className="mr-1.5 h-4 w-4" />{t("settings.security")}
             </TabsTrigger>
             <TabsTrigger value="updates" className="flex-shrink-0">
-              <Download className="mr-1.5 h-4 w-4" />Atualizações
+              <Download className="mr-1.5 h-4 w-4" />{t("settings.updates")}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -71,6 +72,7 @@ function SettingsPage() {
 // ── YouTube Settings ──────────────────────────────────────────────────────────
 function YouTubeSettings() {
   const [setup, setSetup] = useSetup();
+  const { t } = useI18n();
   const { user } = useFirebaseUser();
   const qc = useQueryClient();
 
@@ -80,6 +82,21 @@ function YouTubeSettings() {
   const [channelId, setChannelId] = useState(setup.youtube?.defaultChannelId ?? "");
   const [loadingChannels, setLoadingChannels] = useState(false);
   const [myChannels, setMyChannels] = useState<any[]>([]);
+  const oauthConnected = hasOAuth();
+  const oauthStored = hasStoredOAuth();
+
+  useEffect(() => {
+    setSetup((prev) => ({
+      ...prev,
+      youtube: {
+        ...(prev.youtube ?? {}),
+        apiKey,
+        oauthClientId: clientId.trim(),
+        oauthClientSecret: clientSecret.trim(),
+        defaultChannelId: channelId.trim(),
+      },
+    }));
+  }, [apiKey, clientId, clientSecret, channelId, setSetup]);
 
   // Preview channel when ID typed
   const channelQ = useQuery({
@@ -92,7 +109,7 @@ function YouTubeSettings() {
 
   // Fetch my channels via OAuth
   async function fetchMyChannels() {
-    if (!hasOAuth()) { toast.error("Conecte OAuth primeiro."); return; }
+    if (!hasOAuth()) { toast.error(t("settings.oauthConnectFirst")); return; }
     setLoadingChannels(true);
     try {
       const res = await youtube.myChannel();
@@ -112,18 +129,30 @@ function YouTubeSettings() {
       youtube: {
         ...(setup.youtube ?? {}),
         apiKey,
-        oauthClientId: clientId,
+        oauthClientId: clientId.trim(),
+        oauthClientSecret: clientSecret.trim(),
         defaultChannelId: channelId,
       },
     });
     qc.invalidateQueries({ queryKey: ["channel"] });
-    toast.success("Configurações do YouTube guardadas!");
+    toast.success(t("settings.youtubeSaved"));
+  }
+
+  async function connectOAuth() {
+    save();
+    await startOAuthPKCE({ clientId, clientSecret });
+  }
+
+  function disconnectOAuth() {
+    clearYtToken();
+    qc.invalidateQueries();
+    toast.success(t("settings.oauthDisconnected"));
   }
 
   return (
     <div className="space-y-4">
       {/* Account */}
-      <Section title="Conta Firebase">
+      <Section title={t("settings.firebaseAccount")}>
         {user ? (
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
@@ -136,38 +165,38 @@ function YouTubeSettings() {
                 {user.emailVerified && (
                   <p className="text-xs text-success flex items-center gap-1">
                     <FontAwesomeIcon icon={["fas", "circle-check"]} className="h-3 w-3" />
-                    E-mail verificado
+                    {t("settings.emailVerified")}
                   </p>
                 )}
               </div>
             </div>
             <Button variant="outline" size="sm"
               onClick={() => logout().then(() => toast.success("Sessão encerrada"))}>
-              <LogOut className="mr-1 h-4 w-4" />Sair
+              <LogOut className="mr-1 h-4 w-4" />{t("auth.signOut")}
             </Button>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Não autenticado. <Link to="/auth" className="text-primary underline">Entrar</Link>
+             {t("settings.notAuthenticated")} <Link to="/auth" className="text-primary underline">{t("auth.signIn")}</Link>
           </p>
         )}
       </Section>
 
       {/* API Key */}
       <Section title="YouTube Data API v3"
-        description="Obrigatória para leitura de dados. Crie em console.cloud.google.com → APIs & Services → Credentials.">
+        description={t("settings.youtubeApiDesc")}>
         <Field label="API Key" value={apiKey} onChange={setApiKey} placeholder="AIza…" type="password" />
       </Section>
 
       {/* OAuth */}
-      <Section title="OAuth 2.0 (escrita)"
-        description="Necessário para upload, edição, playlists, comentários e analytics. Crie um OAuth 2.0 Client ID (Web application) em console.cloud.google.com.">
+      <Section title={t("settings.oauthTitle")}
+        description={t("settings.oauthDesc")}>
         <Field label="OAuth Client ID" value={clientId} onChange={setClientId}
           placeholder="xxxx.apps.googleusercontent.com" />
         <Field label="OAuth Client Secret (Web app type)" value={clientSecret} onChange={setClientSecret}
-          type="password" placeholder="GOCSPX-xxxxx (obrigatório se usar Web application)" />
+          type="password" placeholder="GOCSPX-xxxxx" />
         <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs text-warning">
-          <strong>Atenção:</strong> Se receber erro <code>client_secret is missing</code>, tem duas opções:
+          <strong>{t("settings.warning")}:</strong> {t("settings.oauthSecretHint")}
           <ul className="mt-1 ml-3 list-disc space-y-0.5">
             <li>Use tipo <strong>Desktop application</strong> no Google Console (não precisa de client secret)</li>
             <li>Ou use tipo <strong>Web application</strong> e preencha o Client Secret acima</li>
@@ -176,37 +205,37 @@ function YouTubeSettings() {
         <div className="flex items-center justify-between rounded-xl border border-border bg-card/60 p-3">
           <div>
             <p className="text-sm font-medium">
-              {hasOAuth() ? (
+              {oauthConnected ? (
                 <span className="flex items-center gap-1.5 text-success">
                   <FontAwesomeIcon icon={["fas", "circle-check"]} />
-                  OAuth conectado
+                   {t("settings.oauthConnected")}
                 </span>
-              ) : "OAuth não conectado"}
+               ) : oauthStored ? t("settings.oauthExpired") : t("settings.oauthNotConnected")}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              URI de redirect a configurar no Google Console: <code className="text-xs bg-muted px-1 rounded">{typeof window !== "undefined" ? `${window.location.origin}/oauth/callback` : "/oauth/callback"}</code>
+               {t("settings.redirectUri")}: <code className="text-xs bg-muted px-1 rounded">{typeof window !== "undefined" ? `${window.location.origin}/oauth/callback` : "/oauth/callback"}</code>
             </p>
           </div>
-          {hasOAuth() ? (
+          {oauthConnected || oauthStored ? (
             <Button variant="outline" size="sm"
               className="text-destructive border-destructive/30 hover:bg-destructive/10 flex-shrink-0"
-              onClick={() => { clearYtToken(); toast.success("OAuth desconectado."); window.location.reload(); }}>
-              Desconectar
+              onClick={disconnectOAuth}>
+              {t("settings.disconnect")}
             </Button>
           ) : (
             <Button size="sm" className="gradient-brand text-primary-foreground hover:opacity-90 flex-shrink-0"
               disabled={!clientId}
-              onClick={() => startOAuthPKCE().catch(e => toast.error(e.message))}>
+              onClick={() => connectOAuth().catch(e => toast.error(e.message))}>
               <FontAwesomeIcon icon={["fab", "google"]} className="mr-1.5" />
-              Conectar
+              {t("settings.connect")}
             </Button>
           )}
         </div>
       </Section>
 
       {/* Channel */}
-      <Section title="Canal padrão"
-        description="Com OAuth conectado, clique em 'Listar meus canais'. Ou cole o ID manualmente (UC…) de youtube.com/account_advanced.">
+      <Section title={t("settings.defaultChannel")}
+        description={t("settings.defaultChannelDesc")}>
         <div className="flex gap-2">
           <Field label="Channel ID" value={channelId} onChange={setChannelId}
             placeholder="UCxxxxxxxxxxxxxxxxxx" className="flex-1" />
@@ -215,14 +244,14 @@ function YouTubeSettings() {
               onClick={fetchMyChannels}>
               {loadingChannels
                 ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <><RefreshCw className="mr-1 h-4 w-4" />Listar canais</>}
+                : <><RefreshCw className="mr-1 h-4 w-4" />{t("settings.listChannels")}</>}
             </Button>
           </div>
         </div>
 
         {myChannels.length > 1 && (
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Escolha um canal:</p>
+            <p className="text-xs text-muted-foreground">{t("settings.chooseChannel")}</p>
             {myChannels.map((c: any) => (
               <button key={c.id} onClick={() => setChannelId(c.id)}
                 className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${
@@ -270,7 +299,7 @@ function YouTubeSettings() {
       <div className="flex justify-end pt-2">
         <Button className="gradient-brand text-primary-foreground hover:opacity-90 w-full sm:w-auto" onClick={save}>
           <FontAwesomeIcon icon={["fas", "floppy-disk"]} className="mr-2" />
-          Guardar configurações YouTube
+          {t("settings.saveYoutube")}
         </Button>
       </div>
     </div>
