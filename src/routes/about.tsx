@@ -30,13 +30,13 @@ const PLATFORMS = [
 ];
 
 function About() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   return (
     <PublicShell
-      eyebrow="Sobre"
+      eyebrow={t("nav.about")}
       icon={<Info className="h-3 w-3" />}
-      title="Sobre & Atualizações"
-      subtitle="Gerencie sua versão, baixe as últimas builds para qualquer plataforma e conheça o projeto."
+      title={t("about.title")}
+      subtitle={t("about.subtitle")}
       art={<FloatingArt variant="rocket" />}
     >
       <div className="space-y-6">
@@ -46,16 +46,9 @@ function About() {
 
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <SectionCard title="O projeto" icon={<Rocket className="h-4 w-4" />}>
-            <p>
-              Carsai YT Studio é uma plataforma <strong>open-source (MIT)</strong> para criadores
-              gerenciarem o canal do YouTube com auxílio de IA — análise, SEO, comunidade,
-              automações e estúdio — sem que seus dados saiam do dispositivo.
-            </p>
-            <p>
-              Distribuído como app web, PWA, Android (APK/AAB), iOS (IPA) e desktop (Tauri).
-              Pode ser auto-hospedado em qualquer servidor estático ou usado localmente.
-            </p>
+          <SectionCard title={t("about.projectTitle")} icon={<Rocket className="h-4 w-4" />}>
+            <p>{t("about.projectBody1")}</p>
+            <p>{t("about.projectBody2")}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {PLATFORMS.map((p) => (
                 <span key={p.label} className="rounded-full border border-border bg-background/50 px-3 py-1 text-xs">
@@ -65,7 +58,7 @@ function About() {
             </div>
           </SectionCard>
 
-          <SectionCard title="Tecnologias" icon={<Code2 className="h-4 w-4" />}>
+          <SectionCard title={t("about.techTitle")} icon={<Code2 className="h-4 w-4" />}>
             <div className="flex flex-wrap gap-2">
               {STACK.map((s, i) => (
                 <motion.span key={s}
@@ -77,7 +70,7 @@ function About() {
               ))}
             </div>
             <p className="mt-3">
-              Código no GitHub:{" "}
+              {t("about.githubCode")}{" "}
               <a className="inline-flex items-center gap-1 text-primary hover:underline"
                 href="https://github.com/carsaimz/carsai-yt-studio" target="_blank" rel="noreferrer">
                 <Github className="h-3.5 w-3.5" /> carsaimz/carsai-yt-studio
@@ -85,21 +78,16 @@ function About() {
             </p>
           </SectionCard>
 
-          <SectionCard title="Licença & Créditos" icon={<Heart className="h-4 w-4" />}>
-            <p>
-              Licenciado sob <strong>MIT</strong>. Você pode usar, modificar, distribuir e até
-              comercializar — mantendo o aviso de copyright.
-            </p>
-            <p className="mt-1">
-              Construído com 💛 por <strong>Carsai</strong> e a comunidade open-source.
-            </p>
+          <SectionCard title={t("about.licenseTitle")} icon={<Heart className="h-4 w-4" />}>
+            <p>{t("about.licenseBody1")}</p>
+            <p className="mt-1">{t("about.licenseBody2")}</p>
           </SectionCard>
 
-          <SectionCard title="Contribua" icon={<Github className="h-4 w-4" />}>
+          <SectionCard title={t("about.contributeTitle")} icon={<Github className="h-4 w-4" />}>
             <ul className="ml-4 list-disc space-y-1">
-              <li>Abra <a className="text-primary hover:underline" href="https://github.com/carsaimz/carsai-yt-studio/issues" target="_blank" rel="noreferrer">issues</a> com bugs ou ideias.</li>
-              <li>Mande pull requests — guia em <code>CONTRIBUTING.md</code>.</li>
-              <li>Traduções, temas e plugins são bem-vindos.</li>
+              <li>{t("about.contribute1")}</li>
+              <li>{t("about.contribute2")}</li>
+              <li>{t("about.contribute3")}</li>
             </ul>
           </SectionCard>
         </div>

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, BarChart3, Bot, Film, Search, Shield, Sparkles, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
+import { LangPicker } from "@/components/lang-picker";
 
 export const Route = createFileRoute("/welcome")({
   component: WelcomePage,
@@ -35,11 +36,14 @@ function WelcomePage() {
         <nav className="hidden gap-5 text-sm text-muted-foreground sm:flex">
           <Link to="/docs" className="hover:text-foreground">{t("nav.docs")}</Link>
           <Link to="/help" className="hover:text-foreground">{t("nav.help")}</Link>
-          <Link to="/changelog" className="hover:text-foreground">Changelog</Link>
+          <Link to="/changelog" className="hover:text-foreground">{t("nav.changelog")}</Link>
         </nav>
-        <Button asChild size="sm" className="gradient-brand text-primary-foreground hover:opacity-90">
-          <Link to="/setup">{t("welcome.getStarted")}</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <LangPicker compact />
+          <Button asChild size="sm" className="gradient-brand text-primary-foreground hover:opacity-90">
+            <Link to="/setup">{t("welcome.getStarted")}</Link>
+          </Button>
+        </div>
       </header>
 
       <main className="relative z-10 mx-auto max-w-6xl px-4 pb-20">
@@ -120,6 +124,7 @@ function WelcomePage() {
             <Link to="/privacy" className="hover:text-foreground">{t("footer.privacy")}</Link>
             <Link to="/terms" className="hover:text-foreground">{t("footer.terms")}</Link>
             <Link to="/about" className="hover:text-foreground">{t("nav.about")}</Link>
+            <LangPicker compact />
           </div>
         </div>
       </footer>

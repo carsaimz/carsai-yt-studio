@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { PublicShell } from "@/components/public/public-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { APP_VERSION } from "@/lib/version";
 
 export const Route = createFileRoute("/changelog")({
   head: () => ({
@@ -146,11 +147,11 @@ function ChangelogPage() {
           <div className="rounded-2xl border border-border bg-card/60 p-10 text-center">
             <FontAwesomeIcon icon={["fas", "box-open"]} size="2x" className="text-muted-foreground mb-3" />
             <p className="text-sm text-muted-foreground">
-              Ainda sem releases públicas. A primeira será criada automaticamente ao fazer push da tag <code>v0.1.0</code>.
+              Ainda sem releases públicas. A primeira será criada automaticamente ao fazer push da tag <code>v{APP_VERSION}</code>.
             </p>
             <pre className="mt-4 overflow-x-auto rounded-xl bg-muted/50 p-3 text-xs text-left font-mono mx-auto max-w-xs">
-{`git tag -a v0.1.0 -m "Release inicial"
-git push origin v0.1.0`}
+{`git tag -a v${APP_VERSION} -m "Release inicial"
+git push origin v${APP_VERSION}`}
             </pre>
           </div>
         )}

@@ -99,7 +99,7 @@ jobs:
           cp public/icon-512.png resources/icon.png
           cp public/icon-512.png resources/icon-foreground.png
           cp public/icon-512.png resources/icon-background.png
-          cp public/icon-512.png resources/splash.png
+          cp public/icon-192.png resources/splash.png
           npx @capacitor/assets generate --android \
             --iconBackgroundColor "#1a1410" \
             --iconBackgroundColorDark "#1a1410" \
