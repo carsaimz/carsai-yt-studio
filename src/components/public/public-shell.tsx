@@ -2,6 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { BookOpen, HelpCircle, History, Info, Shield } from "lucide-react";
 import type { ReactNode } from "react";
+import { LangPicker } from "@/components/lang-picker";
+import { useI18n } from "@/lib/i18n";
 
 type Props = {
   title: string;
@@ -13,13 +15,14 @@ type Props = {
 };
 
 const NAV = [
-  { to: "/docs", label: "Docs", icon: BookOpen },
-  { to: "/help", label: "Ajuda", icon: HelpCircle },
-  { to: "/changelog", label: "Changelog", icon: History },
-  { to: "/about", label: "Sobre", icon: Info },
+  { to: "/docs", key: "nav.docs", icon: BookOpen },
+  { to: "/help", key: "nav.help", icon: HelpCircle },
+  { to: "/changelog", key: "nav.changelog", icon: History },
+  { to: "/about", key: "nav.about", icon: Info },
 ];
 
 export function PublicShell({ title, subtitle, eyebrow, icon, art, children }: Props) {
+  const { t } = useI18n();
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div className="pointer-events-none absolute -left-32 top-0 h-80 w-80 rounded-full bg-primary/15 blur-3xl" />
@@ -38,15 +41,17 @@ export function PublicShell({ title, subtitle, eyebrow, icon, art, children }: P
               <Link key={n.to} to={n.to}
                 className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
                 activeProps={{ className: "bg-accent/60 text-foreground" }}>
-                <n.icon className="h-3.5 w-3.5" /> {n.label}
+                <n.icon className="h-3.5 w-3.5" /> {t(n.key)}
               </Link>
             ))}
           </nav>
+          <div className="hidden sm:block"><LangPicker compact /></div>
           <nav className="flex gap-3 text-xs text-muted-foreground sm:hidden">
             {NAV.map((n) => (
-              <Link key={n.to} to={n.to} className="hover:text-foreground">{n.label}</Link>
+              <Link key={n.to} to={n.to} className="hover:text-foreground">{t(n.key)}</Link>
             ))}
           </nav>
+          <div className="sm:hidden"><LangPicker compact /></div>
         </div>
       </header>
 
@@ -78,11 +83,11 @@ export function PublicShell({ title, subtitle, eyebrow, icon, art, children }: P
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-muted-foreground">
           <span>© {new Date().getFullYear()} Carsai YT Studio · MIT</span>
           <div className="flex flex-wrap gap-4">
-            <Link to="/privacy" className="hover:text-foreground">Privacidade</Link>
-            <Link to="/terms" className="hover:text-foreground">Termos</Link>
-            <Link to="/cookies" className="hover:text-foreground">Cookies</Link>
-            <Link to="/security" className="hover:text-foreground">Segurança</Link>
-            <Link to="/about" className="hover:text-foreground">Sobre</Link>
+            <Link to="/privacy" className="hover:text-foreground">{t("footer.privacy")}</Link>
+            <Link to="/terms" className="hover:text-foreground">{t("footer.terms")}</Link>
+            <Link to="/cookies" className="hover:text-foreground">{t("footer.cookies")}</Link>
+            <Link to="/security" className="hover:text-foreground">{t("nav.security")}</Link>
+            <Link to="/about" className="hover:text-foreground">{t("nav.about")}</Link>
           </div>
         </div>
       </footer>

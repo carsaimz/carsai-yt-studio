@@ -1,4 +1,3 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { LOCALES, useI18n } from "@/lib/i18n";
 
 type LangPickerProps = {
@@ -27,7 +26,7 @@ export function LangPicker({ compact = false, className = "" }: LangPickerProps)
           </option>
         ))}
       </select>
-      <FontAwesomeIcon icon={["fas", "globe"]} className="hidden h-3 w-3 text-muted-foreground sm:block" />
+      <span className="hidden text-sm text-muted-foreground sm:block" aria-hidden>🌐</span>
     </label>
   );
 }

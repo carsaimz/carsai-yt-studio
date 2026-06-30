@@ -42,6 +42,8 @@ export function getLang(): Locale {
   if (typeof window === "undefined") return "pt-BR";
   const stored = localStorage.getItem(LANG_KEY) as Locale | null;
   if (stored && stored in DICTIONARIES) return stored;
+  const legacy = localStorage.getItem("carsai:lang") as Locale | null;
+  if (legacy && legacy in DICTIONARIES) return legacy;
   try {
     const setup = JSON.parse(localStorage.getItem("carsai:setup") || "null");
     const setupLang = setup?.general?.lang as Locale | undefined;
@@ -59,6 +61,7 @@ export function getLang(): Locale {
 export function setLang(lang: Locale): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(LANG_KEY, lang);
+  localStorage.setItem("carsai:lang", lang);
   try {
     const setup = JSON.parse(localStorage.getItem("carsai:setup") || "{}");
     setup.general = { ...(setup.general ?? {}), lang };
@@ -115,8 +118,15 @@ export function useI18n() {
       const detail = (e as CustomEvent<Locale>).detail;
       setLangState(detail);
     };
+    const storageHandler = () => setLangState(getLang());
     window.addEventListener(LANG_EVENT, handler);
-    return () => window.removeEventListener(LANG_EVENT, handler);
+    window.addEventListener("storage", storageHandler);
+    window.addEventListener("carsai:storage", storageHandler);
+    return () => {
+      window.removeEventListener(LANG_EVENT, handler);
+      window.removeEventListener("storage", storageHandler);
+      window.removeEventListener("carsai:storage", storageHandler);
+    };
   }, []);
 
   const translate = useCallback(
