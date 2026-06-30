@@ -16,7 +16,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { isSetupCompleted, getSetup } from "@/lib/setup/store";
 import { useFirebaseUser } from "@/lib/firebase/auth";
-import { useI18n, LOCALES, setLang, type Locale } from "@/lib/i18n";
+import { useI18n, LOCALES, setLang, getLang, type Locale } from "@/lib/i18n";
 
 library.add(fas, fab);
 
@@ -404,10 +404,10 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: r => r.location.pathname });
 
-  // Restore saved language on boot
+  // Restore saved language on boot. Prefer the public picker/localStorage value;
+  // do not force setup.general.lang over public pages after the user changes it.
   useEffect(() => {
-    const saved = getSetup().general?.lang;
-    if (saved) setLang(saved as Locale);
+    setLang(getLang());
   }, []); // eslint-disable-line
 
   if (typeof window !== "undefined" && pathname !== "/" && !isSetupCompleted() && !isPublic(pathname)) {

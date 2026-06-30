@@ -42,6 +42,13 @@ export function getLang(): Locale {
   if (typeof window === "undefined") return "pt-BR";
   const stored = localStorage.getItem(LANG_KEY) as Locale | null;
   if (stored && stored in DICTIONARIES) return stored;
+  try {
+    const setup = JSON.parse(localStorage.getItem("carsai:setup") || "null");
+    const setupLang = setup?.general?.lang as Locale | undefined;
+    if (setupLang && setupLang in DICTIONARIES) return setupLang;
+  } catch {
+    // Ignore malformed setup state and fall back to browser preference.
+  }
   // Browser preference
   const browser = navigator.language;
   if (browser.startsWith("en")) return "en-US";
@@ -50,7 +57,17 @@ export function getLang(): Locale {
 }
 
 export function setLang(lang: Locale): void {
+  if (typeof window === "undefined") return;
   localStorage.setItem(LANG_KEY, lang);
+  try {
+    const setup = JSON.parse(localStorage.getItem("carsai:setup") || "{}");
+    setup.general = { ...(setup.general ?? {}), lang };
+    if (setup.preferences) setup.preferences.locale = lang;
+    localStorage.setItem("carsai:setup", JSON.stringify(setup));
+    window.dispatchEvent(new CustomEvent("carsai:storage", { detail: { key: "setup" } }));
+  } catch {
+    // Language must still work even if setup storage is unavailable.
+  }
   // Apply html lang attribute
   if (typeof document !== "undefined") {
     document.documentElement.lang = lang;

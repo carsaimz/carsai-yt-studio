@@ -3,8 +3,8 @@
  * O repositório é configurado nas Settings; default abaixo pode ser editado.
  */
 import { lsGet } from "@/lib/storage/kv";
+import { APP_VERSION } from "@/lib/version";
 
-export const APP_VERSION = "0.1.0";
 export const DEFAULT_REPO = "carsaimz/carsai-yt-studio";
 
 export type Release = {
