@@ -1,44 +1,64 @@
 #!/usr/bin/env node
-/**
- * build-web.mjs
- * Gera index.html correcto para TanStack Start (hidrata document, não #root).
- * - Web/Vercel: usa .output/public como outputDirectory
- * - Mobile/Capacitor: copia tudo para dist/client com paths relativos
- */
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, writeFileSync, cpSync } from "node:fs";
 import { join } from "node:path";
 
 const forMobile = process.env.BUILD_TARGET === "mobile";
-
-function run(cmd) {
-  execSync(cmd, { stdio: "inherit", env: { ...process.env } });
-}
-
 console.log(`\n🔨 Build ${forMobile ? "[mobile/Capacitor]" : "[web/Vercel]"}\n`);
-run("npm run build");
+
+execSync("npm run build", { stdio: "inherit", env: { ...process.env } });
 
 const PUB = ".output/public";
 if (!existsSync(PUB)) {
-  console.error("❌ .output/public não encontrado!");
+  console.error("❌ .output/public not found after build!");
   process.exit(1);
 }
 
-console.log("✅ .output/public ready (TanStack Start index.html preserved)");
+// Find assets
+const assetsDir = join(PUB, "assets");
+const assetFiles = existsSync(assetsDir) ? readdirSync(assetsDir) : [];
+const cssFiles = assetFiles.filter(f => f.endsWith(".css"));
+const entryJs  = assetFiles.find(f => /^index-[^/]+\.js$/.test(f)) ?? "";
+
+// Generate proper HTML shell for TanStack Start
+// hydrateRoot(document) needs full html/head/body — no #root div needed
+function makeHtml(relative = false) {
+  const b = relative ? "." : "";
+  const css = cssFiles.map(f =>
+    `  <link rel="stylesheet" href="${b}/assets/${f}" />`
+  ).join("\n");
+  return `<!DOCTYPE html>
+<html lang="pt-BR" class="dark" style="background:#1a1410;color:#f5f0eb">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1410" />
+  <title>Carsai YT Studio</title>
+  <meta name="description" content="Plataforma completa para criadores YouTube com IA." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" href="${b}/favicon.ico" />
+  <link rel="apple-touch-icon" href="${b}/apple-touch-icon.png" />
+  <link rel="manifest" href="${b}/manifest.webmanifest" />
+${css}
+</head>
+<body style="margin:0;background:#1a1410">
+  <script>document.documentElement.className="dark";</script>
+  ${entryJs ? `<script type="module" src="${b}/assets/${entryJs}"></script>` : "<!-- no entry JS found -->"}
+</body>
+</html>`;
+}
+
+// Write index.html to .output/public (for Vercel, uses outputDirectory: .output/public)
+writeFileSync(join(PUB, "index.html"), makeHtml(false));
+console.log(`✅ .output/public/index.html (js:${entryJs || "none"}, css:${cssFiles.length})`);
 
 if (forMobile) {
   const DEST = "dist/client";
   mkdirSync(DEST, { recursive: true });
-  // Copy all assets from .output/public
   cpSync(PUB, DEST, { recursive: true, force: true });
-  // Keep TanStack Start's HTML shell intact; only make root-absolute static paths relative.
-  const indexPath = join(DEST, "index.html");
-  const html = readFileSync(indexPath, "utf8")
-    .replaceAll('href="/assets/', 'href="./assets/')
-    .replaceAll('src="/assets/', 'src="./assets/')
-    .replaceAll('href="/manifest.webmanifest"', 'href="./manifest.webmanifest"')
-    .replaceAll('href="/favicon.ico"', 'href="./favicon.ico"')
-    .replaceAll('href="/apple-touch-icon.png"', 'href="./apple-touch-icon.png"');
-  writeFileSync(indexPath, html);
-  console.log(`✅ dist/client/ ready for Capacitor`);
+  // Overwrite with relative paths for Capacitor
+  writeFileSync(join(DEST, "index.html"), makeHtml(true));
+  console.log(`✅ dist/client/ ready (Capacitor)`);
 }
