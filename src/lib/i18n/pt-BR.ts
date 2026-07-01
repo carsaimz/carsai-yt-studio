@@ -125,6 +125,7 @@ export default {
     withGoogle: "Continuar com Google", connecting: "A conectar com Google…",
     signingIn: "A entrar…", creating: "A criar conta…",
     welcome: "Bem-vindo de volta!", created: "Conta criada com sucesso!",
+    termsPrefix: "Ao continuar você concorda com nossos",
   },
   ai: {
     title: "IA & Agentes",
