@@ -358,27 +358,43 @@ export const youtube = {
   initiateUpload: async (meta: {
     title: string; description: string; tags?: string[];
     privacyStatus?: "public" | "private" | "unlisted"; categoryId?: string;
+    /** ISO datetime. When set, video is forced to `private` and scheduled for `publishAt`. */
+    publishAt?: string;
+    defaultLanguage?: string;
+    madeForKids?: boolean;
+    fileSize?: number;
+    fileType?: string;
   }): Promise<string> => {
     const tok = getYtToken();
     if (!tok) throw new Error("OAuth necessário para upload.");
+
+    const status: Record<string, any> = {
+      privacyStatus: meta.publishAt ? "private" : (meta.privacyStatus ?? "private"),
+      selfDeclaredMadeForKids: !!meta.madeForKids,
+    };
+    if (meta.publishAt) status.publishAt = new Date(meta.publishAt).toISOString();
+
+    const headers: Record<string, string> = {
+      Authorization:   `Bearer ${tok.access_token}`,
+      "Content-Type":  "application/json; charset=UTF-8",
+      "X-Upload-Content-Type": meta.fileType || "video/*",
+    };
+    if (meta.fileSize) headers["X-Upload-Content-Length"] = String(meta.fileSize);
 
     const res = await fetch(
       `${UPLOAD}/videos?uploadType=resumable&part=snippet,status`,
       {
         method: "POST",
-        headers: {
-          Authorization:   `Bearer ${tok.access_token}`,
-          "Content-Type":  "application/json",
-          "X-Upload-Content-Type": "video/*",
-        },
+        headers,
         body: JSON.stringify({
           snippet: {
             title:       meta.title,
             description: meta.description,
             tags:        meta.tags ?? [],
             categoryId:  meta.categoryId ?? "22",
+            ...(meta.defaultLanguage ? { defaultLanguage: meta.defaultLanguage } : {}),
           },
-          status: { privacyStatus: meta.privacyStatus ?? "private" },
+          status,
         }),
       },
     );
