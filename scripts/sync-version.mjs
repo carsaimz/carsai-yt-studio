@@ -28,6 +28,20 @@ if (!version || !/^\d+\.\d+\.\d+/.test(version)) {
 let changed = false;
 const log = (msg) => console.log(`[sync-version] ${msg}`);
 
+// ── src/lib/version.ts ────────────────────────────────────────────────────
+const versionTsPath = join(ROOT, "src/lib/version.ts");
+const versionTsContent = `// Generated/synchronised from package.json by scripts/sync-version.mjs.\nexport const APP_VERSION = "${version}";\n`;
+const existing = existsSync(versionTsPath) ? readFileSync(versionTsPath, "utf8") : "";
+if (existing !== versionTsContent) {
+  if (check) { console.error(`✗ src/lib/version.ts is out of sync`); process.exit(1); }
+  writeFileSync(versionTsPath, versionTsContent);
+  log(`src/lib/version.ts → ${version}`);
+  changed = true;
+} else {
+  log(`src/lib/version.ts already at ${version}`);
+}
+
+
 // ── Capacitor ────────────────────────────────────────────────────────────────
 const capPath = join(ROOT, "capacitor.config.json");
 if (existsSync(capPath)) {

@@ -41,7 +41,7 @@ export type SetupState = {
   };
   preferences: {
     theme: "dark" | "light" | "system";
-    locale: "pt-BR" | "en";
+    locale: "pt-BR" | "en-US" | "es-ES";
     notificationsEnabled: boolean;
     syncFirestore: boolean;
   };

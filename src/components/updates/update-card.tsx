@@ -13,9 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
 import {
-  APP_VERSION, compareSemver, downloadAndHash, fetchLatestRelease, loadChecksums,
+  compareSemver, downloadAndHash, fetchLatestRelease, loadChecksums,
   saveBlob, type Release,
 } from "@/lib/updates/checker";
+import { useAppVersion } from "@/lib/use-app-version";
 
 type AssetCategory = {
   key: string;
@@ -146,6 +147,7 @@ type VerifyState =
   | { status: "error"; message: string };
 
 export function UpdateCard({ compact = false }: { compact?: boolean }) {
+  const { version: APP_VERSION } = useAppVersion();
   const query = useQuery<Release | null, Error>({
     queryKey: ["latest-release"],
     queryFn: () => fetchLatestRelease(),

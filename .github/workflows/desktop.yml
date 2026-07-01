@@ -1,4 +1,4 @@
-name: Desktop — Tauri (Win + Mac + Linux)
+name: Desktop — Tauri
 
 on:
   push:
@@ -10,47 +10,62 @@ on:
 permissions:
   contents: write
 
+env:
+  FIREBASE_ENV: |
+    VITE_FIREBASE_API_KEY
+    VITE_FIREBASE_AUTH_DOMAIN
+    VITE_FIREBASE_PROJECT_ID
+    VITE_FIREBASE_STORAGE_BUCKET
+    VITE_FIREBASE_MESSAGING_SENDER_ID
+    VITE_FIREBASE_APP_ID
+    VITE_FIREBASE_MEASUREMENT_ID
+
 jobs:
-  tauri:
-    name: Build ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            args: ''
-          - os: macos-latest
-            args: '--target universal-apple-darwin'
-          - os: windows-latest
-            args: '--bundles nsis,msi'
-    runs-on: ${{ matrix.os }}
+  # ── Step 1: resolve the tag ONCE and ensure the GitHub Release exists ──────
+  # Doing this in a single job avoids race conditions between platform jobs
+  # trying to create the same release simultaneously (which drops assets).
+  prepare-release:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.ver.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Get version
+        id: ver
+        run: echo "tag=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+      - name: Ensure release exists
+        uses: softprops/action-gh-release@v2
         with:
-          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: "Carsai YT Studio ${{ steps.ver.outputs.tag }}"
+          draft: false
+          prerelease: false
+          make_latest: true
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Linux system dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev libgtk-3-dev \
-            libayatana-appindicator3-dev librsvg2-dev
-
+  # ── Step 2: build each platform, attaching to the SAME pre-existing release ─
+  # Windows runs FIRST and is treated as priority; other platforms won't block it.
+  windows:
+    name: Build Windows (priority)
+    needs: prepare-release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
       - name: Install dependencies
         run: npm install
-
       - name: Build web
-        run: npm run build:mobile
+        run: node scripts/build-web.mjs
         env:
-          BUILD_TARGET: mobile
-          NITRO_PRESET: node-server
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
@@ -58,111 +73,261 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
-
-      - name: Ensure src-tauri exists
+      - name: Ensure src-tauri
         shell: bash
         run: |
           if [ ! -d "src-tauri" ]; then
             mkdir -p src-tauri/icons src-tauri/src
-            cp public/tauri-icons/32x32.png     src-tauri/icons/32x32.png
-            cp public/tauri-icons/128x128.png   src-tauri/icons/128x128.png
-            cp public/tauri-icons/128x128@2x.png src-tauri/icons/128x128@2x.png
-            cp public/tauri-icons/icon.ico      src-tauri/icons/icon.ico
-            cp public/tauri-icons/icon.png      src-tauri/icons/icon.png
-
+            cp public/tauri-icons/32x32.png       src-tauri/icons/32x32.png 2>/dev/null || true
+            cp public/tauri-icons/128x128.png      src-tauri/icons/128x128.png 2>/dev/null || true
+            cp public/tauri-icons/128x128@2x.png   src-tauri/icons/128x128@2x.png 2>/dev/null || true
+            cp public/tauri-icons/icon.ico         src-tauri/icons/icon.ico 2>/dev/null || true
+            cp public/tauri-icons/icon.png         src-tauri/icons/icon.png 2>/dev/null || true
             cat > src-tauri/Cargo.toml << 'CARGO'
-          [package]
-          name = "carsai-yt-studio"
-          version = "0.1.0"
-          edition = "2021"
-          rust-version = "1.77.2"
-          [build-dependencies]
-          tauri-build = { version = "2", features = [] }
-          [dependencies]
-          tauri = { version = "2", features = [] }
-          tauri-plugin-opener = "2"
-          serde = { version = "1", features = ["derive"] }
-          serde_json = "1"
-          CARGO
-
+            [package]
+            name = "carsai-yt-studio"
+            version = "0.1.0"
+            edition = "2021"
+            rust-version = "1.77.2"
+            [build-dependencies]
+            tauri-build = { version = "2", features = [] }
+            [dependencies]
+            tauri = { version = "2", features = [] }
+            tauri-plugin-opener = "2"
+            serde = { version = "1", features = ["derive"] }
+            serde_json = "1"
+            CARGO
             cat > src-tauri/build.rs << 'BUILDRS'
-          fn main() { tauri_build::build() }
-          BUILDRS
-
+            fn main() { tauri_build::build() }
+            BUILDRS
             cat > src-tauri/src/main.rs << 'MAINRS'
-          #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-          fn main() { carsai_yt_studio::run() }
-          MAINRS
-
+            #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+            fn main() { carsai_yt_studio::run() }
+            MAINRS
             cat > src-tauri/src/lib.rs << 'LIBRS'
-          #[cfg_attr(mobile, tauri::mobile_entry_point)]
-          pub fn run() {
-              tauri::Builder::default()
-                  .plugin(tauri_plugin_opener::init())
-                  .run(tauri::generate_context!())
-                  .expect("error while running tauri application");
-          }
-          LIBRS
-
+            #[cfg_attr(mobile, tauri::mobile_entry_point)]
+            pub fn run() {
+                tauri::Builder::default()
+                    .plugin(tauri_plugin_opener::init())
+                    .run(tauri::generate_context!())
+                    .expect("error while running tauri application");
+            }
+            LIBRS
             cat > src-tauri/tauri.conf.json << 'TAURICONF'
-          {
-            "$schema": "https://schema.tauri.app/config/2",
-            "productName": "Carsai YT Studio",
-            "version": "0.1.0",
-            "identifier": "com.carsai.ytstudio",
-            "build": {
-              "frontendDist": "../dist/client",
-              "devUrl": "http://localhost:3000",
-              "beforeDevCommand": "",
-              "beforeBuildCommand": ""
-            },
-            "app": {
-              "windows": [
-                {
-                  "title": "Carsai YT Studio",
-                  "width": 1280,
-                  "height": 800,
-                  "minWidth": 960,
-                  "minHeight": 600
-                }
-              ],
-              "security": { "csp": null }
-            },
-            "bundle": {
-              "active": true,
-              "targets": "all",
-              "icon": [
-                "icons/32x32.png",
-                "icons/128x128.png",
-                "icons/128x128@2x.png",
-                "icons/icon.ico",
-                "icons/icon.png"
-              ],
-              "windows": {
-                "certificateThumbprint": null,
-                "digestAlgorithm": "sha256",
-                "timestampUrl": ""
+            {
+              "$schema": "https://schema.tauri.app/config/2",
+              "productName": "Carsai YT Studio",
+              "version": "0.1.0",
+              "identifier": "com.carsai.ytstudio",
+              "build": {
+                "frontendDist": "../dist/client",
+                "devUrl": "http://localhost:3000"
+              },
+              "app": {
+                "windows": [{"title":"Carsai YT Studio","width":1280,"height":800,"minWidth":960,"minHeight":600}],
+                "security": {"csp": null}
+              },
+              "bundle": {
+                "active": true,
+                "targets": "all",
+                "icon": ["icons/32x32.png","icons/128x128.png","icons/128x128@2x.png","icons/icon.ico","icons/icon.png"],
+                "windows": {"certificateThumbprint":null,"digestAlgorithm":"sha256","timestampUrl":""}
               }
             }
-          }
-          TAURICONF
-          else
-            cp public/tauri-icons/*.png src-tauri/icons/ 2>/dev/null || true
-            cp public/tauri-icons/icon.ico src-tauri/icons/ 2>/dev/null || true
+            TAURICONF
           fi
-
-      - name: Get current version
-        id: ver
-        run: echo "tag=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-      - name: Build Tauri app
+      - name: Build Tauri (Windows — nsis + msi)
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ steps.ver.outputs.tag }}
-          releaseName: Carsai YT Studio ${{ steps.ver.outputs.tag }}
+          tagName: ${{ needs.prepare-release.outputs.tag }}
+          releaseName: Carsai YT Studio ${{ needs.prepare-release.outputs.tag }}
           releaseDraft: false
           prerelease: false
-          updaterJsonKeepUniversal: true
-          args: ${{ matrix.args }}
+          includeUpdaterJson: false
+          args: --bundles nsis,msi
+
+      # Safety net: explicitly verify + re-attach Windows artifacts in case
+      # tauri-action's own upload silently misses one of the two installers.
+      - name: Verify & re-attach Windows assets
+        shell: bash
+        run: |
+          find src-tauri/target/release/bundle -type f \( -name "*.msi" -o -name "*.exe" \) -print
+      - name: Force-attach Windows assets to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare-release.outputs.tag }}
+          files: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*.exe
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  linux:
+    name: Build Linux
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+      - name: System dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+      - name: Install dependencies
+        run: npm install
+      - name: Build web
+        run: node scripts/build-web.mjs
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+      - name: Ensure src-tauri
+        run: |
+          if [ ! -d "src-tauri" ]; then
+            mkdir -p src-tauri/icons src-tauri/src
+            cp public/tauri-icons/*.png src-tauri/icons/ 2>/dev/null || true
+            cp public/tauri-icons/icon.ico src-tauri/icons/ 2>/dev/null || true
+            cat > src-tauri/Cargo.toml << 'CARGO'
+            [package]
+            name = "carsai-yt-studio"
+            version = "0.1.0"
+            edition = "2021"
+            rust-version = "1.77.2"
+            [build-dependencies]
+            tauri-build = { version = "2", features = [] }
+            [dependencies]
+            tauri = { version = "2", features = [] }
+            tauri-plugin-opener = "2"
+            serde = { version = "1", features = ["derive"] }
+            serde_json = "1"
+            CARGO
+            echo 'fn main() { tauri_build::build() }' > src-tauri/build.rs
+            cat > src-tauri/src/main.rs << 'MAINRS'
+            #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+            fn main() { carsai_yt_studio::run() }
+            MAINRS
+            cat > src-tauri/src/lib.rs << 'LIBRS'
+            #[cfg_attr(mobile, tauri::mobile_entry_point)]
+            pub fn run() {
+                tauri::Builder::default()
+                    .plugin(tauri_plugin_opener::init())
+                    .run(tauri::generate_context!())
+                    .expect("error while running tauri application");
+            }
+            LIBRS
+            cat > src-tauri/tauri.conf.json << 'TAURICONF'
+            {
+              "$schema": "https://schema.tauri.app/config/2",
+              "productName": "Carsai YT Studio",
+              "version": "0.1.0",
+              "identifier": "com.carsai.ytstudio",
+              "build": { "frontendDist": "../dist/client", "devUrl": "http://localhost:3000" },
+              "app": { "windows": [{"title":"Carsai YT Studio","width":1280,"height":800}], "security": {"csp": null} },
+              "bundle": { "active": true, "targets": "all", "icon": ["icons/32x32.png","icons/128x128.png","icons/128x128@2x.png","icons/icon.ico","icons/icon.png"] }
+            }
+            TAURICONF
+          fi
+      - name: Build Tauri (Linux)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ needs.prepare-release.outputs.tag }}
+          releaseName: Carsai YT Studio ${{ needs.prepare-release.outputs.tag }}
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: false
+
+  macos:
+    name: Build macOS
+    needs: prepare-release
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - name: Install dependencies
+        run: npm install
+      - name: Build web
+        run: node scripts/build-web.mjs
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+      - name: Ensure src-tauri
+        run: |
+          if [ ! -d "src-tauri" ]; then
+            mkdir -p src-tauri/icons src-tauri/src
+            cp public/tauri-icons/*.png src-tauri/icons/ 2>/dev/null || true
+            cp public/tauri-icons/icon.icns src-tauri/icons/ 2>/dev/null || true
+            cat > src-tauri/Cargo.toml << 'CARGO'
+            [package]
+            name = "carsai-yt-studio"
+            version = "0.1.0"
+            edition = "2021"
+            rust-version = "1.77.2"
+            [build-dependencies]
+            tauri-build = { version = "2", features = [] }
+            [dependencies]
+            tauri = { version = "2", features = [] }
+            tauri-plugin-opener = "2"
+            serde = { version = "1", features = ["derive"] }
+            serde_json = "1"
+            CARGO
+            echo 'fn main() { tauri_build::build() }' > src-tauri/build.rs
+            cat > src-tauri/src/main.rs << 'MAINRS'
+            #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+            fn main() { carsai_yt_studio::run() }
+            MAINRS
+            cat > src-tauri/src/lib.rs << 'LIBRS'
+            #[cfg_attr(mobile, tauri::mobile_entry_point)]
+            pub fn run() {
+                tauri::Builder::default()
+                    .plugin(tauri_plugin_opener::init())
+                    .run(tauri::generate_context!())
+                    .expect("error while running tauri application");
+            }
+            LIBRS
+            cat > src-tauri/tauri.conf.json << 'TAURICONF'
+            {
+              "$schema": "https://schema.tauri.app/config/2",
+              "productName": "Carsai YT Studio",
+              "version": "0.1.0",
+              "identifier": "com.carsai.ytstudio",
+              "build": { "frontendDist": "../dist/client", "devUrl": "http://localhost:3000" },
+              "app": { "windows": [{"title":"Carsai YT Studio","width":1280,"height":800}], "security": {"csp": null} },
+              "bundle": { "active": true, "targets": "all", "icon": ["icons/32x32.png","icons/128x128.png","icons/128x128@2x.png","icons/icon.ico","icons/icon.png"] }
+            }
+            TAURICONF
+          fi
+      - name: Build Tauri (macOS universal)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ needs.prepare-release.outputs.tag }}
+          releaseName: Carsai YT Studio ${{ needs.prepare-release.outputs.tag }}
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: false
+          args: --target universal-apple-darwin

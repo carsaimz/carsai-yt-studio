@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { loginEmail, loginGoogle, registerEmail, resetPassword } from "@/lib/firebase/auth";
+import { loginEmail, loginGoogle, registerEmail, resetPassword, useFirebaseUser } from "@/lib/firebase/auth";
 import { isSetupCompleted } from "@/lib/setup/store";
 import { toast, alert } from "@/lib/notifications";
 import { useI18n } from "@/lib/i18n";
@@ -47,8 +47,26 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const { user, loading } = useFirebaseUser();
+
+  // Already logged in → go to dashboard
+  if (!loading && user) {
+    return <Navigate to="/" />;
+  }
+
+  // Setup not completed → go to wizard
   if (!isSetupCompleted()) {
     return <Navigate to="/welcome" />;
+  }
+
+  // Firebase still resolving — show minimal spinner (don't flash login form)
+  if (loading) {
+    return (
+      <div style={{ display:"flex", minHeight:"100vh", alignItems:"center", justifyContent:"center", background:"#1a1410" }}>
+        <div style={{ width:32, height:32, borderRadius:"50%", border:"3px solid rgba(255,107,53,0.3)", borderTopColor:"#ff6b35", animation:"spin 0.8s linear infinite" }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
   }
 
   const onSubmit = async (e: React.FormEvent) => {
