@@ -21,10 +21,10 @@ import esES from "./es-ES";
 
 export type Locale = "pt-BR" | "en-US" | "es-ES";
 
-export const LOCALES: { code: Locale; label: string; flag: string }[] = [
-  { code: "pt-BR", label: "Português (Brasil)", flag: "🇧🇷" },
-  { code: "en-US", label: "English (US)",        flag: "🇺🇸" },
-  { code: "es-ES", label: "Español",             flag: "🇪🇸" },
+export const LOCALES: { code: Locale; label: string; flag: string; short: string }[] = [
+  { code: "pt-BR", label: "Português (Brasil)", flag: "🇧🇷", short: "PT" },
+  { code: "en-US", label: "English (US)",        flag: "🇺🇸", short: "EN" },
+  { code: "es-ES", label: "Español",             flag: "🇪🇸", short: "ES" },
 ];
 
 const DICTIONARIES: Record<Locale, Record<string, any>> = {
