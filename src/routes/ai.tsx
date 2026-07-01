@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { youtube } from "@/lib/youtube/client";
 import { useSetup, getSetup } from "@/lib/setup/store";
 import { callAI, generateThumbnailImage, selectProvider } from "@/lib/ai/providers";
+import { PROVIDERS, CAPABILITY_LABELS, type ProviderId } from "@/lib/ai/registry";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "@/lib/notifications";
 
