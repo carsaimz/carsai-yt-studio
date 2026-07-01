@@ -358,27 +358,43 @@ export const youtube = {
   initiateUpload: async (meta: {
     title: string; description: string; tags?: string[];
     privacyStatus?: "public" | "private" | "unlisted"; categoryId?: string;
+    /** ISO datetime. When set, video is forced to `private` and scheduled for `publishAt`. */
+    publishAt?: string;
+    defaultLanguage?: string;
+    madeForKids?: boolean;
+    fileSize?: number;
+    fileType?: string;
   }): Promise<string> => {
     const tok = getYtToken();
     if (!tok) throw new Error("OAuth necessário para upload.");
+
+    const status: Record<string, any> = {
+      privacyStatus: meta.publishAt ? "private" : (meta.privacyStatus ?? "private"),
+      selfDeclaredMadeForKids: !!meta.madeForKids,
+    };
+    if (meta.publishAt) status.publishAt = new Date(meta.publishAt).toISOString();
+
+    const headers: Record<string, string> = {
+      Authorization:   `Bearer ${tok.access_token}`,
+      "Content-Type":  "application/json; charset=UTF-8",
+      "X-Upload-Content-Type": meta.fileType || "video/*",
+    };
+    if (meta.fileSize) headers["X-Upload-Content-Length"] = String(meta.fileSize);
 
     const res = await fetch(
       `${UPLOAD}/videos?uploadType=resumable&part=snippet,status`,
       {
         method: "POST",
-        headers: {
-          Authorization:   `Bearer ${tok.access_token}`,
-          "Content-Type":  "application/json",
-          "X-Upload-Content-Type": "video/*",
-        },
+        headers,
         body: JSON.stringify({
           snippet: {
             title:       meta.title,
             description: meta.description,
             tags:        meta.tags ?? [],
             categoryId:  meta.categoryId ?? "22",
+            ...(meta.defaultLanguage ? { defaultLanguage: meta.defaultLanguage } : {}),
           },
-          status: { privacyStatus: meta.privacyStatus ?? "private" },
+          status,
         }),
       },
     );
@@ -491,18 +507,26 @@ export const youtube = {
 
   // ── THUMBNAILS ────────────────────────────────────────────────────────────────
 
-  setThumbnail: async (videoId: string, imageFile: File): Promise<any> => {
+  setThumbnail: async (videoId: string, imageFile: File | Blob): Promise<any> => {
     const tok = getYtToken();
     if (!tok) throw new Error("OAuth necessário para definir thumbnail.");
 
-    const form = new FormData();
-    form.append("file", imageFile);
+    // YouTube requires the raw image bytes as the request body with the image's
+    // MIME type as Content-Type. Do NOT wrap it in FormData or JSON — the API
+    // rejects multipart uploads on this endpoint with `uploadType=media`.
+    const mime =
+      (imageFile as File).type
+      || (imageFile.type)
+      || "image/jpeg";
 
     const res = await fetch(
-      `${UPLOAD}/thumbnails/set?videoId=${videoId}&uploadType=media`,
+      `${UPLOAD}/thumbnails/set?videoId=${encodeURIComponent(videoId)}&uploadType=media`,
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${tok.access_token}` },
+        headers: {
+          Authorization: `Bearer ${tok.access_token}`,
+          "Content-Type": mime,
+        },
         body: imageFile,
       },
     );
@@ -512,6 +536,82 @@ export const youtube = {
     }
     return res.json();
   },
+
+  // ── SCHEDULING ────────────────────────────────────────────────────────────────
+
+  /** Schedule an already-uploaded video for publishing at `publishAt` (ISO). */
+  scheduleVideo: (videoId: string, publishAt: string) =>
+    ytFetch<any>("/videos", { part: "status" }, {
+      auth: true, method: "PUT",
+      body: {
+        id: videoId,
+        status: { privacyStatus: "private", publishAt: new Date(publishAt).toISOString() },
+      },
+    }),
+
+  /** Cancel a previously scheduled publication (removes publishAt). */
+  unscheduleVideo: (videoId: string, privacyStatus: "private" | "unlisted" = "private") =>
+    ytFetch<any>("/videos", { part: "status" }, {
+      auth: true, method: "PUT",
+      body: { id: videoId, status: { privacyStatus } },
+    }),
+
+  // ── CAPTIONS ──────────────────────────────────────────────────────────────────
+
+  listCaptions: (videoId: string) =>
+    ytFetch<any>("/captions", { part: "snippet", videoId }, { auth: true }),
+
+  uploadCaption: async (videoId: string, language: string, name: string, file: File | Blob): Promise<any> => {
+    const tok = getYtToken();
+    if (!tok) throw new Error("OAuth necessário para caption.");
+    const meta = { snippet: { videoId, language, name, isDraft: false } };
+    // Multipart related upload per API contract.
+    const boundary = "----carsai-" + Math.random().toString(36).slice(2);
+    const bytes = new Uint8Array(await (file as Blob).arrayBuffer());
+    const enc = new TextEncoder();
+    const parts: BlobPart[] = [
+      enc.encode(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n`),
+      enc.encode(`--${boundary}\r\nContent-Type: ${(file as File).type || "application/octet-stream"}\r\n\r\n`),
+      bytes,
+      enc.encode(`\r\n--${boundary}--`),
+    ];
+    const res = await fetch(`${UPLOAD}/captions?uploadType=multipart&part=snippet`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${tok.access_token}`,
+        "Content-Type": `multipart/related; boundary=${boundary}`,
+      },
+      body: new Blob(parts),
+    });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error?.message ?? `Caption upload failed ${res.status}`);
+    return res.json();
+  },
+
+  deleteCaption: (id: string) =>
+    ytFetch<void>("/captions", { id }, { auth: true, method: "DELETE" }),
+
+  // ── COMMENT THREADS ───────────────────────────────────────────────────────────
+
+  /** Post a top-level comment on a video. */
+  insertCommentThread: (videoId: string, text: string, channelId?: string) =>
+    ytFetch<any>("/commentThreads", { part: "snippet" }, {
+      auth: true, method: "POST",
+      body: {
+        snippet: {
+          videoId,
+          ...(channelId ? { channelId } : {}),
+          topLevelComment: { snippet: { textOriginal: text } },
+        },
+      },
+    }),
+
+  // ── ABUSE REPORT ──────────────────────────────────────────────────────────────
+
+  reportVideoAbuse: (videoId: string, reasonId: string, secondaryReasonId?: string, comments?: string) =>
+    ytFetch<void>("/videos/reportAbuse", {}, {
+      auth: true, method: "POST",
+      body: { videoId, reasonId, secondaryReasonId, comments },
+    }),
 
   // ── CHANNEL SECTIONS (cards/feature layout) ──────────────────────────────────
 

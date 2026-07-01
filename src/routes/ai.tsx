@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { youtube } from "@/lib/youtube/client";
 import { useSetup, getSetup } from "@/lib/setup/store";
 import { callAI, generateThumbnailImage, selectProvider } from "@/lib/ai/providers";
+import { PROVIDERS, CAPABILITY_LABELS, type ProviderId } from "@/lib/ai/registry";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "@/lib/notifications";
 
@@ -196,18 +197,39 @@ function AIPage() {
       )}
 
       <Tabs defaultValue="chat">
-        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card/60 p-3">
-          <span className="text-xs font-medium text-muted-foreground">Provedor do chat e agentes</span>
-          <select
-            value={activeProvider?.id ?? ""}
-            onChange={(e) => setSelectedProviderId(e.target.value)}
-            className="h-9 min-w-[220px] rounded-lg border border-primary/45 bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
-            disabled={enabledProviders.length === 0}
-          >
-            {enabledProviders.length === 0 && <option value="">Sem provedor ativo</option>}
-            {enabledProviders.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.model || "padrão"}</option>)}
-          </select>
+        <div className="mb-3 space-y-2 rounded-2xl border border-border bg-card/60 p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Provedor do chat e agentes</span>
+            <select
+              value={activeProvider?.id ?? ""}
+              onChange={(e) => setSelectedProviderId(e.target.value)}
+              className="h-9 min-w-[220px] rounded-lg border border-primary/45 bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+              disabled={enabledProviders.length === 0}
+            >
+              {enabledProviders.length === 0 && <option value="">Sem provedor ativo</option>}
+              {enabledProviders.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.model || "padrão"}</option>)}
+            </select>
+          </div>
+          {activeProvider && (() => {
+            const meta = PROVIDERS.find((p) => p.id === (activeProvider.id as ProviderId));
+            if (!meta) return null;
+            return (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Capacidades:</span>
+                {meta.capabilities.map((c) => (
+                  <span key={c} className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-foreground">
+                    <FontAwesomeIcon icon={["fas", CAPABILITY_LABELS[c].icon as any]} className="text-primary" />
+                    {CAPABILITY_LABELS[c].label}
+                  </span>
+                ))}
+                {meta.contextWindow && (
+                  <span className="ml-auto text-[10px] text-muted-foreground">Contexto: {meta.contextWindow.toLocaleString()} tokens</span>
+                )}
+              </div>
+            );
+          })()}
         </div>
+
         <TabsList>
           <TabsTrigger value="agents">Agentes</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>

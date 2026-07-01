@@ -1,142 +1,67 @@
-# Plano de Refundação – Carsai YT Studio
+# Plano de atualizações
 
-Vou reconstruir a plataforma para que tudo funcione com dados reais desde o primeiro acesso. Sem mocks. Todas as chaves e configs ficam no dispositivo do usuário (localStorage + IndexedDB), exceto a auth global que usa Firebase (cada usuário cola sua própria config do Firebase no wizard — assim continua "frontend-only" e cada um usa seu próprio projeto, ou um projeto padrão configurado por env).
+## 1. YouTube — Upload real, thumbnails aplicadas, agendamento
 
-> Importante: este plano é grande. Vou executar tudo em uma sequência de mensagens, mas cada mensagem entrega um bloco funcional e testável. Estimativa: 4-6 mensagens grandes.
+`**src/lib/youtube/client.ts**` — corrigir/implementar:
 
----
+- `uploadVideo({ file, title, description, tags, privacyStatus, publishAt, categoryId, defaultLanguage, madeForKids })` usando **resumable upload** (`POST https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status`). Persistir `uploadUrl` para retomar em caso de queda; enviar em chunks de 256KB com progresso.
+- `setThumbnail(videoId, file)` via `POST https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=…` com `Content-Type: image/jpeg|png` no corpo bruto (era enviado como multipart/JSON, por isso a thumbnail não colava).
+- `scheduleVideo(videoId, publishAt: ISO)` — `PUT videos?part=status` com `status.privacyStatus = "private"` + `publishAt` (obrigatório para agendar).
+- `updateVideo`, `deleteVideo`, `listCaptions/uploadCaption`, `listPlaylists/insertPlaylistItem`, `commentThreads.insert/reply`, `setModerationStatus`, `subscriptions.list`, `channelSections`, `videoAbuseReport` — expor todas as capacidades já suportadas pelo v3.
 
-## 1. Wizard de Instalação (`/setup`)
+`**src/routes/content.tsx` / `studio.tsx**`:
 
-Rota gate: se `setup.completed !== true`, qualquer rota redireciona para `/setup`.
+- Formulário de upload com: arquivo, título, descrição, tags, categoria, idioma, "Made for kids", visibilidade, e **campo `Agendar para**` (datetime-local). Ao agendar, força `privacyStatus=private` + `publishAt`.
+- Barra de progresso do upload resumível.
+- Após criar vídeo, se houver thumbnail escolhida → chama `setThumbnail(videoId, file)` e mostra toast de confirmação.
 
-Passos:
-1. **Boas-vindas** – tour, requisitos, política de privacidade resumida.
-2. **Firebase (obrigatório)** – usuário cola `apiKey`, `authDomain`, `projectId`, `appId`. Validação ao vivo (`initializeApp` + ping `auth`).
-3. **YouTube Data API v3 (obrigatório)** – API Key + teste real (`GET /youtube/v3/channels?mine=true` exige OAuth; usamos `search?part=snippet&q=test` para validar a key).
-4. **Google OAuth (opcional, recomendado)** – Client ID; fluxo PKCE no browser para obter `access_token` com escopo `youtube.readonly`, `youtube.force-ssl`, `yt-analytics.readonly`.
-5. **Provedores de IA (opcional)** – grid com os 18 provedores; usuário ativa quais quiser e cola cada key. Botão "Testar" por provedor.
-6. **Preferências** – tema (dark/light/system), idioma (pt-BR/en), unidades, notificações.
-7. **Resumo + Finalizar** – grava tudo cifrado com AES-GCM (chave derivada de PIN opcional via PBKDF2).
+## 2. Firebase — garantir que integrações funcionam
 
-Componentes: `SetupLayout`, `StepIndicator`, `StepCard`, `ProviderToggle`, `KeyInput` (com mostrar/ocultar, validar, status badge).
+- Rever `src/lib/firebase/{client,auth,messaging}.ts` — validar init idempotente, verificar `getMessaging` guardado atrás de `isSupported()` (evita crash em iOS/desktop).
+- FCM: registrar service worker apenas se `serviceWorker in navigator`.
+- Auth: cobrir Google/Apple/email-link, mapear erros ao i18n.
+- Documentar exigência de `VITE_FIREBASE_*` no `.env.example`.
 
-## 2. Integrações reais
+## 3. Capacidades dos provedores de IA
 
-### YouTube
-- `src/lib/youtube/client.ts` – wrapper fetch com refresh de token OAuth, paginação, quota tracking.
-- Hooks TanStack Query: `useMyChannel`, `useMyVideos`, `useVideoAnalytics`, `useComments`, `usePlaylists`, `useSearch`, `useCaptions`.
-- Sem OAuth, modo "público": usa API key para buscar canais/vídeos por ID que o usuário cole.
+Em `**src/lib/ai/registry.ts**` adicionar metadata por provedor:
 
-### IA Multi-Provedor
-- `src/lib/ai/registry.ts` – metadata dos 18 provedores (Gemini, Groq, OpenAI, Anthropic, Mistral, Cohere, Together, Perplexity, OpenRouter, DeepSeek, xAI, HuggingFace, Replicate, Fireworks, Cerebras, SambaNova, AI21, NVIDIA NIM).
-- `src/lib/ai/router.ts` – `chat({messages, prefer, fallbackChain})` com fallback em cascata e streaming SSE.
-- `src/lib/ai/tasks/` – tarefas prontas: gerar título, descrição, tags SEO, roteiro, ideias, traduções, resposta a comentários, análise de sentimento.
-
-### Firebase
-- Auth (Email/senha + Google OAuth do Firebase, separado do OAuth do YouTube).
-- Firestore opcional: armazenar preferências sincronizadas entre dispositivos (toggle no setup).
-- Realtime: feed de "novidades do app" lido de uma coleção pública (read-only para usuários).
-
-## 3. Páginas (todas reais, dinâmicas)
-
-App (auth-gated):
-- `/` Dashboard – métricas reais do canal, gráficos Recharts, próximos uploads, alertas.
-- `/analytics` – views/watch time/CTR/retenção via YouTube Analytics API.
-- `/content/videos`, `/content/playlists`, `/content/shorts`, `/content/live` – CRUD real (editar título, descrição, tags, thumbnail).
-- `/community/comments`, `/community/inbox` – responder com IA assistida.
-- `/seo` – análise de tags, sugestões, comparador, score, keyword research (DataForSEO opcional).
-- `/studio/thumbnail` – editor com Fabric.js (canvas, layers, templates, export PNG).
-- `/studio/script` – editor de roteiro com IA streaming.
-- `/studio/scheduler` – calendário (FullCalendar) de uploads agendados (localStorage).
-- `/ai/chat`, `/ai/agents`, `/ai/playground` – chat real com fallback.
-- `/notifications` – central de notificações (in-app + push opcional).
-- `/profile`, `/settings/{geral,integracoes,ia,aparencia,privacidade,backup}`.
-- `/about` – versão atual, changelog, **verificador de updates** (`GET api.github.com/repos/{owner}/{repo}/releases/latest`).
-
-Públicas:
-- `/welcome` landing pré-login.
-- `/auth/login`, `/auth/register`, `/auth/reset-password`, `/auth/verify`.
-- `/setup` wizard.
-- `/docs` – documentação de uso (MDX-like, busca interna, sidebar).
-- `/help` – central de ajuda com FAQ + busca + categorias + ticket via mailto.
-- `/changelog` – histórico de versões puxado do GitHub Releases.
-- `/privacy`, `/terms`, `/cookies`, `/security`, `/dmca`, `/acceptable-use`.
-- `/status` – status das integrações do usuário (ping local).
-- `/404`, `/500`, `/offline`.
-
-## 4. UX, animações, notificações
-
-- **Framer Motion** – transições de página, stagger nas listas, modals.
-- **Lottie** (`lottie-react`) – ilustrações no wizard, empty states, sucesso/erro.
-- **tsParticles** – fundo do hero/welcome.
-- **Sonner** – toasts ricos com ações (já instalado).
-- **Notificações in-app** – sino no header, drawer com histórico, badge animada.
-- **Web Push** – via Firebase Cloud Messaging (opcional, ativa no settings).
-- **Skeletons + Suspense** – loading lazy em todas rotas (`React.lazy` + `Suspense`).
-- **Microinterações** – hover tilts, ripple em botões, progress nos uploads.
-- **Comando ⌘K** – paleta de comandos com `cmdk` (já no shadcn).
-
-## 5. Mobile, PWA, Desktop
-
-- Responsividade total (grid + min-w-0 + shrink-0 padrão), bottom-nav no mobile (<768px), sidebar colapsável no desktop.
-- **PWA** – `vite-plugin-pwa` com `NetworkFirst` em HTML, ícones, splash, página `/offline`.
-- **Capacitor** – já configurado; adiciono plugins `@capacitor/app`, `@capacitor/preferences`, `@capacitor/push-notifications`, `@capacitor/share`, `@capacitor/filesystem`, `@capacitor/status-bar`, `@capacitor/splash-screen`, `@capacitor/haptics`.
-- **Desktop** – **Tauri** (mais leve que Electron) com workflow build.
-
-## 6. Build & Release Pipelines (`.github/workflows/`)
-
-- `web.yml` – build Vite + deploy Pages (artifact).
-- `android.yml` – `bun run build && npx cap sync android && ./gradlew assembleRelease bundleRelease` → uploads `.apk` e `.aab`.
-- `ios.yml` – `xcodebuild archive` + `exportArchive` (`runs-on: macos-latest`) → `.ipa`.
-- `desktop.yml` – Tauri matrix (windows/macos/linux) → instaladores.
-- `release.yml` – orquestra tudo no push de tag `v*`, cria GitHub Release com todos artifacts e changelog automático.
-
-Scripts em `scripts/`:
-- `version-bump.mjs` – sobe semver, atualiza `package.json`, `capacitor.config.json`, `tauri.conf.json`, gera CHANGELOG.
-- `check-updates.mjs` – usado pelo cliente in-app.
-
-## 7. Estrutura técnica resumida
-
-```
-src/
-  components/
-    setup/         (wizard steps)
-    layout/        (AppShell, BottomNav, Header, Sidebar)
-    ui/            (shadcn)
-    notifications/
-    animations/
-  lib/
-    firebase/      (init, auth, firestore, messaging)
-    youtube/       (client, oauth, hooks)
-    ai/            (registry, router, tasks, streaming)
-    crypto/        (AES-GCM, PBKDF2)
-    storage/       (localStorage + IndexedDB via idb-keyval)
-    updates/       (github releases checker)
-    i18n/          (pt-BR, en)
-  routes/
-    __root.tsx     (gate setup + auth)
-    setup.tsx
-    welcome.tsx
-    auth/*.tsx
-    _app/*.tsx     (todas rotas auth-gated)
-    docs/*.tsx
-    help.tsx, privacy.tsx, terms.tsx, ...
+```ts
+capabilities: { chat, imageGen, imageEdit, vision, docs, audioIn, audioOut, tools, streaming }
+contextWindow, maxOutputTokens, pricingHint
 ```
 
-## 8. Pacotes a instalar
+Aplicar aos 18 provedores. Em `src/routes/settings.tsx` e no seletor da página IA, exibir **badges** ("Imagens", "Documentos", "Visão", "Áudio", "Ferramentas") por provedor.
+Filtrar seletores por capacidade: p. ex. o Agente de Thumbnail só lista provedores com `imageGen`; upload de PDF só habilitado para provedores com `docs`.
 
-`firebase`, `framer-motion`, `lottie-react`, `@tsparticles/react @tsparticles/slim`, `fabric`, `@fullcalendar/react @fullcalendar/daygreen @fullcalendar/timegrid @fullcalendar/interaction`, `idb-keyval`, `@tanstack/react-query`, `@capacitor/app @capacitor/preferences @capacitor/push-notifications @capacitor/share @capacitor/filesystem @capacitor/status-bar @capacitor/splash-screen @capacitor/haptics`, `cmdk`, `date-fns`, `react-markdown remark-gfm`, `fuse.js` (busca docs).
+## 4. Área pública — sidebar/header expansível + lang picker compacto
 
----
+`**src/components/lang-picker.tsx**`:
 
-## Ordem de execução
+- Trigger mostra apenas bandeira + sigla (`🇵🇹 PT`), nome completo aparece só no dropdown.
+- Variante `compact` para o topbar público, variante padrão para app.
 
-1. **Msg 1** – Setup wizard + Firebase auth + gate de rotas + tema/i18n + storage cifrado.
-2. **Msg 2** – YouTube client real + hooks + dashboard/analytics/content páginas reais.
-3. **Msg 3** – IA router + chat + agentes + tarefas + studio (thumbnail/script/scheduler).
-4. **Msg 4** – Páginas públicas (docs, help, legais, changelog, about+updater), notificações, animações, ⌘K.
-5. **Msg 5** – PWA, Capacitor plugins, responsividade mobile/bottom-nav, Tauri.
-6. **Msg 6** – GitHub Actions workflows, scripts de versão, README/CONTRIBUTING.
+`**src/components/public/public-shell.tsx**`:
 
-Confirma que posso seguir nessa ordem? Se sim, começo já pela Msg 1.
+- Adicionar **Sheet/Sidebar off-canvas** no mobile e menu expansível no desktop com secções: Início, Sobre, Docs, Ajuda, Changelog, Privacidade, Termos, Segurança, Auth.
+- Trigger visível (hamburger) no topbar público.
+
+## Detalhes técnicos
+
+- Uploads binários grandes: usar `fetch` com `ReadableStream`/`FileReader` slice + retry no 308 (`Range: bytes=0-N`), padrão Google resumable.
+- Todos os campos i18n usados devem existir nos 3 dicionários; adicionar chaves `content.upload.*`, `content.schedule.*`, `settings.aiCaps.*`.
+- Nenhum backend novo — YouTube/Firebase permanecem chamadas diretas do dispositivo com o token OAuth do utilizador. Sem Cloud/Supabase.
+- Não vou tocar em versão/workflows (foram estabilizados na iteração anterior).
+
+## Fora de escopo (confirmar se quer nesta rodada)
+
+- Analytics API v2 (reports.query) real — requer OAuth já habilitado; posso plugar após confirmar.
+- Live streaming (liveBroadcasts/liveStreams) — grande superfície, pergunto se quer agora.
+
+&nbsp;
+
+**Bônus:**
+
+- Rever i18n em todas áreas/páginas e corrigir caso necessário (onde não haver i8n ou onde há hardcoded em português)
+- Melhorar design na área pública e autenticada
+- Adicione modo claro (com botão de alterar modo em ambas áreas)
