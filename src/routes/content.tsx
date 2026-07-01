@@ -31,45 +31,69 @@ function fmt(n: any) {
 function UploadDialog({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
+  const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [privacy, setPrivacy] = useState<"private" | "unlisted" | "public">("private");
   const [tags, setTags] = useState("");
+  const [publishAt, setPublishAt] = useState<string>(""); // datetime-local value
+  const [madeForKids, setMadeForKids] = useState(false);
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "video" | "thumbnail">("idle");
 
   async function handleUpload() {
     if (!file || !title) return;
     setUploading(true);
+    setPhase("video");
     try {
       const uri = await youtube.initiateUpload({
-        title, description: desc,
+        title,
+        description: desc,
         tags: tags.split(",").map((t: string) => t.trim()).filter(Boolean),
         privacyStatus: privacy,
+        publishAt: publishAt || undefined,
+        madeForKids,
+        fileSize: file.size,
+        fileType: file.type,
       });
-      await youtube.uploadChunk(uri, file, setProgress);
-      toast.success("Vídeo enviado com sucesso!");
+      const result = await youtube.uploadChunk(uri, file, setProgress);
+      const videoId = result?.id;
+
+      if (videoId && thumbFile) {
+        setPhase("thumbnail");
+        try {
+          await youtube.setThumbnail(videoId, thumbFile);
+        } catch (err) {
+          // Video succeeded — surface thumbnail error separately, don't rollback.
+          toast.error("Vídeo enviado, mas thumbnail falhou: " + (err as Error).message);
+        }
+      }
+
+      toast.success(publishAt ? "Vídeo enviado e agendado!" : "Vídeo enviado com sucesso!");
       qc.invalidateQueries({ queryKey: ["uploads"] });
+      qc.invalidateQueries({ queryKey: ["video-details"] });
       onClose();
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setUploading(false);
+      setPhase("idle");
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <Card className="w-full max-w-lg p-6 space-y-4">
+      <Card className="w-full max-w-lg p-6 space-y-4 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl font-bold">Enviar vídeo</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label="Fechar">
             <FontAwesomeIcon icon={["fas", "xmark"]} />
           </button>
         </div>
 
-        {/* File picker */}
-        <label className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 cursor-pointer transition ${file ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
+        {/* Video file picker */}
+        <label className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 cursor-pointer transition ${file ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
           <input type="file" accept="video/*" className="hidden"
             onChange={e => setFile(e.target.files?.[0] ?? null)} />
           <FontAwesomeIcon icon={["fas", "cloud-arrow-up"]} size="2x" className={file ? "text-primary" : "text-muted-foreground"} />
@@ -79,31 +103,66 @@ function UploadDialog({ onClose }: { onClose: () => void }) {
           {file && <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(1)} MB</p>}
         </label>
 
+        {/* Thumbnail file picker */}
+        <label className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition ${thumbFile ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
+          <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+            onChange={e => setThumbFile(e.target.files?.[0] ?? null)} />
+          <FontAwesomeIcon icon={["fas", "image"]} className={thumbFile ? "text-primary" : "text-muted-foreground"} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">
+              {thumbFile ? thumbFile.name : "Thumbnail (opcional — JPG/PNG, máx 2 MB)"}
+            </p>
+            {thumbFile && <p className="text-xs text-muted-foreground">{(thumbFile.size / 1024).toFixed(0)} KB</p>}
+          </div>
+        </label>
+
         <div className="space-y-3">
           <input value={title} onChange={e => setTitle(e.target.value)}
-            placeholder="Título *"
+            placeholder="Título *" maxLength={100}
             className="h-10 w-full rounded-lg border border-border bg-card/60 px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring" />
           <textarea value={desc} onChange={e => setDesc(e.target.value)}
-            placeholder="Descrição"
-            rows={3}
+            placeholder="Descrição" rows={3}
             className="w-full resize-none rounded-lg border border-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring" />
           <input value={tags} onChange={e => setTags(e.target.value)}
             placeholder="Tags (separadas por vírgula)"
             className="h-10 w-full rounded-lg border border-border bg-card/60 px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring" />
-          <Select value={privacy} onValueChange={v => setPrivacy(v as any)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="private">Privado</SelectItem>
-              <SelectItem value="unlisted">Não listado</SelectItem>
-              <SelectItem value="public">Público</SelectItem>
-            </SelectContent>
-          </Select>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Visibilidade</label>
+              <Select value={privacy} onValueChange={v => setPrivacy(v as any)} disabled={!!publishAt}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="private">Privado</SelectItem>
+                  <SelectItem value="unlisted">Não listado</SelectItem>
+                  <SelectItem value="public">Público</SelectItem>
+                </SelectContent>
+              </Select>
+              {publishAt && <p className="mt-1 text-[11px] text-muted-foreground">Agendado — forçado a privado até publicar.</p>}
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Agendar para</label>
+              <input
+                type="datetime-local"
+                value={publishAt}
+                min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+                onChange={e => setPublishAt(e.target.value)}
+                className="mt-1 h-10 w-full rounded-lg border border-border bg-card/60 px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring"
+              />
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2 text-xs">
+            <input type="checkbox" checked={madeForKids} onChange={e => setMadeForKids(e.target.checked)} className="accent-primary" />
+            Feito para crianças (COPPA)
+          </label>
         </div>
 
         {uploading && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>A enviar…</span><span>{progress}%</span>
+              <span>{phase === "thumbnail" ? "A enviar thumbnail…" : "A enviar vídeo…"}</span>
+              <span>{progress}%</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-border">
               <div className="h-full gradient-brand transition-all" style={{ width: `${progress}%` }} />
@@ -115,7 +174,7 @@ function UploadDialog({ onClose }: { onClose: () => void }) {
           <Button variant="outline" onClick={onClose} disabled={uploading}>Cancelar</Button>
           <Button className="gradient-brand text-primary-foreground hover:opacity-90"
             disabled={!file || !title || uploading} onClick={handleUpload}>
-            {uploading ? <><FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />A enviar…</> : "Enviar"}
+            {uploading ? <><FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />A enviar…</> : (publishAt ? "Enviar e agendar" : "Enviar")}
           </Button>
         </div>
       </Card>
