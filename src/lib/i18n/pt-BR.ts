@@ -187,10 +187,6 @@ export default {
     contribute2: "Mande pull requests — guia em CONTRIBUTING.md.",
     contribute3: "Traduções, temas e plugins são bem-vindos.",
   },
-  auth: {
-    ...({} as any),
-    termsPrefix: "Ao continuar você concorda com nossos",
-  },
   // Footer
   footer: {
     privacy: "Privacidade",
