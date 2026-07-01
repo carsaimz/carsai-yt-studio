@@ -125,6 +125,7 @@ export default {
     withGoogle: "Continuar com Google", connecting: "A conectar com Google…",
     signingIn: "A entrar…", creating: "A criar conta…",
     welcome: "Bem-vindo de volta!", created: "Conta criada com sucesso!",
+    termsPrefix: "Ao continuar você concorda com nossos",
   },
   ai: {
     title: "IA & Agentes",
@@ -185,10 +186,6 @@ export default {
     contribute1: "Abra issues com bugs ou ideias.",
     contribute2: "Mande pull requests — guia em CONTRIBUTING.md.",
     contribute3: "Traduções, temas e plugins são bem-vindos.",
-  },
-  auth: {
-    ...({} as any),
-    termsPrefix: "Ao continuar você concorda com nossos",
   },
   // Footer
   footer: {
