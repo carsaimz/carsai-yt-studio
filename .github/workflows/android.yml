@@ -107,30 +107,7 @@ jobs:
             --splashBackgroundColorDark "#1a1410" || true
 
       - name: Patch AndroidManifest
-        run: |
-          python3 << 'PY'
-          import re
-          path = "android/app/src/main/AndroidManifest.xml"
-          with open(path) as f:
-              c = f.read()
-          c = re.sub(r'\s*<uses-permission[^/]*/>', '', c)
-          perms = """
-              <uses-permission android:name="android.permission.INTERNET"/>
-              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-              <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
-              <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
-              <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-              <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
-              <uses-permission android:name="android.permission.CAMERA"/>
-              <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-              <uses-permission android:name="android.permission.VIBRATE"/>
-              <uses-permission android:name="android.permission.WAKE_LOCK"/>
-              <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>"""
-          c = re.sub(r'(<manifest[^>]*>)', r'\1' + perms, c, count=1)
-          with open(path, 'w') as f:
-              f.write(c)
-          print("✅ Permissions patched")
-          PY
+        run: node scripts/patch-android-manifest.mjs
 
       - name: Update Gradle version
         run: |
@@ -152,23 +129,7 @@ jobs:
 
       - name: Configure signing
         if: env.HAS_KEYSTORE == 'true'
-        run: |
-          cat >> android/app/build.gradle << 'GRADLE'
-
-          android {
-              signingConfigs {
-                  release {
-                      storeFile file('carsai.keystore')
-                      storePassword "carsaidev"
-                      keyAlias "carsaidev"
-                      keyPassword "carsaidev"
-                  }
-              }
-              buildTypes {
-                  release { signingConfig signingConfigs.release }
-              }
-          }
-          GRADLE
+        run: node scripts/configure-android-signing.mjs
 
       - name: Build APK + AAB
         working-directory: android

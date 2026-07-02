@@ -10,16 +10,6 @@ on:
 permissions:
   contents: write
 
-env:
-  FIREBASE_ENV: |
-    VITE_FIREBASE_API_KEY
-    VITE_FIREBASE_AUTH_DOMAIN
-    VITE_FIREBASE_PROJECT_ID
-    VITE_FIREBASE_STORAGE_BUCKET
-    VITE_FIREBASE_MESSAGING_SENDER_ID
-    VITE_FIREBASE_APP_ID
-    VITE_FIREBASE_MEASUREMENT_ID
-
 jobs:
   # ── Step 1: resolve the tag ONCE and ensure the GitHub Release exists ──────
   # Doing this in a single job avoids race conditions between platform jobs
@@ -74,68 +64,8 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
       - name: Ensure src-tauri
-        shell: bash
-        run: |
-          if [ ! -d "src-tauri" ]; then
-            mkdir -p src-tauri/icons src-tauri/src
-            cp public/tauri-icons/32x32.png       src-tauri/icons/32x32.png 2>/dev/null || true
-            cp public/tauri-icons/128x128.png      src-tauri/icons/128x128.png 2>/dev/null || true
-            cp public/tauri-icons/128x128@2x.png   src-tauri/icons/128x128@2x.png 2>/dev/null || true
-            cp public/tauri-icons/icon.ico         src-tauri/icons/icon.ico 2>/dev/null || true
-            cp public/tauri-icons/icon.png         src-tauri/icons/icon.png 2>/dev/null || true
-            cat > src-tauri/Cargo.toml << 'CARGO'
-            [package]
-            name = "carsai-yt-studio"
-            version = "0.1.0"
-            edition = "2021"
-            rust-version = "1.77.2"
-            [build-dependencies]
-            tauri-build = { version = "2", features = [] }
-            [dependencies]
-            tauri = { version = "2", features = [] }
-            tauri-plugin-opener = "2"
-            serde = { version = "1", features = ["derive"] }
-            serde_json = "1"
-            CARGO
-            cat > src-tauri/build.rs << 'BUILDRS'
-            fn main() { tauri_build::build() }
-            BUILDRS
-            cat > src-tauri/src/main.rs << 'MAINRS'
-            #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-            fn main() { carsai_yt_studio::run() }
-            MAINRS
-            cat > src-tauri/src/lib.rs << 'LIBRS'
-            #[cfg_attr(mobile, tauri::mobile_entry_point)]
-            pub fn run() {
-                tauri::Builder::default()
-                    .plugin(tauri_plugin_opener::init())
-                    .run(tauri::generate_context!())
-                    .expect("error while running tauri application");
-            }
-            LIBRS
-            cat > src-tauri/tauri.conf.json << 'TAURICONF'
-            {
-              "$schema": "https://schema.tauri.app/config/2",
-              "productName": "Carsai YT Studio",
-              "version": "0.1.0",
-              "identifier": "com.carsai.ytstudio",
-              "build": {
-                "frontendDist": "../dist/client",
-                "devUrl": "http://localhost:3000"
-              },
-              "app": {
-                "windows": [{"title":"Carsai YT Studio","width":1280,"height":800,"minWidth":960,"minHeight":600}],
-                "security": {"csp": null}
-              },
-              "bundle": {
-                "active": true,
-                "targets": "all",
-                "icon": ["icons/32x32.png","icons/128x128.png","icons/128x128@2x.png","icons/icon.ico","icons/icon.png"],
-                "windows": {"certificateThumbprint":null,"digestAlgorithm":"sha256","timestampUrl":""}
-              }
-            }
-            TAURICONF
-          fi
+        run: node scripts/ensure-tauri.mjs
+
       - name: Build Tauri (Windows — nsis + msi)
         uses: tauri-apps/tauri-action@v0
         env:
@@ -150,10 +80,10 @@ jobs:
 
       # Safety net: explicitly verify + re-attach Windows artifacts in case
       # tauri-action's own upload silently misses one of the two installers.
-      - name: Verify & re-attach Windows assets
+      - name: Verify Windows assets
         shell: bash
-        run: |
-          find src-tauri/target/release/bundle -type f \( -name "*.msi" -o -name "*.exe" \) -print
+        run: find src-tauri/target/release/bundle -type f \( -name "*.msi" -o -name "*.exe" \) -print
+
       - name: Force-attach Windows assets to release
         uses: softprops/action-gh-release@v2
         with:
@@ -193,51 +123,7 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
       - name: Ensure src-tauri
-        run: |
-          if [ ! -d "src-tauri" ]; then
-            mkdir -p src-tauri/icons src-tauri/src
-            cp public/tauri-icons/*.png src-tauri/icons/ 2>/dev/null || true
-            cp public/tauri-icons/icon.ico src-tauri/icons/ 2>/dev/null || true
-            cat > src-tauri/Cargo.toml << 'CARGO'
-            [package]
-            name = "carsai-yt-studio"
-            version = "0.1.0"
-            edition = "2021"
-            rust-version = "1.77.2"
-            [build-dependencies]
-            tauri-build = { version = "2", features = [] }
-            [dependencies]
-            tauri = { version = "2", features = [] }
-            tauri-plugin-opener = "2"
-            serde = { version = "1", features = ["derive"] }
-            serde_json = "1"
-            CARGO
-            echo 'fn main() { tauri_build::build() }' > src-tauri/build.rs
-            cat > src-tauri/src/main.rs << 'MAINRS'
-            #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-            fn main() { carsai_yt_studio::run() }
-            MAINRS
-            cat > src-tauri/src/lib.rs << 'LIBRS'
-            #[cfg_attr(mobile, tauri::mobile_entry_point)]
-            pub fn run() {
-                tauri::Builder::default()
-                    .plugin(tauri_plugin_opener::init())
-                    .run(tauri::generate_context!())
-                    .expect("error while running tauri application");
-            }
-            LIBRS
-            cat > src-tauri/tauri.conf.json << 'TAURICONF'
-            {
-              "$schema": "https://schema.tauri.app/config/2",
-              "productName": "Carsai YT Studio",
-              "version": "0.1.0",
-              "identifier": "com.carsai.ytstudio",
-              "build": { "frontendDist": "../dist/client", "devUrl": "http://localhost:3000" },
-              "app": { "windows": [{"title":"Carsai YT Studio","width":1280,"height":800}], "security": {"csp": null} },
-              "bundle": { "active": true, "targets": "all", "icon": ["icons/32x32.png","icons/128x128.png","icons/128x128@2x.png","icons/icon.ico","icons/icon.png"] }
-            }
-            TAURICONF
-          fi
+        run: node scripts/ensure-tauri.mjs
       - name: Build Tauri (Linux)
         uses: tauri-apps/tauri-action@v0
         env:
@@ -275,51 +161,7 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
       - name: Ensure src-tauri
-        run: |
-          if [ ! -d "src-tauri" ]; then
-            mkdir -p src-tauri/icons src-tauri/src
-            cp public/tauri-icons/*.png src-tauri/icons/ 2>/dev/null || true
-            cp public/tauri-icons/icon.icns src-tauri/icons/ 2>/dev/null || true
-            cat > src-tauri/Cargo.toml << 'CARGO'
-            [package]
-            name = "carsai-yt-studio"
-            version = "0.1.0"
-            edition = "2021"
-            rust-version = "1.77.2"
-            [build-dependencies]
-            tauri-build = { version = "2", features = [] }
-            [dependencies]
-            tauri = { version = "2", features = [] }
-            tauri-plugin-opener = "2"
-            serde = { version = "1", features = ["derive"] }
-            serde_json = "1"
-            CARGO
-            echo 'fn main() { tauri_build::build() }' > src-tauri/build.rs
-            cat > src-tauri/src/main.rs << 'MAINRS'
-            #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-            fn main() { carsai_yt_studio::run() }
-            MAINRS
-            cat > src-tauri/src/lib.rs << 'LIBRS'
-            #[cfg_attr(mobile, tauri::mobile_entry_point)]
-            pub fn run() {
-                tauri::Builder::default()
-                    .plugin(tauri_plugin_opener::init())
-                    .run(tauri::generate_context!())
-                    .expect("error while running tauri application");
-            }
-            LIBRS
-            cat > src-tauri/tauri.conf.json << 'TAURICONF'
-            {
-              "$schema": "https://schema.tauri.app/config/2",
-              "productName": "Carsai YT Studio",
-              "version": "0.1.0",
-              "identifier": "com.carsai.ytstudio",
-              "build": { "frontendDist": "../dist/client", "devUrl": "http://localhost:3000" },
-              "app": { "windows": [{"title":"Carsai YT Studio","width":1280,"height":800}], "security": {"csp": null} },
-              "bundle": { "active": true, "targets": "all", "icon": ["icons/32x32.png","icons/128x128.png","icons/128x128@2x.png","icons/icon.ico","icons/icon.png"] }
-            }
-            TAURICONF
-          fi
+        run: node scripts/ensure-tauri.mjs
       - name: Build Tauri (macOS universal)
         uses: tauri-apps/tauri-action@v0
         env:

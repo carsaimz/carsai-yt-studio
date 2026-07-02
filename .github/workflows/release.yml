@@ -4,6 +4,11 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag para gerar/actualizar release (ex: v1.0.1). Vazio = usa a tag mais recente."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -20,26 +25,43 @@ jobs:
         with:
           node-version: 22
 
-      - name: Get version from tag or package.json
+      - name: Resolve target tag
         id: ver
         run: |
-          if [ "${{ github.ref_type }}" = "tag" ]; then
+          if [ -n "${{ inputs.tag }}" ]; then
+            TAG="${{ inputs.tag }}"
+            # Normalise: allow "1.0.1" or "v1.0.1"
+            case "$TAG" in
+              v*) ;;
+              *) TAG="v$TAG" ;;
+            esac
+            if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+              echo "::error::Tag '$TAG' não existe neste repositório."
+              exit 1
+            fi
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
             TAG="${{ github.ref_name }}"
           else
-            TAG="v$(node -p "require('./package.json').version")"
+            # No input and not triggered by a tag push → use the most recent tag
+            TAG=$(git tag --sort=-v:refname | grep "^v" | head -n1)
+            if [ -z "$TAG" ]; then
+              echo "::error::Nenhuma tag encontrada no repositório. Crie uma tag primeiro (ex: git tag v0.1.0)."
+              exit 1
+            fi
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "🏷️ Release alvo: $TAG"
 
       - name: Generate changelog
         id: cl
         run: |
           TAG="${{ steps.ver.outputs.tag }}"
-          PREV=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | grep "^v" | head -n1)
+          PREV=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | grep "^v" | awk -v t="$TAG" '{ if ($0 < t) print }' | head -n1)
           DATE=$(date +'%d/%m/%Y %H:%M UTC')
           if [ -n "$PREV" ]; then
-            COMMITS=$(git log --pretty=format:"- %s" "${PREV}..HEAD" 2>/dev/null || echo "- Initial release")
+            COMMITS=$(git log --pretty=format:"- %s" "${PREV}..${TAG}" 2>/dev/null || echo "- Initial release")
           else
-            COMMITS=$(git log --pretty=format:"- %s" -20 2>/dev/null || echo "- Initial release")
+            COMMITS=$(git log --pretty=format:"- %s" "${TAG}" -20 2>/dev/null || echo "- Initial release")
           fi
           {
             echo 'body<<EOF'
