@@ -82,8 +82,7 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets \
-            @capacitor/push-notifications @capacitor/splash-screen \
-            @capacitor/status-bar @capacitor/preferences
+            @capacitor/splash-screen @capacitor/status-bar @capacitor/preferences @capacitor/app
 
       - name: Setup Capacitor Android
         run: |

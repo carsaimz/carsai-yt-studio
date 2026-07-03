@@ -5,12 +5,10 @@
   "appVersion": "1.0.1",
   "appVersionCode": 1,
   "server": {
-    "androidScheme": "https",
-    "iosScheme": "https",
-    "hostname": "app"
+    "androidScheme": "https"
   },
   "android": {
-    "allowMixedContent": false,
+    "allowMixedContent": true,
     "captureInput": true,
     "webContentsDebuggingEnabled": true
   },
@@ -29,9 +27,6 @@
       "style": "DARK",
       "backgroundColor": "#1a1410",
       "overlaysWebView": false
-    },
-    "PushNotifications": {
-      "presentationOptions": ["badge", "sound", "alert"]
     },
     "Preferences": {
       "group": "CarsaiSecureStore"

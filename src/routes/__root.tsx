@@ -410,6 +410,10 @@ function RootComponent() {
     setLang(getLang());
   }, []); // eslint-disable-line
 
+  useEffect(() => {
+    (window as any).__carsaiMounted = true;
+  }, []);
+
   if (typeof window !== "undefined" && pathname !== "/" && !isSetupCompleted() && !isPublic(pathname)) {
     return (
       <QueryClientProvider client={queryClient}>

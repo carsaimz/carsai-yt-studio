@@ -11,9 +11,6 @@ permissions:
   contents: write
 
 jobs:
-  # ── Step 1: resolve the tag ONCE and ensure the GitHub Release exists ──────
-  # Doing this in a single job avoids race conditions between platform jobs
-  # trying to create the same release simultaneously (which drops assets).
   prepare-release:
     name: Prepare Release
     runs-on: ubuntu-latest
@@ -39,8 +36,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # ── Step 2: build each platform, attaching to the SAME pre-existing release ─
-  # Windows runs FIRST and is treated as priority; other platforms won't block it.
   windows:
     name: Build Windows (priority)
     needs: prepare-release
@@ -65,33 +60,21 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
       - name: Ensure src-tauri
         run: node scripts/ensure-tauri.mjs
-
+      - name: Install Tauri CLI
+        run: npm install --no-save @tauri-apps/cli
       - name: Build Tauri (Windows — nsis + msi)
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ needs.prepare-release.outputs.tag }}
-          releaseName: Carsai YT Studio ${{ needs.prepare-release.outputs.tag }}
-          releaseDraft: false
-          prerelease: false
-          includeUpdaterJson: false
-          args: --bundles nsis,msi
-
-      # Safety net: explicitly verify + re-attach Windows artifacts in case
-      # tauri-action's own upload silently misses one of the two installers.
-      - name: Verify Windows assets
+        run: npx tauri build --bundles nsis,msi
+      - name: List built artifacts
         shell: bash
         run: find src-tauri/target/release/bundle -type f \( -name "*.msi" -o -name "*.exe" \) -print
-
-      - name: Force-attach Windows assets to release
+      - name: Upload Windows assets to release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare-release.outputs.tag }}
           files: |
             src-tauri/target/release/bundle/msi/*.msi
             src-tauri/target/release/bundle/nsis/*.exe
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -124,16 +107,21 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
       - name: Ensure src-tauri
         run: node scripts/ensure-tauri.mjs
+      - name: Install Tauri CLI
+        run: npm install --no-save @tauri-apps/cli
       - name: Build Tauri (Linux)
-        uses: tauri-apps/tauri-action@v0
+        run: npx tauri build --bundles deb,rpm,appimage
+      - name: Upload Linux assets to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare-release.outputs.tag }}
+          files: |
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/rpm/*.rpm
+            src-tauri/target/release/bundle/appimage/*.AppImage
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ needs.prepare-release.outputs.tag }}
-          releaseName: Carsai YT Studio ${{ needs.prepare-release.outputs.tag }}
-          releaseDraft: false
-          prerelease: false
-          includeUpdaterJson: false
 
   macos:
     name: Build macOS
@@ -162,14 +150,17 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
       - name: Ensure src-tauri
         run: node scripts/ensure-tauri.mjs
+      - name: Install Tauri CLI
+        run: npm install --no-save @tauri-apps/cli
       - name: Build Tauri (macOS universal)
-        uses: tauri-apps/tauri-action@v0
+        run: npx tauri build --target universal-apple-darwin
+      - name: Upload macOS assets to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare-release.outputs.tag }}
+          files: |
+            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app.tar.gz
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ needs.prepare-release.outputs.tag }}
-          releaseName: Carsai YT Studio ${{ needs.prepare-release.outputs.tag }}
-          releaseDraft: false
-          prerelease: false
-          includeUpdaterJson: false
-          args: --target universal-apple-darwin
