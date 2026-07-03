@@ -117,7 +117,7 @@ function YouTubeSettings() {
       setMyChannels(items);
       if (items.length === 1) {
         setChannelId(items[0].id);
-        toast.success("Canal detectado automaticamente!");
+        toast.success(t("settings.channelDetectedAuto"));
       }
     } catch (e) { toast.error((e as Error).message); }
     finally { setLoadingChannels(false); }
@@ -171,7 +171,7 @@ function YouTubeSettings() {
               </div>
             </div>
             <Button variant="outline" size="sm"
-              onClick={() => logout().then(() => toast.success("Sessão encerrada"))}>
+              onClick={() => logout().then(() => toast.success(t("settings.signOut")))}>
               <LogOut className="mr-1 h-4 w-4" />{t("auth.signOut")}
             </Button>
           </div>
@@ -183,7 +183,7 @@ function YouTubeSettings() {
       </Section>
 
       {/* API Key */}
-      <Section title="YouTube Data API v3"
+      <Section title={t("settings.apiTitle")}
         description={t("settings.youtubeApiDesc")}>
         <Field label="API Key" value={apiKey} onChange={setApiKey} placeholder="AIza…" type="password" />
       </Section>
@@ -191,9 +191,9 @@ function YouTubeSettings() {
       {/* OAuth */}
       <Section title={t("settings.oauthTitle")}
         description={t("settings.oauthDesc")}>
-        <Field label="OAuth Client ID" value={clientId} onChange={setClientId}
+        <Field label={t("settings.oauthClientIdLabel")} value={clientId} onChange={setClientId}
           placeholder="xxxx.apps.googleusercontent.com" />
-        <Field label="OAuth Client Secret (Web app type)" value={clientSecret} onChange={setClientSecret}
+        <Field label={t("settings.oauthClientSecretLabel")} value={clientSecret} onChange={setClientSecret}
           type="password" placeholder="GOCSPX-xxxxx" />
         <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs text-warning">
           <strong>{t("settings.warning")}:</strong> {t("settings.oauthSecretHint")}
@@ -237,7 +237,7 @@ function YouTubeSettings() {
       <Section title={t("settings.defaultChannel")}
         description={t("settings.defaultChannelDesc")}>
         <div className="flex gap-2">
-          <Field label="Channel ID" value={channelId} onChange={setChannelId}
+          <Field label={t("settings.channelIdLabel")} value={channelId} onChange={setChannelId}
             placeholder="UCxxxxxxxxxxxxxxxxxx" className="flex-1" />
           <div className="flex flex-col justify-end">
             <Button variant="outline" size="sm" disabled={!hasOAuth() || loadingChannels}
@@ -308,6 +308,7 @@ function YouTubeSettings() {
 
 // ── AI Providers Settings ─────────────────────────────────────────────────────
 function AIProvidersSettings() {
+  const { t } = useI18n();
   const [setup, setSetup] = useSetup();
   const [providers, setProviders] = useState<AIProviderConfig[]>(
     () => setup.ai?.providers ?? []
@@ -316,7 +317,7 @@ function AIProvidersSettings() {
 
   function save() {
     setSetup({ ...setup, ai: { ...(setup.ai ?? {}), providers } });
-    toast.success("Provedores de IA guardados!");
+    toast.success(t("settings.aiSaved"));
   }
 
   function addProvider(presetId: AIProviderConfig["provider"]) {
@@ -351,12 +352,12 @@ function AIProvidersSettings() {
 
   return (
     <div className="space-y-4">
-      <Section title="Provedores de IA"
-        description="Configure múltiplos provedores. O sistema usa o de maior prioridade com API Key preenchida.">
+      <Section title={t("settings.aiTitle")}
+        description={t("settings.aiDesc")}>
         <div className="flex justify-end">
           <Button className="gradient-brand text-primary-foreground hover:opacity-90"
             onClick={() => setAdding(v => !v)}>
-            <Plus className="mr-1 h-4 w-4" />{adding ? "Cancelar" : "Adicionar provedor"}
+            <Plus className="mr-1 h-4 w-4" />{adding ? "Cancelar" : t("settings.addProvider")}
           </Button>
         </div>
 
@@ -367,7 +368,7 @@ function AIProvidersSettings() {
               byTier[tier].length > 0 && (
                 <div key={tier}>
                   <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
-                    {tier === "gratuito" ? "Camada gratuita generosa" : tier === "misto" ? "Camada mista (pago+free)" : "Personalizado"}
+                    {tier === "gratuito" ? t("settings.tierFree") : tier === "misto" ? t("settings.tierMixed") : t("settings.tierCustom")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {byTier[tier].map((p) => (
@@ -402,7 +403,7 @@ function AIProvidersSettings() {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className={`h-2 w-2 rounded-full ${p.enabled && p.apiKey ? "bg-success" : "bg-muted"}`} />
                       <p className="text-xs text-muted-foreground">
-                        {p.enabled && p.apiKey ? "Pronto" : p.apiKey ? "Desactivado" : "Falta API Key"}
+                        {p.enabled && p.apiKey ? "Pronto" : p.apiKey ? t("settings.disabled") : t("settings.missingApiKey")}
                         {" · "} prioridade {p.priority}
                       </p>
                     </div>
@@ -425,7 +426,7 @@ function AIProvidersSettings() {
                     onChange={(v) => update(p.id, { baseUrl: v })}
                     placeholder="https://api.openai.com/v1" />
                 )}
-                <Field label="Prioridade" type="number" value={String(p.priority)}
+                <Field label={t("settings.priority")} type="number" value={String(p.priority)}
                   onChange={(v) => update(p.id, { priority: Number(v) })} />
               </div>
             </div>
@@ -508,6 +509,7 @@ function GeneralSettings() {
 
 // ── Integrations Settings ─────────────────────────────────────────────────────
 function IntegrationsSettings() {
+  const { t } = useI18n();
   const [setup, setSetup] = useSetup();
   const [resendKey, setResendKey] = useState(setup.integrations?.resendKey ?? "");
   const [webhookUrl, setWebhookUrl] = useState(setup.integrations?.webhookUrl ?? "");
@@ -515,17 +517,17 @@ function IntegrationsSettings() {
 
   function save() {
     setSetup({ ...setup, integrations: { resendKey, webhookUrl, discordUrl } });
-    toast.success("Integrações guardadas!");
+    toast.success(t("settings.integrationsSaved"));
   }
 
   return (
     <div className="space-y-4">
-      <Section title="Integrações externas">
-        <Field label="Resend API Key (relatórios por email)" value={resendKey}
+      <Section title={t("settings.integrationsTitle")}>
+        <Field label={t("settings.resendKeyLabel")} value={resendKey}
           onChange={setResendKey} type="password" placeholder="re_…" />
-        <Field label="Webhook URL (eventos do canal)" value={webhookUrl}
+        <Field label={t("settings.webhookUrlLabel")} value={webhookUrl}
           onChange={setWebhookUrl} placeholder="https://…" />
-        <Field label="Discord Webhook (notificações de comentários)" value={discordUrl}
+        <Field label={t("settings.discordWebhookLabel")} value={discordUrl}
           onChange={setDiscordUrl} placeholder="https://discord.com/api/webhooks/…" />
       </Section>
       <div className="flex justify-end">
@@ -540,26 +542,27 @@ function IntegrationsSettings() {
 
 // ── Security Settings ─────────────────────────────────────────────────────────
 function SecuritySettings() {
+  const { t } = useI18n();
   const [setup, setSetup] = useSetup();
   const [biometric, setBiometric] = useState(setup.security?.biometric ?? false);
 
   function save() {
     setSetup({ ...setup, security: { biometric } });
-    toast.success("Segurança guardada!");
+    toast.success(t("settings.securitySaved"));
   }
 
   return (
     <div className="space-y-4">
-      <Section title="Segurança">
-        <Toggle icon={<Shield className="h-4 w-4" />} label="Bloqueio biométrico"
-          description="Pedir impressão digital ou Face ID ao abrir o app (Android/iOS)."
+      <Section title={t("settings.securityTitle")}>
+        <Toggle icon={<Shield className="h-4 w-4" />} label={t("settings.biometricLock")}
+          description={t("settings.biometricLockDesc")}
           checked={biometric} onChange={setBiometric} />
         <Button variant="outline"
           className="text-destructive border-destructive/30 hover:bg-destructive/10"
           onClick={() => {
-            if (confirm("Apagar todas as chaves e preferências locais?")) {
+            if (confirm(t("settings.clearDataConfirm"))) {
               localStorage.clear();
-              toast.success("Dados locais apagados.");
+              toast.success(t("settings.dataCleared"));
               window.location.reload();
             }
           }}>

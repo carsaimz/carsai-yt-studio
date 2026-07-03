@@ -146,7 +146,10 @@ function StepPrefs() {
         <div className="mt-2 grid grid-cols-3 gap-2">
           {(["dark", "light", "system"] as const).map((theme) => (
             <button key={theme} onClick={() => update({ theme })}
-              className={`rounded-lg border px-3 py-2 text-sm capitalize transition ${p.theme === theme ? "border-primary bg-primary/10" : "border-border hover:bg-accent"}`}>
+              className="rounded-lg border px-3 py-2 text-sm capitalize transition"
+              style={p.theme === theme
+                ? { borderColor: "#ef4444", backgroundColor: "rgba(239,68,68,0.12)", color: "#ef4444" }
+                : { borderColor: "var(--border)" }}>
               {theme}
             </button>
           ))}
@@ -158,7 +161,10 @@ function StepPrefs() {
           {LOCALES.map((locale) => (
             <button key={locale.code}
               onClick={() => { setLang(locale.code); update({ locale: locale.code as any }); }}
-              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${lang === locale.code ? "border-primary bg-primary/10" : "border-border hover:bg-accent"}`}>
+              className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition"
+              style={lang === locale.code
+                ? { borderColor: "#ef4444", backgroundColor: "rgba(239,68,68,0.12)", color: "#ef4444" }
+                : { borderColor: "var(--border)" }}>
               <span>{locale.flag}</span> {locale.label}
             </button>
           ))}
