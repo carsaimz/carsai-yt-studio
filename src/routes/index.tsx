@@ -70,8 +70,8 @@ function Dashboard() {
 
   async function handleRefresh() {
     const ok = await confirm({
-      title: "Actualizar dados?",
-      text: "Isso irá buscar as métricas mais recentes do canal.",
+      title: t("common.refreshConfirmTitle") as string,
+      text: t("common.refreshConfirmText") as string,
       icon: "question",
       confirmText: t("common.refresh"),
     });

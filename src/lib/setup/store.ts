@@ -60,12 +60,23 @@ const DEFAULT: SetupState = {
 
 export const SETUP_KEY = "setup";
 
+function mergeWithDefault(state: SetupState | undefined | null): SetupState {
+  if (!state) return DEFAULT;
+  return {
+    ...DEFAULT,
+    ...state,
+    ai: { providers: state.ai?.providers ?? DEFAULT.ai!.providers },
+    preferences: { ...DEFAULT.preferences, ...state.preferences },
+  };
+}
+
 export function getSetup(): SetupState {
-  return lsGet<SetupState>(SETUP_KEY, DEFAULT);
+  return mergeWithDefault(lsGet<SetupState>(SETUP_KEY, DEFAULT));
 }
 
 export function useSetup() {
-  return useLS<SetupState>(SETUP_KEY, DEFAULT);
+  const [value, update] = useLS<SetupState>(SETUP_KEY, DEFAULT);
+  return [mergeWithDefault(value), update] as const;
 }
 
 export function isSetupCompleted() {

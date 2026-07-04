@@ -23,20 +23,20 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-function friendly(e: unknown) {
+function friendly(e: unknown, t: (k: string) => string) {
   if (e instanceof FirebaseError) {
     const map: Record<string, string> = {
-      "auth/invalid-credential": "Credenciais inválidas.",
-      "auth/user-not-found": "Usuário não encontrado.",
-      "auth/wrong-password": "Senha incorreta.",
-      "auth/email-already-in-use": "Este e-mail já está cadastrado.",
-      "auth/weak-password": "Senha muito fraca (mín. 6 caracteres).",
-      "auth/invalid-email": "E-mail inválido.",
-      "auth/popup-closed-by-user": "Janela fechada antes de concluir o login.",
+      "auth/invalid-credential": t("auth.invalidCredential"),
+      "auth/user-not-found": t("auth.userNotFound"),
+      "auth/wrong-password": t("auth.wrongPassword"),
+      "auth/email-already-in-use": t("auth.emailInUse"),
+      "auth/weak-password": t("auth.weakPassword"),
+      "auth/invalid-email": t("auth.invalidEmail"),
+      "auth/popup-closed-by-user": t("auth.popupClosed"),
     };
     return map[e.code] ?? e.message;
   }
-  return e instanceof Error ? e.message : "Erro inesperado.";
+  return e instanceof Error ? e.message : t("auth.unexpectedError");
 }
 
 function AuthPage() {
@@ -81,7 +81,7 @@ function AuthPage() {
       navigate({ to: "/" });
     } catch (err) {
       toast.dismiss(id);
-      toast.error(friendly(err));
+      toast.error(friendly(err, t));
     } finally {
       setBusy(false);
     }
@@ -97,7 +97,7 @@ function AuthPage() {
       navigate({ to: "/" });
     } catch (err) {
       toast.dismiss(id);
-      toast.error(friendly(err));
+      toast.error(friendly(err, t));
     } finally {
       setBusy(false);
     }
@@ -112,7 +112,7 @@ function AuthPage() {
       await resetPassword(email);
       toast.success("E-mail de recuperação enviado.");
     } catch (err) {
-      toast.error(friendly(err));
+      toast.error(friendly(err, t));
     }
   };
 
@@ -122,7 +122,7 @@ function AuthPage() {
         {mode === "login" ? t("auth.signIn") : t("auth.signUp")}
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Acesse com sua conta para sincronizar preferências entre dispositivos.
+        {t("auth.subtitle")}
       </p>
 
       <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="mt-5">
@@ -141,14 +141,14 @@ function AuthPage() {
             <div className="space-y-1.5">
               <Label htmlFor="email">
                 <FontAwesomeIcon icon={["fas", "envelope"]} className="mr-1.5 text-muted-foreground" />
-                E-mail
+                {t("auth.emailLabel")}
               </Label>
               <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">
                 <FontAwesomeIcon icon={["fas", "lock"]} className="mr-1.5 text-muted-foreground" />
-                Senha
+                {t("auth.passwordLabel")}
               </Label>
               <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.currentTarget.value)} />
             </div>
@@ -165,19 +165,19 @@ function AuthPage() {
 
       <div className="mt-4 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
-        <span className="text-xs text-muted-foreground">ou</span>
+        <span className="text-xs text-muted-foreground">t("auth.or")</span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <Button variant="outline" onClick={onGoogle} disabled={busy} className="mt-3 w-full">
         <FontAwesomeIcon icon={["fab", "google"]} className="mr-2 text-blue-400" />
-        Continuar com Google
+        {t("auth.withGoogle")}
       </Button>
 
       {mode === "login" && (
         <button type="button" onClick={onReset} className="mt-3 w-full text-center text-xs text-muted-foreground hover:text-foreground transition">
           <FontAwesomeIcon icon={["fas", "key"]} className="mr-1" />
-          Esqueci minha senha
+          {t("auth.forgotPassword")}
         </button>
       )}
     </Shell>

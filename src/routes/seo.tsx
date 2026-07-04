@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Sparkles, TrendingUp } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { PageHeader } from "@/components/page-header";
@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { youtube } from "@/lib/youtube/client";
 import { getSetup } from "@/lib/setup/store";
 import { toast } from "@/lib/notifications";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/seo")({
   head: () => ({
@@ -23,13 +24,13 @@ export const Route = createFileRoute("/seo")({
 });
 
 function SEOPage() {
+  const { t, lang } = useI18n();
   const { youtube: yt } = getSetup();
   const channelId = yt?.defaultChannelId;
   const [titleInput, setTitleInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Load channel's own videos for tag analysis
   const channelQ = useQuery({
     enabled: !!channelId,
     queryKey: ["channel", channelId],
@@ -52,18 +53,16 @@ function SEOPage() {
   });
   const videos = detailsQ.data?.items ?? [];
 
-  // Aggregate real tags from own videos
   const tagFreq: Record<string, number> = {};
   videos.forEach((v: any) => {
-    (v.snippet?.tags ?? []).forEach((t: string) => {
-      tagFreq[t] = (tagFreq[t] ?? 0) + 1;
+    (v.snippet?.tags ?? []).forEach((tag: string) => {
+      tagFreq[tag] = (tagFreq[tag] ?? 0) + 1;
     });
   });
   const topTags = Object.entries(tagFreq)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 12);
 
-  // Real YouTube search for competitor analysis
   const searchQ = useQuery({
     enabled: !!searchTerm,
     queryKey: ["yt-search", searchTerm],
@@ -74,47 +73,43 @@ function SEOPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
-        title="SEO & Descoberta"
-        description="Tags reais do canal + pesquisa de concorrentes via YouTube API."
+        title={t("seoPage.title") as string}
+        description={t("seoPage.subtitle") as string}
       />
 
       {!channelId && (
         <Card className="p-5">
           <p className="text-sm text-muted-foreground">
-            Configure o canal em{" "}
-            <Link to="/settings" className="text-primary underline">Configurações → YouTube</Link>{" "}
-            para ver dados reais de SEO.
+            {t("seoPage.configureChannel")}{" "}
+            <Link to="/settings" className="text-primary underline">{t("seoPage.settingsLink")}</Link>{" "}
+            {t("seoPage.forRealData")}
           </p>
         </Card>
       )}
 
-      {/* Title optimiser — uses real video titles as base */}
       <Card className="p-5">
-        <h2 className="font-display text-lg font-semibold">Optimizador de título</h2>
-        <p className="text-xs text-muted-foreground">
-          Cole um título e veja variações baseadas nos seus vídeos mais vistos.
-        </p>
+        <h2 className="font-display text-lg font-semibold">{t("seoPage.titleOptimizer")}</h2>
+        <p className="text-xs text-muted-foreground">{t("seoPage.titleOptimizerDesc")}</p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <input
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
-            placeholder="Cole o título do seu próximo vídeo…"
+            placeholder={t("seoPage.titlePlaceholder") as string}
             className="h-10 flex-1 rounded-lg border border-border bg-card/60 px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring"
           />
           <Button
             className="gradient-brand text-primary-foreground hover:opacity-90"
             disabled={!titleInput}
-            onClick={() => toast.info("Integre um provedor de IA em Configurações para sugestões automáticas.")}
+            onClick={() => toast.info(t("seoPage.optimizeToast") as string)}
           >
             <Sparkles className="mr-1 h-4 w-4" />
-            Optimizar com IA
+            {t("seoPage.optimizeWithAi")}
           </Button>
         </div>
 
-        {/* Show top performing real video titles */}
         {videos.length > 0 && (
           <div className="mt-4 space-y-2">
-            <p className="text-xs text-muted-foreground font-medium">Seus vídeos mais vistos:</p>
+            <p className="text-xs text-muted-foreground font-medium">{t("seoPage.topVideos")}</p>
             {videos
               .sort((a: any, b: any) =>
                 parseInt(b.statistics?.viewCount ?? "0") - parseInt(a.statistics?.viewCount ?? "0"))
@@ -125,7 +120,7 @@ function SEOPage() {
                   <a href={`https://youtu.be/${v.id}`} target="_blank" rel="noreferrer"
                     className="line-clamp-1 hover:text-primary">{v.snippet?.title}</a>
                   <Badge variant="secondary">
-                    {parseInt(v.statistics?.viewCount ?? "0").toLocaleString("pt-BR")} views
+                    {parseInt(v.statistics?.viewCount ?? "0").toLocaleString(lang)} {t("seoPage.views")}
                   </Badge>
                 </div>
               ))}
@@ -134,15 +129,14 @@ function SEOPage() {
       </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Real tags from channel */}
         <Card className="p-5">
-          <h2 className="font-display text-lg font-semibold">Tags mais usadas no canal</h2>
-          <p className="text-xs text-muted-foreground">Extraídas dos seus {videos.length} vídeos recentes</p>
+          <h2 className="font-display text-lg font-semibold">{t("seoPage.topTags")}</h2>
+          <p className="text-xs text-muted-foreground">{t("seoPage.extractedFrom")} {videos.length} {t("seoPage.recentVideosLabel")}</p>
 
           {detailsQ.isLoading && (
             <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
               <FontAwesomeIcon icon={["fas", "spinner"]} spin />
-              A analisar tags…
+              {t("seoPage.analyzingTags")}
             </div>
           )}
 
@@ -152,9 +146,9 @@ function SEOPage() {
               <table className="w-full min-w-[320px] text-sm">
                 <thead className="bg-card/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
-                    <th className="p-3">Tag</th>
-                    <th className="p-3">Usos</th>
-                    <th className="p-3 hidden sm:table-cell">Frequência</th>
+                    <th className="p-3">{t("seoPage.tag")}</th>
+                    <th className="p-3">{t("seoPage.uses")}</th>
+                    <th className="p-3 hidden sm:table-cell">{t("seoPage.frequency")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -178,21 +172,20 @@ function SEOPage() {
             </div>
           ) : !detailsQ.isLoading && (
             <p className="mt-4 text-sm text-muted-foreground">
-              Nenhuma tag encontrada nos seus vídeos recentes.
+              {t("seoPage.noTagsFound")}
             </p>
           )}
         </Card>
 
-        {/* Competitor search — real YouTube API */}
         <Card className="p-5">
-          <h2 className="font-display text-lg font-semibold">Pesquisa de concorrentes</h2>
-          <p className="text-xs text-muted-foreground">Busca real no YouTube via YouTube Data API</p>
+          <h2 className="font-display text-lg font-semibold">{t("seoPage.competitorSearch")}</h2>
+          <p className="text-xs text-muted-foreground">{t("seoPage.competitorDesc")}</p>
           <div className="mt-3 flex gap-2">
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && searchQuery && setSearchTerm(searchQuery)}
-              placeholder="Ex: thumbnails com IA 2026"
+              placeholder={t("seoPage.searchPlaceholder") as string}
               className="h-9 flex-1 rounded-lg border border-border bg-card/60 px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring"
             />
             <Button variant="outline" size="sm"
@@ -219,7 +212,7 @@ function SEOPage() {
             </ul>
           )}
           {!searchQ.isFetching && searchTerm && searchResults.length === 0 && (
-            <p className="mt-4 text-sm text-muted-foreground">Nenhum resultado encontrado.</p>
+            <p className="mt-4 text-sm text-muted-foreground">{t("seoPage.noResults")}</p>
           )}
         </Card>
       </div>

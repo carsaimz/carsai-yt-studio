@@ -1,0 +1,88 @@
+export type FaqItem = { q: string; a: string; tags: string[]; cat: string };
+
+export const FAQ_PT_BR: FaqItem[] = [
+  { cat: "Conta", q: "Como crio minha conta?", tags: ["auth"],
+    a: "Em /auth você pode criar uma conta com e-mail/senha. O login dá acesso à plataforma e sincroniza preferências básicas entre dispositivos." },
+  { cat: "Conta", q: "Esqueci minha senha", tags: ["auth"],
+    a: "Na tela de login clique em 'Esqueci minha senha' e informe seu e-mail. Um link de recuperação será enviado." },
+  { cat: "YouTube", q: "Como obtenho uma API Key do YouTube?", tags: ["youtube"],
+    a: "Em console.cloud.google.com → ative 'YouTube Data API v3' → Credenciais → Criar API key. Cole em Configurações → YouTube." },
+  { cat: "YouTube", q: "Como conecto meu canal?", tags: ["youtube"],
+    a: "Após o login: Configurações → YouTube, cole API Key e Channel ID (UC…). O ID está em youtube.com/account_advanced. O Dashboard passa a mostrar dados em tempo real." },
+  { cat: "YouTube", q: "OAuth para ações privadas", tags: ["oauth"],
+    a: "Crie OAuth Client ID (Web) no Google Cloud, adicione o domínio em Authorized JavaScript Origins, cole o Client ID em Configurações." },
+  { cat: "IA", q: "Posso usar vários provedores?", tags: ["ia"],
+    a: "Sim. Ative quantos quiser em Configurações → Provedores IA. A ordem define o fallback em cascata." },
+  { cat: "IA", q: "Quais provedores são suportados?", tags: ["ia"],
+    a: "OpenAI, Anthropic, Google AI (Gemini), Groq, OpenRouter, Mistral, Cohere e mais." },
+  { cat: "Privacidade", q: "Onde minhas chaves ficam guardadas?", tags: ["privacidade"],
+    a: "Apenas no seu dispositivo (localStorage / Capacitor Preferences). Nunca enviamos para servidores próprios." },
+  { cat: "Instalação", q: "Como instalo como app no celular?", tags: ["pwa"],
+    a: "PWA: 'Adicionar à tela inicial'. Android: APK/AAB nas releases. iOS: TestFlight ou compile via Capacitor." },
+  { cat: "Atualizações", q: "Como atualizo o app?", tags: ["updates"],
+    a: "Web/PWA atualizam automaticamente. Em /about veja a versão e baixe a última. Apps nativos: baixe nova versão das releases." },
+  { cat: "Self-host", q: "Posso auto-hospedar?", tags: ["self-host"],
+    a: "Sim, é MIT. 'npm install && npm run build' gera dist/client/. Hospede em qualquer CDN ou localmente com 'npx serve dist/client'." },
+  { cat: "Suporte", q: "Como reporto bugs?", tags: ["suporte"],
+    a: "Abra issue em github.com/carsaimz/carsai-yt-studio/issues. Suporte direto: suporte@carsai.app." },
+];
+
+export const FAQ_EN_US: FaqItem[] = [
+  { cat: "Account", q: "How do I create my account?", tags: ["auth"],
+    a: "At /auth you can create an account with email/password. Logging in gives you access to the platform and syncs basic preferences across devices." },
+  { cat: "Account", q: "I forgot my password", tags: ["auth"],
+    a: "On the login screen, click 'Forgot my password' and enter your email. A recovery link will be sent." },
+  { cat: "YouTube", q: "How do I get a YouTube API key?", tags: ["youtube"],
+    a: "At console.cloud.google.com → enable 'YouTube Data API v3' → Credentials → Create API key. Paste it in Settings → YouTube." },
+  { cat: "YouTube", q: "How do I connect my channel?", tags: ["youtube"],
+    a: "After logging in: Settings → YouTube, paste your API key and Channel ID (UC…). The ID is at youtube.com/account_advanced. The Dashboard will then show real-time data." },
+  { cat: "YouTube", q: "OAuth for private actions", tags: ["oauth"],
+    a: "Create an OAuth Client ID (Web) in Google Cloud, add your domain to Authorized JavaScript Origins, and paste the Client ID in Settings." },
+  { cat: "AI", q: "Can I use multiple providers?", tags: ["ia"],
+    a: "Yes. Enable as many as you like in Settings → AI Providers. Their order defines the cascade fallback." },
+  { cat: "AI", q: "Which providers are supported?", tags: ["ia"],
+    a: "OpenAI, Anthropic, Google AI (Gemini), Groq, OpenRouter, Mistral, Cohere, and more." },
+  { cat: "Privacy", q: "Where are my keys stored?", tags: ["privacidade"],
+    a: "Only on your device (localStorage / Capacitor Preferences). We never send them to our own servers." },
+  { cat: "Installation", q: "How do I install it as a phone app?", tags: ["pwa"],
+    a: "PWA: 'Add to home screen'. Android: APK/AAB in releases. iOS: TestFlight or build via Capacitor." },
+  { cat: "Updates", q: "How do I update the app?", tags: ["updates"],
+    a: "Web/PWA update automatically. Check /about for the version and download the latest. Native apps: download the new version from releases." },
+  { cat: "Self-host", q: "Can I self-host?", tags: ["self-host"],
+    a: "Yes, it's MIT licensed. 'npm install && npm run build' generates dist/client/. Host it on any CDN or locally with 'npx serve dist/client'." },
+  { cat: "Support", q: "How do I report bugs?", tags: ["suporte"],
+    a: "Open an issue at github.com/carsaimz/carsai-yt-studio/issues. Direct support: suporte@carsai.app." },
+];
+
+export const FAQ_ES_ES: FaqItem[] = [
+  { cat: "Cuenta", q: "¿Cómo creo mi cuenta?", tags: ["auth"],
+    a: "En /auth puedes crear una cuenta con correo/contraseña. Iniciar sesión te da acceso a la plataforma y sincroniza preferencias básicas entre dispositivos." },
+  { cat: "Cuenta", q: "Olvidé mi contraseña", tags: ["auth"],
+    a: "En la pantalla de inicio de sesión haz clic en 'Olvidé mi contraseña' e indica tu correo. Se enviará un enlace de recuperación." },
+  { cat: "YouTube", q: "¿Cómo obtengo una API Key de YouTube?", tags: ["youtube"],
+    a: "En console.cloud.google.com → activa 'YouTube Data API v3' → Credenciales → Crear API key. Pégala en Ajustes → YouTube." },
+  { cat: "YouTube", q: "¿Cómo conecto mi canal?", tags: ["youtube"],
+    a: "Tras iniciar sesión: Ajustes → YouTube, pega la API Key y el Channel ID (UC…). El ID está en youtube.com/account_advanced. El Panel mostrará datos en tiempo real." },
+  { cat: "YouTube", q: "OAuth para acciones privadas", tags: ["oauth"],
+    a: "Crea un OAuth Client ID (Web) en Google Cloud, añade el dominio en Authorized JavaScript Origins, pega el Client ID en Ajustes." },
+  { cat: "IA", q: "¿Puedo usar varios proveedores?", tags: ["ia"],
+    a: "Sí. Activa los que quieras en Ajustes → Proveedores IA. El orden define el fallback en cascada." },
+  { cat: "IA", q: "¿Qué proveedores son compatibles?", tags: ["ia"],
+    a: "OpenAI, Anthropic, Google AI (Gemini), Groq, OpenRouter, Mistral, Cohere y más." },
+  { cat: "Privacidad", q: "¿Dónde se guardan mis claves?", tags: ["privacidade"],
+    a: "Solo en tu dispositivo (localStorage / Capacitor Preferences). Nunca las enviamos a servidores propios." },
+  { cat: "Instalación", q: "¿Cómo lo instalo como app en el móvil?", tags: ["pwa"],
+    a: "PWA: 'Añadir a pantalla de inicio'. Android: APK/AAB en las releases. iOS: TestFlight o compila con Capacitor." },
+  { cat: "Actualizaciones", q: "¿Cómo actualizo la app?", tags: ["updates"],
+    a: "Web/PWA se actualizan automáticamente. En /about consulta la versión y descarga la última. Apps nativas: descarga la nueva versión desde releases." },
+  { cat: "Auto-hospedaje", q: "¿Puedo auto-hospedarlo?", tags: ["self-host"],
+    a: "Sí, es MIT. 'npm install && npm run build' genera dist/client/. Hospédalo en cualquier CDN o localmente con 'npx serve dist/client'." },
+  { cat: "Soporte", q: "¿Cómo reporto errores?", tags: ["suporte"],
+    a: "Abre un issue en github.com/carsaimz/carsai-yt-studio/issues. Soporte directo: suporte@carsai.app." },
+];
+
+export function faqByLocale(lang: string): FaqItem[] {
+  if (lang === "en-US") return FAQ_EN_US;
+  if (lang === "es-ES") return FAQ_ES_ES;
+  return FAQ_PT_BR;
+}

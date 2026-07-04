@@ -29,6 +29,7 @@ function fmt(n: any) {
 
 // ── Upload dialog ─────────────────────────────────────────────────────────────
 function UploadDialog({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
@@ -171,7 +172,7 @@ function UploadDialog({ onClose }: { onClose: () => void }) {
         )}
 
         <div className="flex gap-2 justify-end pt-2">
-          <Button variant="outline" onClick={onClose} disabled={uploading}>Cancelar</Button>
+          <Button variant="outline" onClick={onClose} disabled={uploading}>{t("contentDialogs.cancel")}</Button>
           <Button className="gradient-brand text-primary-foreground hover:opacity-90"
             disabled={!file || !title || uploading} onClick={handleUpload}>
             {uploading ? <><FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />A enviar…</> : (publishAt ? "Enviar e agendar" : "Enviar")}
@@ -184,6 +185,7 @@ function UploadDialog({ onClose }: { onClose: () => void }) {
 
 // ── Edit dialog ───────────────────────────────────────────────────────────────
 function EditVideoDialog({ video, onClose }: { video: any; onClose: () => void }) {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [title, setTitle] = useState(video.snippet?.title ?? "");
   const [desc, setDesc] = useState(video.snippet?.description ?? "");
@@ -267,7 +269,7 @@ function EditVideoDialog({ video, onClose }: { video: any; onClose: () => void }
         </div>
 
         <div className="flex gap-2 justify-end pt-2 border-t border-border">
-          <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button variant="outline" onClick={onClose} disabled={saving}>{t("contentDialogs.cancel")}</Button>
           <Button className="gradient-brand text-primary-foreground hover:opacity-90"
             disabled={saving} onClick={handleSave}>
             {saving ? <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" /> : null}
@@ -281,6 +283,7 @@ function EditVideoDialog({ video, onClose }: { video: any; onClose: () => void }
 
 // ── Playlist dialog ───────────────────────────────────────────────────────────
 function PlaylistDialog({ playlist, onClose }: { playlist?: any; onClose: () => void }) {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [title, setTitle] = useState(playlist?.snippet?.title ?? "");
   const [desc, setDesc] = useState(playlist?.snippet?.description ?? "");
@@ -329,11 +332,11 @@ function PlaylistDialog({ playlist, onClose }: { playlist?: any; onClose: () => 
           </Select>
         )}
         <div className="flex gap-2 justify-end pt-2">
-          <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button variant="outline" onClick={onClose} disabled={saving}>{t("contentDialogs.cancel")}</Button>
           <Button className="gradient-brand text-primary-foreground hover:opacity-90"
             disabled={!title || saving} onClick={handleSave}>
             {saving ? <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" /> : null}
-            {playlist ? "Guardar" : "Criar"}
+            {playlist ? t("contentDialogs.save") : t("contentDialogs.create")}
           </Button>
         </div>
       </Card>

@@ -357,7 +357,7 @@ function AIProvidersSettings() {
         <div className="flex justify-end">
           <Button className="gradient-brand text-primary-foreground hover:opacity-90"
             onClick={() => setAdding(v => !v)}>
-            <Plus className="mr-1 h-4 w-4" />{adding ? "Cancelar" : t("settings.addProvider")}
+            <Plus className="mr-1 h-4 w-4" />{adding ? t("common.cancel") : t("settings.addProvider")}
           </Button>
         </div>
 
@@ -422,7 +422,7 @@ function AIProvidersSettings() {
                 <Field label="Modelo" value={p.model}
                   onChange={(v) => update(p.id, { model: v })} />
                 {(p.provider === "custom" || p.baseUrl) && (
-                  <Field label="Base URL" value={p.baseUrl ?? ""}
+                  <Field label={t("settings.baseUrlLabel") as string} value={p.baseUrl ?? ""}
                     onChange={(v) => update(p.id, { baseUrl: v })}
                     placeholder="https://api.openai.com/v1" />
                 )}

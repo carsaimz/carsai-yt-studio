@@ -98,7 +98,9 @@ jobs:
           cp public/icon-512.png resources/icon.png
           cp public/icon-512.png resources/icon-foreground.png
           cp public/icon-512.png resources/icon-background.png
-          cp public/icon-192.png resources/splash.png
+          convert -size 2732x2732 xc:"#1a1410" \
+            public/icon-512.png -gravity center -geometry 640x640 -composite \
+            resources/splash.png
           npx @capacitor/assets generate --android \
             --iconBackgroundColor "#1a1410" \
             --iconBackgroundColorDark "#1a1410" \

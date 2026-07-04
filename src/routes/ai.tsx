@@ -124,7 +124,7 @@ function AIPage() {
       setMsgs((prev) => [...prev, { role: "assistant", text: reply }]);
     } catch (err) {
       toast.error((err as Error).message);
-      setMsgs((prev) => [...prev, { role: "assistant", text: `Erro: ${(err as Error).message}` }]);
+      setMsgs((prev) => [...prev, { role: "assistant", text: `${t("ai.errorPrefix")} ${(err as Error).message}` }]);
     } finally {
       setSending(false);
     }
@@ -165,7 +165,7 @@ function AIPage() {
       const message = (err as Error).message;
       toast.error(message);
       if (agentId === "thumbnail") {
-        setAgentResults((r) => ({ ...r, [agentId]: `${r[agentId] ? `${r[agentId]}\n\n` : ""}Sem thumbnail real neste provedor: ${message}` }));
+        setAgentResults((r) => ({ ...r, [agentId]: `${r[agentId] ? `${r[agentId]}\n\n` : ""}${t("ai.noThumbnailProvider")} ${message}` }));
       }
     } finally {
       setAgentBusy(null);
@@ -175,10 +175,10 @@ function AIPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
-        title="IA & Agentes"
+        title={t("ai.title2")}
         description={activeProvider
-          ? `Provedor activo: ${activeProvider.name} · modelo: ${activeProvider.model ?? "padrão"}`
-          : "Configure um provedor de IA em Configurações → Provedores IA"}
+          ? `${t("ai.providerActive")} ${activeProvider.name} · ${t("ai.model")} ${activeProvider.model ?? t("ai.defaultModel")}`
+          : t("ai.configureProvider")}
       />
 
       {!activeProvider && (
@@ -186,10 +186,10 @@ function AIPage() {
           <div className="flex items-start gap-3">
             <FontAwesomeIcon icon={["fas", "triangle-exclamation"]} className="mt-0.5 text-warning" />
             <div>
-              <p className="font-semibold">Sem provedor de IA configurado</p>
+              <p className="font-semibold">{t("ai.noProviderTitle")}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                O chat e os agentes precisam de uma API Key.{" "}
-                <Link to="/settings" className="text-primary underline">Configurar agora</Link>
+                {t("ai.noProviderHint")}{" "}
+                <Link to="/settings" className="text-primary underline">{t("ai.configureNow")}</Link>
               </p>
             </div>
           </div>
@@ -199,15 +199,15 @@ function AIPage() {
       <Tabs defaultValue="chat">
         <div className="mb-3 space-y-2 rounded-2xl border border-border bg-card/60 p-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">Provedor do chat e agentes</span>
+            <span className="text-xs font-medium text-muted-foreground">{t("ai.chatProviderLabel")}</span>
             <select
               value={activeProvider?.id ?? ""}
               onChange={(e) => setSelectedProviderId(e.target.value)}
               className="h-9 min-w-[220px] rounded-lg border border-primary/45 bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
               disabled={enabledProviders.length === 0}
             >
-              {enabledProviders.length === 0 && <option value="">Sem provedor ativo</option>}
-              {enabledProviders.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.model || "padrão"}</option>)}
+              {enabledProviders.length === 0 && <option value="">{t("ai.noActiveProvider")}</option>}
+              {enabledProviders.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.model || t("ai.defaultModel")}</option>)}
             </select>
           </div>
           {activeProvider && (() => {
@@ -215,7 +215,7 @@ function AIPage() {
             if (!meta) return null;
             return (
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Capacidades:</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("ai.capabilities")}</span>
                 {meta.capabilities.map((c) => (
                   <span key={c} className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-foreground">
                     <FontAwesomeIcon icon={["fas", CAPABILITY_LABELS[c].icon as any]} className="text-primary" />
@@ -223,7 +223,7 @@ function AIPage() {
                   </span>
                 ))}
                 {meta.contextWindow && (
-                  <span className="ml-auto text-[10px] text-muted-foreground">Contexto: {meta.contextWindow.toLocaleString()} tokens</span>
+                  <span className="ml-auto text-[10px] text-muted-foreground">{t("ai.context")} {meta.contextWindow.toLocaleString()} {t("ai.tokens")}</span>
                 )}
               </div>
             );
@@ -231,9 +231,9 @@ function AIPage() {
         </div>
 
         <TabsList>
-          <TabsTrigger value="agents">Agentes</TabsTrigger>
-          <TabsTrigger value="chat">Chat</TabsTrigger>
-          <TabsTrigger value="scripts">Roteiros</TabsTrigger>
+          <TabsTrigger value="agents">{t("ai.tabAgents")}</TabsTrigger>
+          <TabsTrigger value="chat">{t("ai.tabChat")}</TabsTrigger>
+          <TabsTrigger value="scripts">{t("ai.tabScripts")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="agents">
@@ -251,20 +251,20 @@ function AIPage() {
                   <p className="mt-1 text-sm text-muted-foreground">{a.description}</p>
                   {a.id === "thumbnail" && activeProvider?.provider !== "openai" && (
                     <p className="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning">
-                      O provedor actual gera briefing/copy. Imagem real requer OpenAI com modelo de imagem.
+                      {t("ai.imageProviderHint")}
                     </p>
                   )}
                   <textarea
                     className="mt-3 h-24 w-full resize-none rounded-lg border border-border bg-background p-3 text-sm outline-none focus:border-primary/40"
-                    placeholder={a.id === "thumbnail" ? "Tema do vídeo, emoção, público e texto desejado…" : "Descreva o que este agente deve criar…"}
+                    placeholder={a.id === "thumbnail" ? t("ai.thumbnailPlaceholder") as string : t("ai.agentPlaceholder") as string}
                     value={agentInputs[a.id] ?? ""}
                     onChange={(e) => setAgentInputs((s) => ({ ...s, [a.id]: e.target.value }))}
                   />
                   <Button className="mt-3 gradient-brand text-primary-foreground" disabled={!activeProvider || agentBusy === a.id || !agentInputs[a.id]?.trim()} onClick={() => runAgent(a.id)}>
                     {agentBusy === a.id ? <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                    {a.id === "thumbnail" ? "Gerar thumbnail/briefing" : "Executar agente"}
+                    {a.id === "thumbnail" ? t("ai.generateThumbBrief") : t("ai.runAgent")}
                   </Button>
-                  {a.id === "thumbnail" && thumbnailUrl && <img src={thumbnailUrl} alt="Thumbnail gerada" className="mt-4 aspect-video w-full rounded-xl border border-border object-cover" />}
+                  {a.id === "thumbnail" && thumbnailUrl && <img src={thumbnailUrl} alt={t("ai.thumbnailAlt") as string} className="mt-4 aspect-video w-full rounded-xl border border-border object-cover" />}
                   {agentResults[a.id] && <div className="mt-3 rounded-xl border border-border bg-card/60 p-3 text-sm whitespace-pre-wrap">{agentResults[a.id]}</div>}
                 </Card>
               );
@@ -281,8 +281,8 @@ function AIPage() {
                     <FontAwesomeIcon icon={["fas", "robot"]} size="2x" className="text-muted-foreground" />
                     <p className="mt-2 text-sm text-muted-foreground">
                       {activeProvider
-                        ? "Chat livre — escolha o provedor acima e converse sem agentes."
-                        : "Configure um provedor de IA para começar."}
+                        ? t("ai.chatFreeIntro")
+                        : t("ai.chatConfigureFirst")}
                     </p>
                   </div>
                 </div>
@@ -308,7 +308,7 @@ function AIPage() {
                   </div>
                   <div className="rounded-2xl bg-accent/40 p-3 text-sm text-muted-foreground">
                     <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />
-                    A pensar…
+                    {t("ai.thinking")}
                   </div>
                 </div>
               )}
@@ -333,7 +333,7 @@ function AIPage() {
               {msgs.length > 0 && (
                 <button onClick={() => setMsgs([])}
                   className="mt-2 text-xs text-muted-foreground hover:text-foreground">
-                  Limpar conversa
+                  {t("ai.clearChat")}
                 </button>
               )}
             </div>
@@ -342,10 +342,10 @@ function AIPage() {
 
         <TabsContent value="scripts">
           <Card className="p-5 space-y-4">
-            <h3 className="font-display text-lg font-semibold">Gerador de roteiros</h3>
+            <h3 className="font-display text-lg font-semibold">{t("ai.scriptGeneratorTitle")}</h3>
             <textarea
               className="h-32 w-full resize-none rounded-lg border border-border bg-background p-3 text-sm outline-none focus:border-primary/40"
-              placeholder="Descreva o tema, formato e duração do vídeo…"
+              placeholder={t("ai.scriptPlaceholder") as string}
               value={scriptInput}
               onChange={(e) => setScriptInput(e.target.value)}
             />
@@ -354,8 +354,8 @@ function AIPage() {
               disabled={!activeProvider || generatingScript || !scriptInput.trim()}
               onClick={handleGenerateScript}>
               {generatingScript
-                ? <><FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />A gerar…</>
-                : <><Sparkles className="mr-1 h-4 w-4" />Gerar roteiro completo</>}
+                ? <><FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />{t("ai.generatingLabel")}</>
+                : <><Sparkles className="mr-1 h-4 w-4" />{t("ai.generateFullScript")}</>}
             </Button>
 
             {scriptResult && (
@@ -365,8 +365,8 @@ function AIPage() {
             )}
             {!activeProvider && (
               <p className="text-xs text-muted-foreground">
-                Configure um provedor de IA em{" "}
-                <Link to="/settings" className="text-primary underline">Configurações</Link>.
+                {t("ai.configureAt")}{" "}
+                <Link to="/settings" className="text-primary underline">{t("ai.settingsLink")}</Link>.
               </p>
             )}
           </Card>

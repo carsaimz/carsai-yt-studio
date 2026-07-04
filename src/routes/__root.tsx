@@ -51,21 +51,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     </html>
   ),
   component: RootComponent,
-  notFoundComponent: () => (
-    <div style={C.center}>
-      <h1 style={{ fontSize:"5rem", fontWeight:900, background:"linear-gradient(135deg,#ff6b35,#e63946)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", margin:0 }}>404</h1>
-      <p style={{ color:"#9ca3af" }}>Página não encontrada</p>
-      <Link to="/" style={C.btn}>Voltar ao início</Link>
-    </div>
-  ),
+  notFoundComponent: () => {
+    const { t } = useI18n();
+    return (
+      <div style={C.center}>
+        <h1 style={{ fontSize:"5rem", fontWeight:900, background:"linear-gradient(135deg,#ff6b35,#e63946)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", margin:0 }}>404</h1>
+        <p style={{ color:"#9ca3af" }}>{t("errors.notFoundTitle")}</p>
+        <Link to="/" style={C.btn}>{t("errors.notFoundBack")}</Link>
+      </div>
+    );
+  },
   errorComponent: ({ error, reset }) => {
     const router = useRouter();
+    const { t } = useI18n();
     useEffect(() => { reportLovableError(error as Error, { boundary: "root" }); }, [error]);
     return (
       <div style={C.center}>
         <FontAwesomeIcon icon={["fas","triangle-exclamation"]} size="3x" style={{ color:"#ef4444" }} />
-        <h1 style={{ fontSize:"1.25rem", fontWeight:600 }}>Algo deu errado</h1>
-        <button onClick={() => { router.invalidate(); reset(); }} style={C.btn}>Tentar novamente</button>
+        <h1 style={{ fontSize:"1.25rem", fontWeight:600 }}>{t("errors.boundaryTitle")}</h1>
+        <button onClick={() => { router.invalidate(); reset(); }} style={C.btn}>{t("errors.retry")}</button>
       </div>
     );
   },
@@ -88,25 +92,25 @@ const ACTIVE_COLOR = "#ff6b35";
 
 // ── Nav groups ────────────────────────────────────────────────────────────────
 const NAV_GROUPS = [
-  { label:"Principal", items:[
+  { labelKey:"common.navGroupMain", items:[
     { url:"/",           icon:"gauge",                   i18n:"nav.dashboard", exact:true },
     { url:"/analytics",  icon:"chart-line",              i18n:"nav.analytics" },
   ]},
-  { label:"Criação", items:[
+  { labelKey:"common.navGroupCreation", items:[
     { url:"/content",   icon:"film",                    i18n:"nav.content" },
     { url:"/studio",    icon:"wand-magic-sparkles",     i18n:"nav.studio" },
     { url:"/seo",       icon:"magnifying-glass-chart",  i18n:"nav.seo" },
   ]},
-  { label:"Engajamento", items:[
+  { labelKey:"common.navGroupEngagement", items:[
     { url:"/community", icon:"comments",    i18n:"nav.community" },
     { url:"/ai",        icon:"robot",       i18n:"nav.ai" },
   ]},
-  { label:"Conta", items:[
+  { labelKey:"common.navGroupAccount", items:[
     { url:"/profile",       icon:"circle-user",  i18n:"nav.profile" },
     { url:"/notifications", icon:"bell",         i18n:"nav.notifications" },
     { url:"/settings",      icon:"sliders",      i18n:"nav.settings" },
   ]},
-  { label:"Ajuda", items:[
+  { labelKey:"common.navGroupHelp", items:[
     { url:"/docs",  icon:"book-open",      i18n:"nav.docs" },
     { url:"/help",  icon:"circle-question",i18n:"nav.help" },
     { url:"/about", icon:"circle-info",    i18n:"nav.about" },
@@ -188,10 +192,10 @@ function Sidebar({ open, collapsed, onClose }: { open: boolean; collapsed: boole
       {/* Nav */}
       <nav style={{ flex:1, overflowY:"auto", overflowX:"hidden", padding:"4px 6px" }}>
         {NAV_GROUPS.map(group => (
-          <div key={group.label} style={{ marginBottom:4 }}>
+          <div key={group.labelKey} style={{ marginBottom:4 }}>
             {!collapsed && (
               <div style={{ padding:"6px 8px 2px", fontSize:10, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.09em", color:MUTED }}>
-                {group.label}
+                {t(group.labelKey)}
               </div>
             )}
             {group.items.map(item => {

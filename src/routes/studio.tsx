@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useRef } from "react";
-import { Wand2 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { PageHeader } from "@/components/page-header";
@@ -13,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { youtube, hasOAuth, startOAuthPKCE } from "@/lib/youtube/client";
 import { getSetup } from "@/lib/setup/store";
 import { toast } from "@/lib/notifications";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/studio")({
   head: () => ({
@@ -22,6 +22,7 @@ export const Route = createFileRoute("/studio")({
 });
 
 function StudioPage() {
+  const { t, lang } = useI18n();
   const { youtube: yt } = getSetup();
   const channelId = yt?.defaultChannelId;
   const qc = useQueryClient();
@@ -38,7 +39,6 @@ function StudioPage() {
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [uploadingThumb, setUploadingThumb] = useState(false);
 
-  // Analytics date range
   const today = new Date().toISOString().split("T")[0];
   const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
@@ -100,7 +100,7 @@ function StudioPage() {
         {
           title: titleDraft,
           description: descDraft,
-          tags: tagsDraft.split(",").map(t => t.trim()).filter(Boolean),
+          tags: tagsDraft.split(",").map(tag => tag.trim()).filter(Boolean),
         },
         { privacyStatus: privacyDraft as any },
       );
@@ -111,7 +111,7 @@ function StudioPage() {
         setUploadingThumb(false);
       }
 
-      toast.success("Vídeo actualizado!");
+      toast.success(t("studioPage.videoUpdated") as string);
       qc.invalidateQueries({ queryKey: ["video-details-studio"] });
       qc.invalidateQueries({ queryKey: ["video-details"] });
     } catch (e) {
@@ -132,10 +132,10 @@ function StudioPage() {
   if (!channelId) {
     return (
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
-        <PageHeader title="Estúdio" description="Configure o canal." />
+        <PageHeader title={t("studioPage.title") as string} description={t("studioPage.configureChannelFirst") as string} />
         <Card className="mt-6 p-6">
           <p className="text-sm text-muted-foreground">
-            Configure em <Link to="/settings" className="text-primary underline">Definições → YouTube</Link>.
+            {t("studioPage.configureAt")} <Link to="/settings" className="text-primary underline">{t("studioPage.ytSettingsLink")}</Link>.
           </p>
         </Card>
       </div>
@@ -145,14 +145,14 @@ function StudioPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
-        title="Estúdio de criação"
-        description={oauthOk ? "Edição de vídeos, thumbnails e análise avançada." : "Conecte OAuth para edição completa."}
+        title={t("studioPage.studioTitle") as string}
+        description={oauthOk ? t("studioPage.studioFullDesc") as string : t("studioPage.studioLimitedDesc") as string}
         actions={
           !oauthOk && (
             <Button variant="outline" size="sm"
               onClick={() => startOAuthPKCE().catch(e => toast.error(e.message))}>
               <FontAwesomeIcon icon={["fab", "google"]} className="mr-1.5" />
-              Conectar OAuth
+              {t("studioPage.connectOAuth")}
             </Button>
           )
         }
@@ -162,36 +162,34 @@ function StudioPage() {
         <TabsList>
           <TabsTrigger value="editor">
             <FontAwesomeIcon icon={["fas", "pen-to-square"]} className="mr-1.5" />
-            Editor de vídeo
+            {t("studioPage.editorTab")}
           </TabsTrigger>
           <TabsTrigger value="thumbnail">
             <FontAwesomeIcon icon={["fas", "image"]} className="mr-1.5" />
-            Thumbnail
+            {t("studioPage.thumbnailTab")}
           </TabsTrigger>
           <TabsTrigger value="analytics">
             <FontAwesomeIcon icon={["fas", "chart-bar"]} className="mr-1.5" />
-            Analytics
+            {t("studioPage.analyticsTab")}
           </TabsTrigger>
           <TabsTrigger value="branding">
             <FontAwesomeIcon icon={["fas", "palette"]} className="mr-1.5" />
-            Canal
+            {t("studioPage.channelTab")}
           </TabsTrigger>
         </TabsList>
 
-        {/* ── Editor ─────────────────────────────────────────────────── */}
         <TabsContent value="editor">
           {!oauthOk && (
             <Card className="border-warning/40 bg-warning/5 p-4 mb-4">
               <p className="text-sm text-muted-foreground">
                 <FontAwesomeIcon icon={["fas", "triangle-exclamation"]} className="mr-2 text-warning" />
-                Edição requer OAuth. <button onClick={() => startOAuthPKCE().catch(e => toast.error(e.message))} className="text-primary underline">Conectar agora</button>
+                {t("studioPage.editRequiresOauth")} <button onClick={() => startOAuthPKCE().catch(e => toast.error(e.message))} className="text-primary underline">{t("studioPage.connectNow")}</button>
               </p>
             </Card>
           )}
 
           {videos.length > 0 ? (
             <div className="space-y-4">
-              {/* Video selector */}
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {videos.slice(0, 10).map((v: any) => (
                   <button key={v.id} onClick={() => selectVideo(v)}
@@ -206,33 +204,32 @@ function StudioPage() {
 
               {activeVideo && (
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
-                  {/* Form */}
                   <Card className="p-5 space-y-4">
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground">Título</label>
+                      <label className="text-xs font-medium text-muted-foreground">{t("studioPage.videoTitleLabel")}</label>
                       <input value={titleDraft} onChange={e => setTitleDraft(e.target.value)}
                         className="mt-1 h-10 w-full rounded-lg border border-border bg-card/60 px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring" />
                       <p className="mt-0.5 text-xs text-muted-foreground text-right">{titleDraft.length}/100</p>
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground">Descrição</label>
+                      <label className="text-xs font-medium text-muted-foreground">{t("studioPage.videoDescLabel")}</label>
                       <textarea value={descDraft} onChange={e => setDescDraft(e.target.value)} rows={7}
                         className="mt-1 w-full resize-y rounded-lg border border-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring" />
                       <p className="mt-0.5 text-xs text-muted-foreground text-right">{descDraft.length}/5000</p>
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground">Tags (vírgula)</label>
+                      <label className="text-xs font-medium text-muted-foreground">{t("studioPage.videoTagsLabel")}</label>
                       <input value={tagsDraft} onChange={e => setTagsDraft(e.target.value)}
                         className="mt-1 h-10 w-full rounded-lg border border-border bg-card/60 px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring" />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground">Visibilidade</label>
+                      <label className="text-xs font-medium text-muted-foreground">{t("studioPage.visibilityLabel")}</label>
                       <Select value={privacyDraft} onValueChange={setPrivacyDraft}>
                         <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="public">Público</SelectItem>
-                          <SelectItem value="unlisted">Não listado</SelectItem>
-                          <SelectItem value="private">Privado</SelectItem>
+                          <SelectItem value="public">{t("studioPage.public")}</SelectItem>
+                          <SelectItem value="unlisted">{t("studioPage.unlisted")}</SelectItem>
+                          <SelectItem value="private">{t("studioPage.private")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -242,25 +239,24 @@ function StudioPage() {
                         disabled={!oauthOk || saving}
                         onClick={handleSaveVideo}>
                         {saving
-                          ? <><FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />{uploadingThumb ? "A enviar thumb…" : "A guardar…"}</>
-                          : <><FontAwesomeIcon icon={["fas", "floppy-disk"]} className="mr-2" />Guardar alterações</>}
+                          ? <><FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />{uploadingThumb ? t("studioPage.sendingThumb") : t("studioPage.savingChanges")}</>
+                          : <><FontAwesomeIcon icon={["fas", "floppy-disk"]} className="mr-2" />{t("studioPage.saveChanges")}</>}
                       </Button>
                       <Button variant="ghost" onClick={() => selectVideo(activeVideo)}>
-                        Repor
+                        {t("studioPage.reset")}
                       </Button>
                     </div>
                   </Card>
 
-                  {/* Stats panel */}
                   <div className="space-y-3">
                     <Card className="p-4 space-y-3">
-                      <h3 className="font-display font-semibold text-sm">Métricas do vídeo</h3>
+                      <h3 className="font-display font-semibold text-sm">{t("studioPage.videoMetrics")}</h3>
                       {[
-                        { label: "Views", value: parseInt(activeVideo.statistics?.viewCount ?? "0").toLocaleString("pt-BR"), icon: "eye" },
-                        { label: "Likes", value: parseInt(activeVideo.statistics?.likeCount ?? "0").toLocaleString("pt-BR"), icon: "thumbs-up" },
-                        { label: "Comentários", value: parseInt(activeVideo.statistics?.commentCount ?? "0").toLocaleString("pt-BR"), icon: "comments" },
+                        { label: t("studioPage.views"), value: parseInt(activeVideo.statistics?.viewCount ?? "0").toLocaleString(lang), icon: "eye" },
+                        { label: t("studioPage.likes"), value: parseInt(activeVideo.statistics?.likeCount ?? "0").toLocaleString(lang), icon: "thumbs-up" },
+                        { label: t("studioPage.comments"), value: parseInt(activeVideo.statistics?.commentCount ?? "0").toLocaleString(lang), icon: "comments" },
                       ].map(m => (
-                        <div key={m.label} className="flex items-center justify-between">
+                        <div key={m.label as string} className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground flex items-center gap-2">
                             <FontAwesomeIcon icon={["fas", m.icon as any]} className="w-4" />
                             {m.label}
@@ -274,10 +270,10 @@ function StudioPage() {
                         src={activeVideo.snippet?.thumbnails?.maxres?.url ?? activeVideo.snippet?.thumbnails?.high?.url}
                         alt="" className="w-full aspect-video object-cover" />
                       <div className="p-3">
-                        <p className="text-xs text-muted-foreground">Thumbnail actual</p>
+                        <p className="text-xs text-muted-foreground">{t("studioPage.currentThumbnail")}</p>
                         <Badge className="mt-1 text-xs" variant={
                           privacyDraft === "public" ? "default" : "secondary"}>
-                          {privacyDraft === "public" ? "Público" : privacyDraft === "unlisted" ? "Não listado" : "Privado"}
+                          {privacyDraft === "public" ? t("studioPage.public") : privacyDraft === "unlisted" ? t("studioPage.unlisted") : t("studioPage.private")}
                         </Badge>
                       </div>
                     </Card>
@@ -288,13 +284,12 @@ function StudioPage() {
           ) : (
             <Card className="p-10 text-center">
               <p className="text-sm text-muted-foreground">
-                {detailsQ.isLoading ? <><FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />A carregar…</> : "Nenhum vídeo encontrado."}
+                {detailsQ.isLoading ? <><FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />{t("studioPage.loadingEllipsis")}</> : t("studioPage.noVideosFound")}
               </p>
             </Card>
           )}
         </TabsContent>
 
-        {/* ── Thumbnail editor ────────────────────────────────────────── */}
         <TabsContent value="thumbnail">
           {videos.length > 0 ? (
             <div className="space-y-4">
@@ -312,9 +307,8 @@ function StudioPage() {
 
               {activeVideo && (
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  {/* Current */}
                   <Card className="overflow-hidden">
-                    <div className="bg-muted/30 p-3 text-xs font-medium text-muted-foreground">Thumbnail actual</div>
+                    <div className="bg-muted/30 p-3 text-xs font-medium text-muted-foreground">{t("studioPage.currentThumbnail")}</div>
                     <img
                       src={activeVideo.snippet?.thumbnails?.maxres?.url ?? activeVideo.snippet?.thumbnails?.high?.url}
                       alt="" className="w-full aspect-video object-cover" />
@@ -323,15 +317,14 @@ function StudioPage() {
                         download={`thumb-${activeVideo.id}.jpg`} target="_blank" rel="noreferrer">
                         <Button variant="outline" size="sm">
                           <FontAwesomeIcon icon={["fas", "download"]} className="mr-2" />
-                          Descarregar
+                          {t("studioPage.download")}
                         </Button>
                       </a>
                     </div>
                   </Card>
 
-                  {/* New thumbnail upload */}
                   <Card className="overflow-hidden">
-                    <div className="bg-muted/30 p-3 text-xs font-medium text-muted-foreground">Nova thumbnail</div>
+                    <div className="bg-muted/30 p-3 text-xs font-medium text-muted-foreground">{t("studioPage.newThumbnail")}</div>
                     <input ref={thumbRef} type="file" accept="image/jpeg,image/png,image/gif,image/bmp"
                       className="hidden" onChange={handleThumbChange} />
 
@@ -342,8 +335,8 @@ function StudioPage() {
                         onClick={() => thumbRef.current?.click()}>
                         <div className="text-center">
                           <FontAwesomeIcon icon={["fas", "cloud-arrow-up"]} size="2x" className="text-muted-foreground" />
-                          <p className="mt-2 text-sm text-muted-foreground">Clique para escolher imagem</p>
-                          <p className="text-xs text-muted-foreground">JPG, PNG · recomendado 1280×720</p>
+                          <p className="mt-2 text-sm text-muted-foreground">{t("studioPage.chooseImage")}</p>
+                          <p className="text-xs text-muted-foreground">{t("studioPage.thumbHint")}</p>
                         </div>
                       </label>
                     )}
@@ -351,7 +344,7 @@ function StudioPage() {
                     <div className="p-4 flex gap-2">
                       <Button variant="outline" size="sm" onClick={() => thumbRef.current?.click()}>
                         <FontAwesomeIcon icon={["fas", "image"]} className="mr-2" />
-                        {thumbPreview ? "Trocar" : "Escolher"}
+                        {thumbPreview ? t("studioPage.change") : t("studioPage.choose")}
                       </Button>
                       {thumbPreview && oauthOk && (
                         <Button size="sm" className="gradient-brand text-primary-foreground hover:opacity-90"
@@ -360,7 +353,7 @@ function StudioPage() {
                             setUploadingThumb(true);
                             try {
                               await youtube.setThumbnail(activeVideo.id, thumbFile);
-                              toast.success("Thumbnail actualizada!");
+                              toast.success(t("studioPage.thumbPublished") as string);
                               setThumbPreview(null);
                               setThumbFile(null);
                               qc.invalidateQueries({ queryKey: ["video-details-studio"] });
@@ -370,11 +363,11 @@ function StudioPage() {
                           {uploadingThumb
                             ? <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />
                             : <FontAwesomeIcon icon={["fas", "cloud-arrow-up"]} className="mr-2" />}
-                          Publicar thumbnail
+                          {t("studioPage.publishThumb")}
                         </Button>
                       )}
                       {thumbPreview && !oauthOk && (
-                        <p className="text-xs text-muted-foreground self-center">OAuth necessário para publicar.</p>
+                        <p className="text-xs text-muted-foreground self-center">{t("studioPage.oauthRequiredPublish")}</p>
                       )}
                     </div>
                   </Card>
@@ -383,43 +376,42 @@ function StudioPage() {
             </div>
           ) : (
             <Card className="p-10 text-center">
-              <p className="text-sm text-muted-foreground">Nenhum vídeo encontrado.</p>
+              <p className="text-sm text-muted-foreground">{t("studioPage.noVideosFound")}</p>
             </Card>
           )}
         </TabsContent>
 
-        {/* ── Analytics (OAuth) ───────────────────────────────────────── */}
         <TabsContent value="analytics">
           {!oauthOk ? (
             <Card className="p-10 text-center space-y-3">
               <FontAwesomeIcon icon={["fas", "chart-bar"]} size="2x" className="text-muted-foreground" />
-              <p className="text-sm font-medium">Analytics avançada requer OAuth</p>
+              <p className="text-sm font-medium">{t("studioPage.analyticsRequiresOauth")}</p>
               <p className="text-xs text-muted-foreground">
-                YouTube Analytics API fornece dados detalhados de retenção, tempo de visualização e demografia.
+                {t("studioPage.analyticsApiDesc")}
               </p>
               <Button className="gradient-brand text-primary-foreground hover:opacity-90"
                 onClick={() => startOAuthPKCE().catch(e => toast.error(e.message))}>
                 <FontAwesomeIcon icon={["fab", "google"]} className="mr-2" />
-                Conectar OAuth
+                {t("studioPage.connectOauth")}
               </Button>
             </Card>
           ) : analyticsQ.isLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
-              <FontAwesomeIcon icon={["fas", "spinner"]} spin />A carregar analytics…
+              <FontAwesomeIcon icon={["fas", "spinner"]} spin />{t("studioPage.loadingAnalytics")}
             </div>
           ) : analyticsQ.isError ? (
             <Card className="border-destructive/40 p-5">
               <p className="text-sm text-destructive">
-                Erro ao carregar analytics: {(analyticsQ.error as Error).message}
+                {t("studioPage.analyticsError")} {(analyticsQ.error as Error).message}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                Certifique-se de que a YouTube Analytics API está activada na Google Cloud Console.
+                {t("studioPage.enableAnalyticsApi")}
               </p>
             </Card>
           ) : analyticsRows.length > 0 ? (
             <div className="space-y-4">
               <div className="text-xs text-muted-foreground">
-                Dados dos últimos 30 dias · {analyticsRows.length} dias
+                {t("studioPage.last30DaysData")} {analyticsRows.length} {t("studioPage.days")}
               </div>
               <Card className="overflow-hidden">
                 <div className="overflow-x-auto">
@@ -436,7 +428,7 @@ function StudioPage() {
                       <tr key={i} className="border-t border-border hover:bg-accent/30">
                         {row.map((cell: any, j: number) => (
                           <td key={j} className="p-3 whitespace-nowrap">
-                            {typeof cell === "number" ? cell.toLocaleString("pt-BR") : cell}
+                            {typeof cell === "number" ? cell.toLocaleString(lang) : cell}
                           </td>
                         ))}
                       </tr>
@@ -448,12 +440,11 @@ function StudioPage() {
             </div>
           ) : (
             <Card className="p-10 text-center">
-              <p className="text-sm text-muted-foreground">Sem dados de analytics disponíveis.</p>
+              <p className="text-sm text-muted-foreground">{t("studioPage.noAnalyticsData")}</p>
             </Card>
           )}
         </TabsContent>
 
-        {/* ── Channel branding ────────────────────────────────────────── */}
         <TabsContent value="branding">
           <ChannelBrandingTab ch={ch} channelId={channelId} oauthOk={oauthOk} />
         </TabsContent>
@@ -463,6 +454,7 @@ function StudioPage() {
 }
 
 function ChannelBrandingTab({ ch, channelId, oauthOk }: { ch: any; channelId: string; oauthOk: boolean }) {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [desc, setDesc] = useState(ch?.brandingSettings?.channel?.description ?? "");
   const [keywords, setKeywords] = useState(ch?.brandingSettings?.channel?.keywords ?? "");
@@ -472,7 +464,7 @@ function ChannelBrandingTab({ ch, channelId, oauthOk }: { ch: any; channelId: st
     setSaving(true);
     try {
       await youtube.updateChannelBranding(channelId, desc, keywords);
-      toast.success("Canal actualizado!");
+      toast.success(t("studioPage.channelUpdated") as string);
       qc.invalidateQueries({ queryKey: ["channel"] });
     } catch (e) { toast.error((e as Error).message); }
     finally { setSaving(false); }
@@ -484,9 +476,9 @@ function ChannelBrandingTab({ ch, channelId, oauthOk }: { ch: any; channelId: st
         <Card className="border-warning/40 bg-warning/5 p-4">
           <p className="text-sm text-muted-foreground">
             <FontAwesomeIcon icon={["fas", "triangle-exclamation"]} className="mr-2 text-warning" />
-            Edição do canal requer OAuth.{" "}
+            {t("studioPage.channelEditRequiresOauth")}{" "}
             <button onClick={() => startOAuthPKCE().catch(e => toast.error(e.message))}
-              className="text-primary underline">Conectar agora</button>
+              className="text-primary underline">{t("studioPage.connectNow")}</button>
           </p>
         </Card>
       )}
@@ -504,14 +496,14 @@ function ChannelBrandingTab({ ch, channelId, oauthOk }: { ch: any; channelId: st
 
       <Card className="p-5 space-y-4">
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Descrição do canal</label>
+          <label className="text-xs font-medium text-muted-foreground">{t("studioPage.channelDescLabel")}</label>
           <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={5}
             className="mt-1 w-full resize-y rounded-lg border border-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring" />
           <p className="mt-0.5 text-xs text-muted-foreground text-right">{desc.length}/1000</p>
         </div>
         <div>
           <label className="text-xs font-medium text-muted-foreground">
-            Palavras-chave do canal (separadas por vírgula)
+            {t("studioPage.channelKeywordsLabel")}
           </label>
           <input value={keywords} onChange={e => setKeywords(e.target.value)}
             className="mt-1 h-10 w-full rounded-lg border border-border bg-card/60 px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring" />
@@ -521,7 +513,7 @@ function ChannelBrandingTab({ ch, channelId, oauthOk }: { ch: any; channelId: st
           {saving
             ? <FontAwesomeIcon icon={["fas", "spinner"]} spin className="mr-2" />
             : <FontAwesomeIcon icon={["fas", "floppy-disk"]} className="mr-2" />}
-          Guardar alterações do canal
+          {t("studioPage.saveChannelChanges")}
         </Button>
       </Card>
     </div>
