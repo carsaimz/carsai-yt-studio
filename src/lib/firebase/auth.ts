@@ -3,6 +3,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
+  signInWithCredential,
   getRedirectResult,
   GoogleAuthProvider,
   sendPasswordResetEmail,
@@ -17,13 +18,10 @@ const provider = new GoogleAuthProvider();
 provider.addScope("https://www.googleapis.com/auth/userinfo.email");
 provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
 
-// Capacitor native context detection
 function isCapacitorNative(): boolean {
   return typeof window !== "undefined" &&
     !!(window as any).Capacitor?.isNativePlatform?.();
 }
-
-// ── Auth methods ──────────────────────────────────────────────────────────────
 
 export async function loginEmail(email: string, password: string) {
   const auth = getFirebaseAuth();
@@ -37,20 +35,27 @@ export async function registerEmail(email: string, password: string) {
   return createUserWithEmailAndPassword(auth, email, password);
 }
 
+async function loginGoogleNative() {
+  const auth = getFirebaseAuth();
+  if (!auth) throw new Error("Firebase não configurado.");
+  const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+  const result = await FirebaseAuthentication.signInWithGoogle();
+  const idToken = result.credential?.idToken;
+  if (!idToken) throw new Error("Login com Google cancelado ou sem token.");
+  const credential = GoogleAuthProvider.credential(idToken, result.credential?.accessToken);
+  return signInWithCredential(auth, credential);
+}
+
 export async function loginGoogle() {
   const auth = getFirebaseAuth();
   if (!auth) throw new Error("Firebase não configurado.");
 
-  // Always use redirect on Capacitor native (popup is blocked in WebView)
   if (isCapacitorNative()) {
-    await signInWithRedirect(auth, provider);
-    return null; // page will reload
+    return loginGoogleNative();
   }
 
-  // Web: try popup first, fallback to redirect
   try {
-    const result = await signInWithPopup(auth, provider);
-    return result;
+    return await signInWithPopup(auth, provider);
   } catch (e: any) {
     if (
       e.code === "auth/popup-blocked" ||
@@ -73,13 +78,16 @@ export async function resetPassword(email: string) {
 export async function logout() {
   const auth = getFirebaseAuth();
   if (!auth) return;
+  if (isCapacitorNative()) {
+    try {
+      const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+      await FirebaseAuthentication.signOut();
+    } catch { /* ignore */ }
+  }
   return signOut(auth);
 }
 
-/** Alias */
 export const logoutUser = logout;
-
-// ── React hook ────────────────────────────────────────────────────────────────
 
 export function useFirebaseUser() {
   const [user, setUser] = useState<User | null>(null);
@@ -93,7 +101,6 @@ export function useFirebaseUser() {
       return;
     }
 
-    // Check redirect result ONCE on mount (handles Google sign-in after redirect)
     if (!redirectChecked.current) {
       redirectChecked.current = true;
       getRedirectResult(auth)
@@ -104,12 +111,10 @@ export function useFirebaseUser() {
           }
         })
         .catch((e) => {
-          // Ignore — onAuthStateChanged handles the actual state
           console.warn("[Auth] Redirect result:", e?.code ?? e?.message);
         });
     }
 
-    // Primary auth state listener
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);

@@ -476,4 +476,14 @@ export default {
     commonOauthErrors: "Common OAuth errors", fix: "Fix:",
     seeFullHistory: "See the full version history at", orAt: "or on",
     toCreateRelease: "To create a release:",
+  },
+  changelogPanel: {
+    fullChangelog: "Full changelog", searchHelp: "Search by change, category, or version",
+    refresh: "Refresh", searchPlaceholder: "Search: 'YouTube', 'auth', 'fix'…",
+    filterByVersion: "Filter by version", allVersions: "All versions",
+    category: "Category", all: "All",
+    catFeat: "Features", catFix: "Fixes", catPerf: "Performance",
+    catSec: "Security", catDocs: "Documentation", catChore: "Chores",
+    loadError: "Couldn't load the changelog. Try again.",
+    noResults: "No changes found with these filters.", release: "release",
   },};

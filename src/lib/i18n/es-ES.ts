@@ -476,4 +476,14 @@ export default {
     commonOauthErrors: "Errores comunes de OAuth", fix: "Solución:",
     seeFullHistory: "Consulta el historial completo de versiones en", orAt: "o en",
     toCreateRelease: "Para crear una release:",
+  },
+  changelogPanel: {
+    fullChangelog: "Changelog completo", searchHelp: "Busca por cambio, categoría o versión",
+    refresh: "Actualizar", searchPlaceholder: "Buscar: 'YouTube', 'auth', 'fix'…",
+    filterByVersion: "Filtrar por versión", allVersions: "Todas las versiones",
+    category: "Categoría", all: "Todo",
+    catFeat: "Novedades", catFix: "Correcciones", catPerf: "Rendimiento",
+    catSec: "Seguridad", catDocs: "Documentación", catChore: "Mantenimiento",
+    loadError: "No se pudo cargar el changelog. Inténtalo de nuevo.",
+    noResults: "No se encontraron cambios con estos filtros.", release: "release",
   },};

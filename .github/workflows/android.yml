@@ -82,7 +82,8 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets \
-            @capacitor/splash-screen @capacitor/status-bar @capacitor/preferences @capacitor/app
+            @capacitor/splash-screen @capacitor/status-bar @capacitor/preferences @capacitor/app \
+            @capacitor-firebase/authentication
 
       - name: Setup Capacitor Android
         run: |
@@ -98,14 +99,15 @@ jobs:
           cp public/icon-512.png resources/icon.png
           cp public/icon-512.png resources/icon-foreground.png
           cp public/icon-512.png resources/icon-background.png
-          convert -size 2732x2732 xc:"#1a1410" \
-            public/icon-512.png -gravity center -geometry 640x640 -composite \
-            resources/splash.png
+          node scripts/generate-splash.mjs
           npx @capacitor/assets generate --android \
             --iconBackgroundColor "#1a1410" \
             --iconBackgroundColorDark "#1a1410" \
             --splashBackgroundColor "#1a1410" \
             --splashBackgroundColorDark "#1a1410" || true
+
+      - name: Apply google-services.json
+        run: node scripts/apply-google-services.mjs
 
       - name: Patch AndroidManifest
         run: node scripts/patch-android-manifest.mjs

@@ -19,6 +19,7 @@
     "predev": "node scripts/sync-version.mjs"
   },
   "dependencies": {
+    "@capacitor-firebase/authentication": "^8.3.0",
     "@capacitor/android": "^8.4.1",
     "@capacitor/app": "^8.1.0",
     "@capacitor/cli": "^8.4.1",
@@ -82,6 +83,7 @@
     "react-resizable-panels": "^4.6.5",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.4",
+    "sharp": "^0.35.3",
     "sonner": "^2.0.7",
     "sweetalert2": "^11.14.5",
     "tailwind-merge": "^3.5.0",
