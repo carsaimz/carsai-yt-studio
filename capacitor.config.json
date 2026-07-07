@@ -30,6 +30,10 @@
     },
     "Preferences": {
       "group": "CarsaiSecureStore"
+    },
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": ["google.com"]
     }
   }
 }

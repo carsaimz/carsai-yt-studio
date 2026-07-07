@@ -49,6 +49,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build web
+        shell: bash
         run: BUILD_TARGET=mobile node scripts/build-web.mjs
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
@@ -91,6 +92,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build web
+        shell: bash
         run: BUILD_TARGET=mobile node scripts/build-web.mjs
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
@@ -131,6 +133,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build web
+        shell: bash
         run: BUILD_TARGET=mobile node scripts/build-web.mjs
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
