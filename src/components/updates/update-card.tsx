@@ -37,14 +37,6 @@ const CATEGORIES: AssetCategory[] = [
     install: [{ titleKey: "installAabTitle", stepKeys: ["installAabSteps0", "installAabSteps1", "installAabSteps2"] }],
   },
   {
-    key: "ios", labelKey: "iOS IPA", icon: Apple, hintKey: "catIosHint",
-    match: (n) => n.endsWith(".ipa"),
-    install: [
-      { titleKey: "installTestFlightTitle", stepKeys: ["installTestFlightSteps0", "installTestFlightSteps1"] },
-      { titleKey: "installSideloadTitle", stepKeys: ["installSideloadSteps0", "installSideloadSteps1", "installSideloadSteps2"] },
-    ],
-  },
-  {
     key: "windows", labelKey: "Windows", icon: Monitor, hintKey: "catWindowsHint",
     match: (n) => /\.(exe|msi)$/i.test(n),
     install: [{ titleKey: "installWindowsTitle", stepKeys: ["installWindowsSteps0", "installWindowsSteps1", "installWindowsSteps2"] }],

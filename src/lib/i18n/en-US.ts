@@ -185,6 +185,8 @@ export default {
     withGoogle: "Continue with Google", connecting: "Connecting with Google…",
     signingIn: "Signing in…", creating: "Creating account…",
     welcome: "Welcome back!", created: "Account created successfully!",
+    or: "or",
+    termsPrefix: "By continuing you agree to our",
   },
   ai: {
     title2: "AI & Agents", providerActive: "Active provider:", model: "model:", defaultModel: "default",
@@ -287,9 +289,9 @@ export default {
     s6Title: "Children",
     s6Body: "The app is not intended for users under 13 years of age.",
     s7Title: "Your Rights",
-    s7Body: "Delete all local data in Settings → Security → Clear local data. To delete your account: privacy@carsai.app",
+    s7Body: "Delete all local data in Settings → Security → Clear local data. To delete your account: suporte.carsaimz@gmail.com",
     s8Title: "Contact",
-    s8Body: "privacy@carsai.app",
+    s8Body: "suporte.carsaimz@gmail.com",
   },
   // Terms
   terms: {
@@ -311,7 +313,7 @@ export default {
     s7Title: "Changes to Terms",
     s7Body: "We may update these Terms. Significant changes will be recorded in the changelog.",
     s8Title: "Contact",
-    s8Body: "Legal questions: legal@carsai.app",
+    s8Body: "Legal questions: carsaideveloper@gmail.com",
   },
   // Cookies
   cookies: {
@@ -339,7 +341,7 @@ export default {
     s3Title: "Biometric lock",
     s3Body: "In mobile apps you can enable fingerprint or Face ID lock in Settings → Security.",
     s4Title: "Report vulnerabilities",
-    s4Body: "Send email to security@carsai.app. We accept coordinated responsible disclosure.",
+    s4Body: "Send email to suporte.carsaimz@gmail.com. We accept coordinated responsible disclosure.",
   },
   wizard: {
     back: "Back",
@@ -540,4 +542,12 @@ export default {
     installRpmTitle: "Fedora/RHEL (.rpm)",
     installWebTitle: "Self-host (static)",
     installWebSteps2: "Serve behind any CDN / nginx / Cloudflare Pages",
+  },
+  changelogPage: {
+    title: "Changelog", subtitle: "Full version history, downloads, and release notes.",
+    allReleases: "All releases", latestDownload: "Latest download",
+    loading: "Loading GitHub releases…", loadError: "Error loading releases",
+    viewDirect: "View directly at", noPublicReleases: "No public releases yet. The first will be created automatically when you push the tag",
+    downloads: "Downloads", latest: "Latest", prerelease: "Pre-release",
+    viewFullRelease: "View full release on GitHub", changes: "Changes",
   },};

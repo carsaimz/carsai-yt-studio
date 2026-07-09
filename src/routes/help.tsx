@@ -91,7 +91,7 @@ function Help() {
               className="text-primary hover:underline">{t("help.githubLink")}</a>
           </SectionCard>
           <SectionCard title={t("help.emailCard") as string} icon={<MessageCircle className="h-4 w-4" />}>
-            <a href="mailto:suporte@carsai.app" className="text-primary hover:underline">suporte@carsai.app</a>
+            <a href="mailto:suporte.carsaimz@gmail.com" className="text-primary hover:underline">suporte.carsaimz@gmail.com</a>
           </SectionCard>
         </aside>
       </div>

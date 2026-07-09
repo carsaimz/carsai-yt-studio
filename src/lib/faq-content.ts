@@ -24,7 +24,7 @@ export const FAQ_PT_BR: FaqItem[] = [
   { cat: "Self-host", q: "Posso auto-hospedar?", tags: ["self-host"],
     a: "Sim, é MIT. 'npm install && npm run build' gera dist/client/. Hospede em qualquer CDN ou localmente com 'npx serve dist/client'." },
   { cat: "Suporte", q: "Como reporto bugs?", tags: ["suporte"],
-    a: "Abra issue em github.com/carsaimz/carsai-yt-studio/issues. Suporte direto: suporte@carsai.app." },
+    a: "Abra issue em github.com/carsaimz/carsai-yt-studio/issues. Suporte direto: suporte.carsaimz@gmail.com." },
 ];
 
 export const FAQ_EN_US: FaqItem[] = [
@@ -51,7 +51,7 @@ export const FAQ_EN_US: FaqItem[] = [
   { cat: "Self-host", q: "Can I self-host?", tags: ["self-host"],
     a: "Yes, it's MIT licensed. 'npm install && npm run build' generates dist/client/. Host it on any CDN or locally with 'npx serve dist/client'." },
   { cat: "Support", q: "How do I report bugs?", tags: ["suporte"],
-    a: "Open an issue at github.com/carsaimz/carsai-yt-studio/issues. Direct support: suporte@carsai.app." },
+    a: "Open an issue at github.com/carsaimz/carsai-yt-studio/issues. Direct support: suporte.carsaimz@gmail.com." },
 ];
 
 export const FAQ_ES_ES: FaqItem[] = [
@@ -78,7 +78,7 @@ export const FAQ_ES_ES: FaqItem[] = [
   { cat: "Auto-hospedaje", q: "¿Puedo auto-hospedarlo?", tags: ["self-host"],
     a: "Sí, es MIT. 'npm install && npm run build' genera dist/client/. Hospédalo en cualquier CDN o localmente con 'npx serve dist/client'." },
   { cat: "Soporte", q: "¿Cómo reporto errores?", tags: ["suporte"],
-    a: "Abre un issue en github.com/carsaimz/carsai-yt-studio/issues. Soporte directo: suporte@carsai.app." },
+    a: "Abre un issue en github.com/carsaimz/carsai-yt-studio/issues. Soporte directo: suporte.carsaimz@gmail.com." },
 ];
 
 export function faqByLocale(lang: string): FaqItem[] {

@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PROVIDER_PRESETS, useLocalState, type AIProviderConfig } from "@/lib/local-store";
 import { useSetup } from "@/lib/setup/store";
+import { useDebouncedEffect } from "@/lib/use-debounced-effect";
 import { useFirebaseUser, logout } from "@/lib/firebase/auth";
 import { youtube, hasOAuth, hasStoredOAuth, startOAuthPKCE, clearYtToken } from "@/lib/youtube/client";
 import { UpdateCard } from "@/components/updates/update-card";
@@ -85,7 +86,7 @@ function YouTubeSettings() {
   const oauthConnected = hasOAuth();
   const oauthStored = hasStoredOAuth();
 
-  useEffect(() => {
+  useDebouncedEffect(() => {
     setSetup((prev) => ({
       ...prev,
       youtube: {
@@ -96,7 +97,7 @@ function YouTubeSettings() {
         defaultChannelId: channelId.trim(),
       },
     }));
-  }, [apiKey, clientId, clientSecret, channelId, setSetup]);
+  }, [apiKey, clientId, clientSecret, channelId]);
 
   // Preview channel when ID typed
   const channelQ = useQuery({

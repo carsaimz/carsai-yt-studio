@@ -25,7 +25,6 @@ const STACK = [
 const PLATFORMS = [
   { icon: "🌐", label: "Web / PWA" },
   { icon: "🤖", label: "Android (APK/AAB)" },
-  { icon: "🍎", label: "iOS (IPA)" },
   { icon: "🖥️", label: "Desktop (Win/Mac/Linux)" },
 ];
 

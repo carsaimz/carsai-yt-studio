@@ -207,7 +207,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </p>
         <nav className="mt-4 flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground">
           <Link to="/docs" className="hover:text-foreground">
-            <FontAwesomeIcon icon={["fas", "book-open"]} className="mr-1" />Docs
+            <FontAwesomeIcon icon={["fas", "book-open"]} className="mr-1" />{t("nav.docs")}
           </Link>
           <Link to="/help" className="hover:text-foreground">
             <FontAwesomeIcon icon={["fas", "circle-question"]} className="mr-1" />{t("nav.help")}
@@ -216,7 +216,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <FontAwesomeIcon icon={["fas", "circle-info"]} className="mr-1" />{t("nav.about")}
           </Link>
           <Link to="/changelog" className="hover:text-foreground">
-            <FontAwesomeIcon icon={["fas", "clock-rotate-left"]} className="mr-1" />Changelog
+            <FontAwesomeIcon icon={["fas", "clock-rotate-left"]} className="mr-1" />{t("nav.changelog")}
           </Link>
         </nav>
       </div>

@@ -15,7 +15,7 @@
 
 Reporte de forma privada via:
 1. [GitHub Security Advisories](https://github.com/carsaimz/carsai-yt-studio/security/advisories/new) (preferido)
-2. Email: **security@carsai.app**
+2. Email: **suporte.carsaimz@gmail.com**
 
 **Inclua:**
 - Descrição detalhada da vulnerabilidade
@@ -45,7 +45,7 @@ Reporte de forma privada via:
 
 Report privately via:
 1. [GitHub Security Advisories](https://github.com/carsaimz/carsai-yt-studio/security/advisories/new) (preferred)
-2. Email: **security@carsai.app**
+2. Email: **suporte.carsaimz@gmail.com**
 
 **Include:**
 - Detailed description
@@ -66,4 +66,4 @@ Report privately via:
 
 Reporte de forma privada:
 1. [GitHub Security Advisories](https://github.com/carsaimz/carsai-yt-studio/security/advisories/new)
-2. Email: **security@carsai.app**
+2. Email: **suporte.carsaimz@gmail.com**

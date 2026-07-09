@@ -288,9 +288,9 @@ export default {
     s6Title: "Crianças",
     s6Body: "O app não é destinado a menores de 13 anos.",
     s7Title: "Seus Direitos",
-    s7Body: "Apague todos os dados locais em Configurações → Segurança → Limpar dados locais. Para apagar sua conta: privacy@carsai.app",
+    s7Body: "Apague todos os dados locais em Configurações → Segurança → Limpar dados locais. Para apagar sua conta: suporte.carsaimz@gmail.com",
     s8Title: "Contacto",
-    s8Body: "privacy@carsai.app",
+    s8Body: "suporte.carsaimz@gmail.com",
   },
   // Terms
   terms: {
@@ -312,7 +312,7 @@ export default {
     s7Title: "Alterações dos Termos",
     s7Body: "Podemos atualizar estes Termos. Mudanças significativas serão registradas no changelog.",
     s8Title: "Contacto",
-    s8Body: "Dúvidas legais: legal@carsai.app",
+    s8Body: "Dúvidas legais: carsaideveloper@gmail.com",
   },
   // Cookies
   cookies: {
@@ -340,7 +340,7 @@ export default {
     s3Title: "Bloqueio biométrico",
     s3Body: "Em apps mobile você pode ativar bloqueio por impressão digital ou Face ID em Configurações → Segurança.",
     s4Title: "Reportar vulnerabilidades",
-    s4Body: "Envie e-mail para security@carsai.app. Aceitamos divulgação responsável coordenada.",
+    s4Body: "Envie e-mail para suporte.carsaimz@gmail.com. Aceitamos divulgação responsável coordenada.",
   },
   wizard: {
     back: "Voltar",
@@ -541,4 +541,12 @@ export default {
     installRpmTitle: "Fedora/RHEL (.rpm)",
     installWebTitle: "Self-host (estático)",
     installWebSteps2: "Sirva atrás de qualquer CDN / nginx / Cloudflare Pages",
+  },
+  changelogPage: {
+    title: "Changelog", subtitle: "Histórico completo de versões, downloads e notas de release.",
+    allReleases: "Todas as releases", latestDownload: "Download mais recente",
+    loading: "A carregar releases do GitHub…", loadError: "Erro ao carregar releases",
+    viewDirect: "Veja directamente em", noPublicReleases: "Ainda sem releases públicas. A primeira será criada automaticamente ao fazer push da tag",
+    downloads: "Downloads", latest: "Mais recente", prerelease: "Pré-lançamento",
+    viewFullRelease: "Ver release completa no GitHub", changes: "Mudanças",
   },};

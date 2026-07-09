@@ -186,6 +186,8 @@ export default {
     withGoogle: "Continuar con Google", connecting: "Conectando con Google…",
     signingIn: "Iniciando sesión…", creating: "Creando cuenta…",
     welcome: "¡Bienvenido de nuevo!", created: "¡Cuenta creada correctamente!",
+    or: "o",
+    termsPrefix: "Al continuar aceptas nuestros",
   },
   ai: {
     title2: "IA y Agentes", providerActive: "Proveedor activo:", model: "modelo:", defaultModel: "predeterminado",
@@ -287,9 +289,9 @@ export default {
     s6Title: "Menores",
     s6Body: "La app no está destinada a menores de 13 años.",
     s7Title: "Tus Derechos",
-    s7Body: "Elimina todos los datos locales en Configuración → Seguridad → Limpiar datos locales. Para eliminar tu cuenta: privacy@carsai.app",
+    s7Body: "Elimina todos los datos locales en Configuración → Seguridad → Limpiar datos locales. Para eliminar tu cuenta: suporte.carsaimz@gmail.com",
     s8Title: "Contacto",
-    s8Body: "privacy@carsai.app",
+    s8Body: "suporte.carsaimz@gmail.com",
   },
   // Terms
   terms: {
@@ -311,7 +313,7 @@ export default {
     s7Title: "Cambios en los Términos",
     s7Body: "Podemos actualizar estos Términos. Los cambios significativos se registrarán en el changelog.",
     s8Title: "Contacto",
-    s8Body: "Preguntas legales: legal@carsai.app",
+    s8Body: "Preguntas legales: carsaideveloper@gmail.com",
   },
   // Cookies
   cookies: {
@@ -339,7 +341,7 @@ export default {
     s3Title: "Bloqueo biométrico",
     s3Body: "En apps móviles puedes activar bloqueo por huella dactilar o Face ID en Configuración → Seguridad.",
     s4Title: "Reportar vulnerabilidades",
-    s4Body: "Envía un correo a security@carsai.app. Aceptamos divulgación responsable coordinada.",
+    s4Body: "Envía un correo a suporte.carsaimz@gmail.com. Aceptamos divulgación responsable coordinada.",
   },
   wizard: {
     back: "Volver",
@@ -540,4 +542,12 @@ export default {
     installRpmTitle: "Fedora/RHEL (.rpm)",
     installWebTitle: "Auto-hospedaje (estático)",
     installWebSteps2: "Sirve detrás de cualquier CDN / nginx / Cloudflare Pages",
+  },
+  changelogPage: {
+    title: "Changelog", subtitle: "Historial completo de versiones, descargas y notas de la release.",
+    allReleases: "Todas las releases", latestDownload: "Descarga más reciente",
+    loading: "Cargando releases de GitHub…", loadError: "Error al cargar las releases",
+    viewDirect: "Ver directamente en", noPublicReleases: "Aún no hay releases públicas. La primera se creará automáticamente al hacer push de la tag",
+    downloads: "Descargas", latest: "Más reciente", prerelease: "Pre-lanzamiento",
+    viewFullRelease: "Ver release completa en GitHub", changes: "Cambios",
   },};

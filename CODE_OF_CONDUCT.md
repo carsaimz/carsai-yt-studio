@@ -28,7 +28,7 @@ Nós, como membros, contribuidores e líderes, prometemos tornar a participaçã
 
 Líderes da comunidade são responsáveis por esclarecer e aplicar os padrões de comportamento aceitável.
 
-Comportamentos abusivos podem ser reportados para: **conduct@carsai.app**
+Comportamentos abusivos podem ser reportados para: **suporte.carsaimz@gmail.com**
 
 ---
 
@@ -56,7 +56,7 @@ We as members, contributors, and leaders pledge to make participation in our com
 
 ### Enforcement
 
-Instances of abusive behavior may be reported to: **conduct@carsai.app**
+Instances of abusive behavior may be reported to: **suporte.carsaimz@gmail.com**
 
 ---
 
@@ -73,7 +73,7 @@ Como miembros, contribuyentes y líderes, nos comprometemos a hacer que la parti
 - Acoso público o privado
 - Publicar información privada de otros sin permiso
 
-Reportar conductas inapropiadas a: **conduct@carsai.app**
+Reportar conductas inapropiadas a: **suporte.carsaimz@gmail.com**
 
 ---
 
