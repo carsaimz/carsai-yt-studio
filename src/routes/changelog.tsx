@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Fragment } from "react";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { PublicShell } from "@/components/public/public-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { APP_VERSION } from "@/lib/version";
+import { renderMarkdownLite } from "@/lib/markdown-lite";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/changelog")({
@@ -57,46 +58,7 @@ function assetIcon(name: string) {
   return { icon: "download" as const, brand: false, label: name, color: "text-muted-foreground" };
 }
 
-function parseChangelog(body: string) {
-  if (!body) return [];
-  const sections: { title: string; items: string[] }[] = [];
-  let current: { title: string; items: string[] } | null = null;
 
-  for (const line of body.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    if (trimmed.startsWith("## ") || trimmed.startsWith("### ")) {
-      if (current) sections.push(current);
-      current = { title: trimmed.replace(/^#+\s*/, ""), items: [] };
-    } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-      if (!current) current = { title: "", items: [] };
-      current.items.push(trimmed.replace(/^[-*]\s*/, ""));
-    }
-  }
-  if (current) sections.push(current);
-  return sections;
-}
-
-function renderInline(line: string) {
-  const parts = line.split(/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g).filter(Boolean);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={i}>{part.slice(2, -2)}</strong>;
-    }
-    if (part.startsWith("`") && part.endsWith("`")) {
-      return <code key={i} className="rounded bg-muted px-1 py-0.5 text-[0.85em]">{part.slice(1, -1)}</code>;
-    }
-    const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-    if (linkMatch) {
-      return (
-        <a key={i} href={linkMatch[2]} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-          {linkMatch[1]}
-        </a>
-      );
-    }
-    return <Fragment key={i}>{part}</Fragment>;
-  });
-}
 
 function ChangelogPage() {
   const { t, lang } = useI18n();
@@ -175,8 +137,6 @@ git push origin v${APP_VERSION}`}
 
         <div className="space-y-8">
           {releases.map((release, i) => {
-            const sections = parseChangelog(release.body);
-
             return (
               <motion.div
                 key={release.id}
@@ -259,34 +219,11 @@ git push origin v${APP_VERSION}`}
                       </div>
                     )}
 
-                    {sections.length > 0 ? (
-                      <div className="space-y-3">
-                        {sections.map((section, j) => (
-                          <div key={j}>
-                            {section.title && sections.length > 1 && (
-                              <h3 className="text-sm font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                                <FontAwesomeIcon icon={["fas", "chevron-right"]} className="h-3 w-3" />
-                                {section.title}
-                              </h3>
-                            )}
-                            {section.items.length > 0 && (
-                              <ul className="space-y-1">
-                                {section.items.map((item, k) => (
-                                  <li key={k} className="flex items-start gap-2 text-sm text-muted-foreground">
-                                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
-                                    {renderInline(item)}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                        ))}
+                    {release.body && (
+                      <div className="text-muted-foreground">
+                        {renderMarkdownLite(release.body)}
                       </div>
-                    ) : release.body ? (
-                      <p className="text-sm text-muted-foreground line-clamp-6">
-                        {renderInline(release.body)}
-                      </p>
-                    ) : null}
+                    )}
 
                     <a href={release.html_url} target="_blank" rel="noreferrer"
                       className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition">

@@ -17,5 +17,6 @@ if (forMobile) {
     process.exit(1);
   }
 } else {
+  execSync("node scripts/generate-sw.mjs", { stdio: "inherit", env: { ...process.env } });
   execSync("npm run build", { stdio: "inherit", env: { ...process.env } });
 }

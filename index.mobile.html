@@ -22,8 +22,16 @@
     if (typeof globalThis.structuredClone !== "function") {
       globalThis.structuredClone = function (obj) { return JSON.parse(JSON.stringify(obj)); };
     }
-    window.addEventListener("error", function (e) { window.__carsaiShowError(e.error || e.message); });
-    window.addEventListener("unhandledrejection", function (e) { window.__carsaiShowError(e.reason); });
+    // Boot-failure diagnostics ONLY. Once React has mounted (__carsaiMounted),
+    // runtime errors are handled by React's own error boundaries — this overlay
+    // must NOT fire after mount, or it wipes a perfectly-alive app on any
+    // benign rejected promise (e.g. an aborted fetch while typing).
+    window.addEventListener("error", function (e) {
+      if (!window.__carsaiMounted) window.__carsaiShowError(e.error || e.message);
+    });
+    window.addEventListener("unhandledrejection", function (e) {
+      if (!window.__carsaiMounted) window.__carsaiShowError(e.reason);
+    });
     window.__carsaiShowError = function (err) {
       if (document.getElementById("carsai-crash-screen")) return;
       var msg = err && err.stack ? err.stack : String(err);

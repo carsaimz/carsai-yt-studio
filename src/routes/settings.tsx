@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PROVIDER_PRESETS, useLocalState, type AIProviderConfig } from "@/lib/local-store";
 import { useSetup } from "@/lib/setup/store";
 import { useDebouncedEffect } from "@/lib/use-debounced-effect";
+import { enablePushNotifications, disablePush, isPushEnabled, pushSupport } from "@/lib/firebase/messaging";
 import { useFirebaseUser, logout } from "@/lib/firebase/auth";
 import { youtube, hasOAuth, hasStoredOAuth, startOAuthPKCE, clearYtToken } from "@/lib/youtube/client";
 import { UpdateCard } from "@/components/updates/update-card";
@@ -337,7 +338,7 @@ function AIProvidersSettings() {
     };
     setProviders([...providers, next]);
     setAdding(false);
-    toast.success(`${preset.name} adicionado — preencha a API Key e guarde.`);
+    toast.success(`${preset.name} ${t("settings.providerAdded")}`);
   }
 
   function remove(id: string) { setProviders(providers.filter((p) => p.id !== id)); }
@@ -364,7 +365,7 @@ function AIProvidersSettings() {
 
         {adding && (
           <div className="rounded-xl border border-border bg-card/60 p-4 space-y-3">
-            <p className="text-sm font-medium">Escolha um provedor:</p>
+            <p className="text-sm font-medium">{t("settings.chooseProvider")}</p>
             {(["gratuito", "misto", "personalizado"] as const).map((tier) => (
               byTier[tier].length > 0 && (
                 <div key={tier}>
@@ -387,7 +388,7 @@ function AIProvidersSettings() {
 
         {providers.length === 0 && !adding && (
           <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            Nenhum provedor configurado. Recomendamos Gemini ou Groq (camada gratuita generosa).
+            {t("settings.noProvidersConfigured")}
           </div>
         )}
 
@@ -404,8 +405,8 @@ function AIProvidersSettings() {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className={`h-2 w-2 rounded-full ${p.enabled && p.apiKey ? "bg-success" : "bg-muted"}`} />
                       <p className="text-xs text-muted-foreground">
-                        {p.enabled && p.apiKey ? "Pronto" : p.apiKey ? t("settings.disabled") : t("settings.missingApiKey")}
-                        {" · "} prioridade {p.priority}
+                        {p.enabled && p.apiKey ? t("settings.ready") : p.apiKey ? t("settings.disabled") : t("settings.missingApiKey")}
+                        {" · "} {t("settings.priorityLabel")} {p.priority}
                       </p>
                     </div>
                   </div>
@@ -418,9 +419,9 @@ function AIProvidersSettings() {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field label="API Key" type="password" value={p.apiKey}
+                <Field label={t("settings.apiKeyLabel") as string} type="password" value={p.apiKey}
                   onChange={(v) => update(p.id, { apiKey: v })} placeholder="sk-… / AIza… / gsk_…" />
-                <Field label="Modelo" value={p.model}
+                <Field label={t("settings.modelLabel") as string} value={p.model}
                   onChange={(v) => update(p.id, { model: v })} />
                 {(p.provider === "custom" || p.baseUrl) && (
                   <Field label={t("settings.baseUrlLabel") as string} value={p.baseUrl ?? ""}
@@ -450,12 +451,29 @@ function GeneralSettings() {
   const [setup, setSetup] = useSetup();
   const { t, lang: currentLang, setLang: applyLang } = useI18n();
   const [lang,     setLangLocal] = useState<Locale>((setup.general?.lang as Locale) ?? currentLang);
-  const [notif,    setNotif]    = useState(setup.general?.notif    ?? true);
+  const [notif,    setNotif]    = useState(() => isPushEnabled() || (setup.general?.notif ?? true));
   const [autosync, setAutosync] = useState(setup.general?.autosync ?? true);
+  const support = pushSupport();
 
   function handleLangChange(newLang: Locale) {
     setLangLocal(newLang);
     applyLang(newLang); // Apply immediately — whole app re-renders
+  }
+
+  async function handleNotifToggle(next: boolean) {
+    setNotif(next);
+    if (support === "unsupported-desktop") {
+      toast.info(t("settings.pushUnsupportedDesktop") as string);
+      return;
+    }
+    if (next) {
+      const token = await enablePushNotifications();
+      if (token) toast.success(t("settings.pushEnabled2") as string);
+      else { toast.error(t("settings.pushEnableFailed") as string); setNotif(false); }
+    } else {
+      disablePush();
+      toast.success(t("settings.pushDisabled2") as string);
+    }
   }
 
   function save() {
@@ -488,12 +506,12 @@ function GeneralSettings() {
             ))}
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            A mudança de idioma é aplicada imediatamente em toda a aplicação.
+            {t("settings.langAppliesImmediately")}
           </p>
         </div>
         <Toggle icon={<Bell className="h-4 w-4" />} label={t("settings.notifications")}
           description={t("settings.notificationsDesc")}
-          checked={notif} onChange={setNotif} />
+          checked={notif} onChange={handleNotifToggle} />
         <Toggle icon={<Globe className="h-4 w-4" />} label={t("settings.autosync")}
           description={t("settings.autosyncDesc")}
           checked={autosync} onChange={setAutosync} />
