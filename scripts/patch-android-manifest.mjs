@@ -27,5 +27,12 @@ const perms = `
 
 c = c.replace(/(<manifest[^>]*>)/, `$1${perms}`);
 
+// Ensure the keyboard resizes the WebView layout instead of leaving stale
+// layout/touch state behind — a missing/wrong value here is a common cause
+// of the app becoming unresponsive to touch after a text field is focused.
+if (c.includes("<activity") && !c.includes("windowSoftInputMode")) {
+  c = c.replace(/<activity\b/, '<activity\n            android:windowSoftInputMode="adjustResize"');
+}
+
 writeFileSync(path, c);
 console.log("✅ AndroidManifest permissions patched");

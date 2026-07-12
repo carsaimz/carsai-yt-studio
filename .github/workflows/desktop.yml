@@ -6,6 +6,11 @@ on:
   release:
     types: [published, created]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Versão do app (ex: 1.2.0). Vazio = usa a versão actual do package.json"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -16,14 +21,50 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.ver.outputs.tag }}
+      base: ${{ steps.ver.outputs.base }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Get version
+
+      - name: Resolve version
         id: ver
-        run: echo "tag=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            BASE="${{ inputs.version }}"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            BASE="${{ github.ref_name }}"
+            BASE="${BASE#v}"
+          else
+            BASE=$(node -p "require('./package.json').version")
+          fi
+          echo "base=$BASE"   >> $GITHUB_OUTPUT
+          echo "tag=v$BASE"   >> $GITHUB_OUTPUT
+          echo "📦 Desktop version: $BASE"
+
+      - name: Update package.json version
+        run: |
+          BASE="${{ steps.ver.outputs.base }}"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json'));p.version='$BASE';fs.writeFileSync('package.json',JSON.stringify(p,null,2));"
+
+      - name: Commit version bump (if changed)
+        run: |
+          if ! git diff --quiet package.json; then
+            git add package.json
+            git commit -m "chore: bump version to ${{ steps.ver.outputs.base }} [skip ci]"
+            git push origin HEAD:${{ github.ref_name }} || git push origin HEAD:main
+          fi
+
       - name: Ensure release exists
         uses: softprops/action-gh-release@v2
         with:
@@ -60,7 +101,11 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
       - name: Ensure src-tauri
+        shell: bash
         run: node scripts/ensure-tauri.mjs
+      - name: Sync Tauri version
+        shell: bash
+        run: node scripts/sync-tauri-version.mjs ${{ needs.prepare-release.outputs.base }}
       - name: Install Tauri CLI
         run: npm install --no-save @tauri-apps/cli
       - name: Build Tauri (Windows nsis)
@@ -104,6 +149,8 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
       - name: Ensure src-tauri
         run: node scripts/ensure-tauri.mjs
+      - name: Sync Tauri version
+        run: node scripts/sync-tauri-version.mjs ${{ needs.prepare-release.outputs.base }}
       - name: Install Tauri CLI
         run: npm install --no-save @tauri-apps/cli
       - name: Build Tauri (Linux appimage)
@@ -145,6 +192,8 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
       - name: Ensure src-tauri
         run: node scripts/ensure-tauri.mjs
+      - name: Sync Tauri version
+        run: node scripts/sync-tauri-version.mjs ${{ needs.prepare-release.outputs.base }}
       - name: Install Tauri CLI
         run: npm install --no-save @tauri-apps/cli
       - name: Build Tauri (macOS universal dmg)
