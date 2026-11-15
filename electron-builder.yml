@@ -1,6 +1,5 @@
 appId: mz.carsai.ytstudio
 productName: Carsai YT Studio
-main: electron/main.cjs
 directories:
   output: dist-electron
 files:
