@@ -16,11 +16,12 @@ import type {
   AiMessage,
   CustomProvider,
   Goal,
+  GoogleAuth,
 } from "./types";
 import { demoRules, demoActivity, demoVideos, demoComments } from "./demo-data";
 import { uid } from "./utils";
 
-export const APP_VERSION = "3.1.0";
+export const APP_VERSION = "3.2.0";
 
 export interface PlannerItem {
   id: string;
@@ -65,6 +66,9 @@ interface StudioStore {
   /* ai chat */
   chatHistory: AiMessage[];
 
+  /* google oauth (youtube data + analytics apis) */
+  googleAuth: GoogleAuth | null;
+
   /* actions */
   setLang: (l: Lang) => void;
   setTheme: (t: ThemeMode) => void;
@@ -93,6 +97,7 @@ interface StudioStore {
   removeRule: (id: string) => void;
   logActivity: (e: Omit<ActivityEntry, "id" | "at">) => void;
   setChatHistory: (m: AiMessage[]) => void;
+  setGoogleAuth: (a: GoogleAuth | null) => void;
   resetAll: () => void;
 }
 
@@ -124,6 +129,7 @@ const initialData = {
   rules: demoRules(),
   activity: demoActivity,
   chatHistory: [] as AiMessage[],
+  googleAuth: null as GoogleAuth | null,
 };
 
 export const useStudioStore = create<StudioStore>()(
@@ -172,12 +178,13 @@ export const useStudioStore = create<StudioStore>()(
           activity: [{ ...e, id: uid(), at: new Date().toISOString() }, ...s.activity].slice(0, 100),
         })),
       setChatHistory: (chatHistory) => set({ chatHistory }),
+      setGoogleAuth: (googleAuth) => set({ googleAuth }),
       resetAll: () => set({ ...initialData, rules: demoRules(), activity: demoActivity }),
     }),
     {
       name: "carsai-yt-studio-v3",
       storage: createJSONStorage(() => localStorage),
-      version: 4,
+      version: 5,
       migrate: (persisted: unknown, version: number) => {
         if (version < 4) {
           return {
@@ -188,7 +195,11 @@ export const useStudioStore = create<StudioStore>()(
             aiModel: "",
             customProviders: [],
             goals: initialData.goals,
+            googleAuth: null,
           } as unknown as StudioStore;
+        }
+        if (version < 5) {
+          return { ...(persisted as object), googleAuth: null } as unknown as StudioStore;
         }
         return persisted as StudioStore;
       },

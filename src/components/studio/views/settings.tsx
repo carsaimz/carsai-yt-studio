@@ -5,6 +5,7 @@ import {
   Settings2, Moon, Sun, Languages, KeyRound, Trash2, Download, Upload,
   ShieldCheck, Info, Eye, EyeOff, Check, Bot, Palette, Plus, PlugZap,
   Globe, MessageCircle, Target, Github, Monitor, FlaskConical,
+  Lock, LogOut, Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ViewHeader, SectionCard } from "../widgets";
@@ -19,6 +20,11 @@ import { Switch } from "@/components/ui/switch";
 import { WhatsNewDialog } from "../whats-new";
 import { ChartTypeSwitcher } from "../widgets";
 import { cn, uid } from "@/lib/studio/utils";
+import { WEB_DEMO } from "@/lib/studio/platform";
+import {
+  pkcePairAsync, buildAuthUrl, exchangeCode, fetchAccountEmail,
+  extractAuthCode, OAUTH_REDIRECT_PORT,
+} from "@/lib/studio/oauth";
 
 const ACCENTS: { id: AccentId; swatch: string; i18n: string }[] = [
   { id: "flame", swatch: "oklch(0.63 0.24 25)", i18n: "accent.flame" },
@@ -53,6 +59,13 @@ export function SettingsView(_props: { channel: Channel; videos: Video[]; commen
 
   /* what's new dialog (manual open) */
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+
+  /* google oauth */
+  const [oauthClientId, setOauthClientId] = useState(store.googleAuth?.clientId || "");
+  const [oauthSecret, setOauthSecret] = useState(store.googleAuth?.clientSecret || "");
+  const [oauthManualCode, setOauthManualCode] = useState("");
+  const [oauthBusy, setOauthBusy] = useState(false);
+  const [oauthVerifier, setOauthVerifier] = useState<string | null>(null);
 
   const themes: { id: ThemeMode; icon: React.ReactNode; label: string }[] = [
     { id: "dark", icon: <Moon className="h-4 w-4" />, label: t("common.dark") },
@@ -111,6 +124,83 @@ export function SettingsView(_props: { channel: Channel; videos: Video[]; commen
   };
 
   const providers = allProviders(store.customProviders);
+
+  /* Google OAuth connect (PKCE) — loopback capture on desktop, manual paste fallback */
+  const connectGoogle = async () => {
+    if (!oauthClientId.trim() || !oauthSecret.trim()) {
+      toast.error(t("oauth.connect"), { description: `${t("oauth.clientId")} + ${t("oauth.clientSecret")}` });
+      return;
+    }
+    setOauthBusy(true);
+    try {
+      const { verifier, challenge } = await pkcePairAsync();
+      setOauthVerifier(verifier);
+      const consentUrl = buildAuthUrl({ clientId: oauthClientId.trim(), challenge });
+      let code: string | null = null;
+      const desktop = typeof window !== "undefined" && typeof (window as unknown as { carsaiDesktop?: { oauthLoopback?: unknown } }).carsaiDesktop?.oauthLoopback === "function";
+      if (desktop) {
+        try {
+          const desktopApi = (window as unknown as {
+            carsaiDesktop: { oauthLoopback: (u: string, p: number, t: number) => Promise<{ code: string }> };
+          }).carsaiDesktop;
+          const res = await desktopApi.oauthLoopback(consentUrl, OAUTH_REDIRECT_PORT, 5 * 60 * 1000);
+          code = res?.code || null;
+        } catch {
+          /* fall back to manual paste */
+        }
+      }
+      if (!code) {
+        window.open(consentUrl, "_blank", "noopener");
+        toast(t("oauth.openBrowser"), { description: t("oauth.pasteHint"), duration: 10000 });
+        return;
+      }
+      await completeGoogleAuth(code);
+    } catch (err) {
+      toast.error("OAuth", { description: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setOauthBusy(false);
+    }
+  };
+
+  const completeGoogleAuth = async (code: string) => {
+    if (!oauthVerifier) throw new Error("Sessão OAuth inexistente — liga a conta outra vez");
+    const tokens = await exchangeCode({
+      code,
+      clientId: oauthClientId.trim(),
+      clientSecret: oauthSecret.trim(),
+      verifier: oauthVerifier,
+    });
+    const email = tokens.email || (await fetchAccountEmail(tokens.accessToken));
+    store.setGoogleAuth({
+      clientId: oauthClientId.trim(),
+      clientSecret: oauthSecret.trim(),
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresAt: tokens.expiresAt,
+      scope: tokens.scope,
+      email,
+      connectedAt: new Date().toISOString(),
+    });
+    store.logActivity({ kind: "system", title: `Google ligado: ${email || "conta"}` });
+    toast.success(t("oauth.connected"), { description: email || "Google" });
+    setOauthManualCode("");
+    setOauthVerifier(null);
+  };
+
+  const finishGooglePaste = async () => {
+    if (!oauthManualCode.trim()) return;
+    setOauthBusy(true);
+    try {
+      const code = extractAuthCode(oauthManualCode);
+      if (!code) throw new Error("Código inválido");
+      await completeGoogleAuth(code);
+    } catch (err) {
+      toast.error("OAuth", { description: `${err instanceof Error ? err.message : String(err)}` });
+    } finally {
+      setOauthBusy(false);
+    }
+  };
+
   const tierLabel: Record<string, string> = {
     free: t("settings.tier.free"),
     paid: t("settings.tier.paid"),
@@ -407,6 +497,81 @@ export function SettingsView(_props: { channel: Channel; videos: Video[]; commen
             />
           </div>
         </div>
+      </SectionCard>
+
+      {/* Google OAuth — YouTube Data + Analytics APIs */}
+      <SectionCard title={t("oauth.title")} icon={<Lock className="h-4 w-4" />}>
+        <p className="flex items-start gap-2 mb-4 text-xs text-muted-foreground">
+          <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+          <span className="min-w-0">{t("oauth.desc")}</span>
+        </p>
+
+        {WEB_DEMO ? (
+          <div className="flex items-start gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-sm text-amber-100/90">
+            <Lock className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
+            <span className="min-w-0 break-words">{t("oauth.webNote")}</span>
+          </div>
+        ) : store.googleAuth ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-300">
+                <Check className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold break-words">{store.googleAuth.email || t("oauth.connected")}</p>
+                <p className="text-[11px] text-muted-foreground font-mono break-anywhere">
+                  {t("oauth.expiresIn")} {new Date(store.googleAuth.expiresAt).toLocaleString()} · {store.googleAuth.scope.split(" ").length} scopes
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 text-red-400 border-red-500/40 hover:bg-red-500/10"
+                onClick={() => {
+                  store.setGoogleAuth(null);
+                  toast.success(t("oauth.disconnect"));
+                }}
+              >
+                <LogOut className="h-3.5 w-3.5" /> {t("oauth.disconnect")}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className="text-xs text-muted-foreground">{t("oauth.clientId")}</span>
+                <Input value={oauthClientId} onChange={(e) => setOauthClientId(e.target.value)} placeholder="xxxx.apps.googleusercontent.com" className="font-mono text-xs" />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-muted-foreground">{t("oauth.clientSecret")}</span>
+                <Input type="password" value={oauthSecret} onChange={(e) => setOauthSecret(e.target.value)} placeholder="GOCSPX-..." className="font-mono text-xs" />
+              </label>
+            </div>
+            <p className="text-[11px] text-muted-foreground font-mono break-anywhere leading-relaxed">{t("oauth.howto")}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" onClick={connectGoogle} disabled={oauthBusy} className="gap-1.5 bg-gradient-flame text-white">
+                <Link2 className={cn("h-3.5 w-3.5", oauthBusy && "animate-pulse")} />
+                {oauthBusy ? t("oauth.connecting") : t("oauth.connect")}
+              </Button>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/20 p-3.5 space-y-2">
+              <p className="text-xs font-medium">{t("oauth.pasteCode")}</p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  value={oauthManualCode}
+                  onChange={(e) => setOauthManualCode(e.target.value)}
+                  placeholder="4/0AQSTgQF..."
+                  className="font-mono text-xs min-w-0"
+                />
+                <Button size="sm" variant="outline" onClick={finishGooglePaste} disabled={oauthBusy || !oauthManualCode.trim()} className="shrink-0">
+                  <Check className="h-3.5 w-3.5" /> {t("common.apply")}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">{t("oauth.pasteHint")}</p>
+            </div>
+          </div>
+        )}
       </SectionCard>
 
       {/* Goals */}

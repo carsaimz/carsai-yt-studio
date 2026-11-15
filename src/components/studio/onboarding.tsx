@@ -5,13 +5,15 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   Flame, KeyRound, PlayCircle, ArrowRight, BarChart3, SearchCheck,
-  MessagesSquare, Bot, Youtube, ShieldCheck, Github, Globe,
+  MessagesSquare, Bot, Youtube, ShieldCheck, Github, Globe, ShieldAlert,
 } from "lucide-react";
 import { useStudioStore, APP_VERSION } from "@/lib/studio/store";
 import { useI18n, languages } from "@/lib/studio/i18n";
+import { WEB_DEMO, LATEST_RELEASE_URL } from "@/lib/studio/platform";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { extractChannelId, fetchChannel } from "@/lib/studio/youtube";
+import { cn } from "@/lib/studio/utils";
 
 const FEATURE_PILLS = [
   { icon: <BarChart3 className="h-3.5 w-3.5" />, label: "Analytics" },
@@ -145,15 +147,24 @@ export function Onboarding() {
               </motion.button>
 
               <motion.button
-                onClick={() => setLiveMode(true)}
-                whileHover={{ y: -2 }}
-                className="obsidian-card card-elevated group p-6 text-left hover:ring-focus transition-shadow"
+                onClick={() => (WEB_DEMO ? undefined : setLiveMode(true))}
+                whileHover={{ y: WEB_DEMO ? 0 : -2 }}
+                className={cn(
+                  "obsidian-card card-elevated group p-6 text-left hover:ring-focus transition-shadow",
+                  WEB_DEMO && "opacity-70 cursor-not-allowed"
+                )}
               >
                 <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-flame">
                   <KeyRound className="h-6 w-6 text-white" />
                 </span>
                 <h2 className="mt-4 text-lg font-bold">{t("onboarding.liveCard")}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{t("onboarding.liveCardDesc")}</p>
+                {WEB_DEMO && (
+                  <span className="mt-3 inline-flex items-start gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-[11px] leading-snug text-amber-200">
+                    <ShieldAlert className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    {t("webDemo.onboardingNote")}
+                  </span>
+                )}
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
                   {t("common.open")} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </span>
@@ -194,6 +205,14 @@ export function Onboarding() {
                   {t("common.cancel")}
                 </Button>
               </div>
+              <a
+                href={LATEST_RELEASE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+              >
+                {t("webDemo.download")} — Electron / Capacitor
+              </a>
             </div>
           )}
 

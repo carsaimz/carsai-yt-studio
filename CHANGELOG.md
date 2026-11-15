@@ -2,6 +2,27 @@
 
 Todas as alterações notáveis deste projeto estão documentadas aqui. O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o versionamento usa [SemVer](https://semver.org/lang/pt-BR/).
 
+## [3.2.0] — 2026-11-16
+
+### Adicionado
+
+- **Google OAuth 2.0** — liga a conta Google com PKCE usando o client OAuth do utilizador (credenciais e tokens apenas no dispositivo); captura automática de loopback no Electron (redirect `http://localhost:8765/`) e colagem manual do código em qualquer plataforma; *refresh token* aplicado automaticamente quando o access token expira
+- **YouTube Analytics API v2** — nova aba **Live · Analytics** na vista Analytics: relatórios reais diários do canal (views, minutos assistidos, subscritores ganhos/perdidos, likes, comentários, partilhas) e top vídeos do período, com gráficos e exportação CSV
+- **Recursos da Data API só com OAuth** — playlists próprias (`mine=true`) e legendas do canal via token OAuth (lib `gapi.ts`)
+- **Modo web demo explícito** — quando aberto num navegador comum a plataforma entra em modo de teste/demonstração: banner permanente com link para descarregar a app, alternador "Ao vivo" bloqueado com explicação, onboarding adaptado e secção OAuth desativada na web
+- **Verificador de atualizações** — consulta o último release do GitHub no arranque e mostra um toast com link quando existe versão mais recente
+- **Electron** — IPC `carsai:oauth-loopback` no main process (servidor loopback seguro, timeout 5 min) + preload com `contextIsolation`
+
+### Melhorado
+
+- Onboarding distingue a web demo (cartão "Ligar canal" desativado com nota de acesso total nas apps) das apps instaladas
+- Store persistida **v5** com estado `googleAuth` e migração automática v3/v4→v5
+- i18n (PT/EN/ES) completa para todos os novos ecrãs (OAuth, analytics live, banner web, atualizações)
+
+### Notas
+
+- A versão web fica apenas para **testes e demonstração** — a funcionalidade completa (dados reais, OAuth, automação) corre em Electron (desktop) e Capacitor (telemóvel)
+
 ## [3.1.0] — 2026-11-15
 
 ### Adicionado

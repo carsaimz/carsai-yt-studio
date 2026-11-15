@@ -7,10 +7,13 @@ import {
   LayoutDashboard, BarChart3, Clapperboard, SearchCheck, MessagesSquare,
   Sparkles, Bot, Blocks, Wrench, Settings2, Menu, Flame, Command,
   Moon, Sun, Zap, Radio, Plus, Youtube, CircleDot, X,
+  ShieldAlert, MonitorDown,
 } from "lucide-react";
 import { useStudioStore, resolveVideos, APP_VERSION } from "@/lib/studio/store";
 import { demoChannel, demoComments, demoVideos } from "@/lib/studio/demo-data";
 import { I18nProvider, useI18n, languages } from "@/lib/studio/i18n";
+import { WEB_DEMO, LATEST_RELEASE_URL } from "@/lib/studio/platform";
+import { checkForUpdate } from "@/lib/studio/updates";
 import type { StudioStateView, StudioView, Lang, DataMode } from "@/lib/studio/types";
 import { cn } from "@/lib/studio/utils";
 import { RouteProvider } from "./nav-context";
@@ -100,6 +103,7 @@ function StudioShell() {
   const [route, setRoute] = useState<StudioStateView>({ view: "dashboard" });
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [webBannerOpen, setWebBannerOpen] = useState(true);
 
   /* theme + accent on <html> */
   useEffect(() => {
@@ -110,6 +114,18 @@ function StudioShell() {
 
   /* automation engine heartbeat */
   useEffect(() => startAutomationLoop(), []);
+
+  /* update checker — informational toast when a newer release is out */
+  useEffect(() => {
+    void checkForUpdate().then((info) => {
+      if (!info) return;
+      toast(t("updates.available"), {
+        description: `${info.version} · ${t("updates.download")}`,
+        action: { label: t("updates.download"), onClick: () => window.open(info.url, "_blank") },
+        duration: 12000,
+      });
+    });
+  }, []);
 
   /* What's new — derived state: opens automatically once per version, only after onboarding */
   const whatsNewOpen = store.onboarded && store.whatsNewSeen !== APP_VERSION;
@@ -135,6 +151,11 @@ function StudioShell() {
   const toggleTheme = () => store.setTheme(store.theme === "dark" ? "light" : "dark");
 
   const switchMode = (mode: DataMode) => {
+    /* web build is testing/demo only — live connections run on the installed apps */
+    if (WEB_DEMO && mode === "live") {
+      toast.error(t("webDemo.badge"), { description: t("webDemo.liveBlocked") });
+      return;
+    }
     if (mode === "live" && !store.youtubeApiKey) {
       toast.error(t("ai.noKey"), { description: t("mode.liveHint") });
       navigate("settings");
@@ -263,6 +284,34 @@ function StudioShell() {
             </div>
           </div>
         </header>
+
+        {/* Web demo banner — testing/demonstration build notice */}
+        {WEB_DEMO && webBannerOpen && (
+          <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 md:px-6">
+            <div className="mx-auto flex max-w-7xl flex-col gap-2 py-2.5 sm:flex-row sm:items-center">
+              <ShieldAlert className="h-4 w-4 shrink-0 text-amber-400" aria-hidden />
+              <p className="min-w-0 flex-1 text-xs leading-snug text-amber-100/90 sm:text-sm">{t("webDemo.banner")}</p>
+              <div className="flex items-center gap-2">
+                <a
+                  href={LATEST_RELEASE_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/15 px-3 py-1 text-xs font-semibold text-amber-200 transition-colors hover:bg-amber-400/25"
+                >
+                  <MonitorDown className="h-3.5 w-3.5" aria-hidden />
+                  {t("webDemo.download")}
+                </a>
+                <button
+                  onClick={() => setWebBannerOpen(false)}
+                  className="shrink-0 text-amber-200/70 transition-colors hover:text-amber-100"
+                  aria-label={t("common.close")}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-1">
           {/* Desktop sidebar */}

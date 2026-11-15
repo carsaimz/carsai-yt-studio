@@ -43,6 +43,7 @@ Ao contrário da versão anterior, a v3 é **local-first**: os teus dados e chav
 |--|---|---|
 | 📊 | **Painel & Analytics** | KPIs com sparklines, gráficos de 28/90 dias, origens de tráfego, curva de retenção, heatmap de melhores horários, exportação CSV |
 | 📈 | **Gráficos alternáveis (novo)** | Troca o tipo de gráfico em qualquer painel: **linha, área, barras, circular (donut), radar e 3D** |
+| 🔐 | **OAuth Google (novo)** | Liga a conta Google com PKCE — playlists próprias, legendas e **YouTube Analytics API v2** (relatórios reais diários + top vídeos + CSV); captura automática loopback no Electron |
 | 🎬 | **Biblioteca de conteúdo** | Pesquisa, filtros, editor de metadados com score SEO ao vivo, capítulos, pré-visualização de miniatura |
 | 🛰️ | **YouTube Hub (novo)** | Toda a YouTube Data API v3 num só lugar: tendências por região/categoria, pesquisa global (vídeos/canais/playlists), playlists, subscrições, atividades, transmissões live e taxonomias oficiais (categorias, regiões i18n, idiomas) |
 | 🔍 | **Estúdio SEO** | Otimizador de títulos com checklist, laboratório de tags (extração real via API), pesquisa de palavras-chave (autocomplete público), análise de concorrentes |
@@ -57,6 +58,8 @@ Ao contrário da versão anterior, a v3 é **local-first**: os teus dados e chav
 | ⌨️ | **Command palette** | `Cmd/Ctrl+K` para navegar e executar ações |
 | 📲 | **PWA instalável (novo)** | Instala como app nativa no desktop e Android — funciona offline após a primeira visita |
 | 📱 | **Multi-plataforma** | Web · Android/iOS (Capacitor) · Windows/macOS/Linux (Electron) |
+
+> **Nota sobre a web**: a versão web funciona apenas como **teste e demonstração** (dados de exemplo, sem ligações reais). A experiência completa — dados reais, OAuth e automação — corre nas apps **Electron (desktop)** e **Capacitor (telemóvel)**, descarregáveis nos [Releases](https://github.com/carsaimz/carsai-yt-studio/releases/latest).
 
 ### Início rápido
 

@@ -217,6 +217,20 @@ export interface AiMessage {
   at: string;
 }
 
+/* ---------- Google OAuth ---------- */
+
+export interface GoogleAuth {
+  clientId: string;
+  clientSecret: string;
+  accessToken: string;
+  refreshToken?: string;
+  /** epoch ms when the access token expires */
+  expiresAt: number;
+  scope: string;
+  email?: string;
+  connectedAt: string;
+}
+
 /* ---------- Views / navigation ---------- */
 
 export type StudioView =
