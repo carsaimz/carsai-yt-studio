@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
-    "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+    "build": "next build && node scripts/copy-standalone.cjs",
     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -106,5 +106,9 @@
     "@capacitor/cli": "^6.2.0"
   },
   "description": "Plataforma local-first open-source (MIT) para criadores YouTube — analytics, SEO, comunidade, automação, YouTube Data API v3 e IA multi-provedor (Next.js + Capacitor + Electron + PWA)",
-  "main": "electron/main.cjs"
+  "main": "electron/main.cjs",
+  "author": {
+    "name": "Carsai",
+    "email": "carsaimz@users.noreply.github.com"
+  }
 }

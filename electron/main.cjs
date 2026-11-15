@@ -8,6 +8,7 @@
  */
 const { app, BrowserWindow, shell, Menu, nativeTheme, ipcMain } = require("electron");
 const path = require("node:path");
+const fs = require("node:fs");
 const { spawn } = require("node:child_process");
 const http = require("node:http");
 
@@ -99,8 +100,38 @@ function waitForServer(url, timeoutMs = 30000) {
   });
 }
 
+/**
+ * Finds the standalone server entry, handling the nested layout that appears
+ * when the repo lives inside a parent workspace (monorepo / parent lockfile):
+ *   .next/standalone/server.js                        (normal)
+ *   .next/standalone/<relative-path>/server.js        (nested)
+ */
+function findStandaloneServer() {
+  const standaloneRoot = path.join(__dirname, "..", ".next", "standalone");
+  const direct = path.join(standaloneRoot, "server.js");
+  if (fs.existsSync(direct)) return direct;
+  const stack = [standaloneRoot];
+  while (stack.length) {
+    const dir = stack.shift();
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      if (["node_modules", ".next", "static"].includes(e.name)) continue;
+      const candidate = path.join(dir, e.name, "server.js");
+      if (fs.existsSync(candidate)) return candidate;
+      stack.push(path.join(dir, e.name));
+    }
+  }
+  return direct; // fall back to the default path (error will surface on spawn)
+}
+
 function startLocalServer() {
-  const standalone = path.join(__dirname, "..", ".next", "standalone", "server.js");
+  const standalone = findStandaloneServer();
   serverProc = spawn(process.execPath, [standalone], {
     env: { ...process.env, PORT: String(PORT), HOSTNAME: "127.0.0.1", ELECTRON_RUN_AS_NODE: "1" },
     stdio: "inherit",
