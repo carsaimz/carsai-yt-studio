@@ -50,7 +50,6 @@ export function AiStudioView({
   /* keep model in sync when the provider changes externally */
   useEffect(() => {
     setModel(resolveProvider(store.aiProvider, store.customProviders).meta.defaultModel);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.aiProvider, store.customProviders.length]);
 
   /* chat */

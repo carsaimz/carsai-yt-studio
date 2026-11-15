@@ -111,14 +111,8 @@ function StudioShell() {
   /* automation engine heartbeat */
   useEffect(() => startAutomationLoop(), []);
 
-  /* What's new — once per version, only after onboarding */
-  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
-  useEffect(() => {
-    if (store.onboarded && store.whatsNewSeen !== APP_VERSION) {
-      setWhatsNewOpen(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.onboarded]);
+  /* What's new — derived state: opens automatically once per version, only after onboarding */
+  const whatsNewOpen = store.onboarded && store.whatsNewSeen !== APP_VERSION;
 
   const navigate = useCallback((view: StudioView, extra?: Partial<StudioStateView>) => {
     setRoute({ view, ...extra });
@@ -351,7 +345,6 @@ function StudioShell() {
         <WhatsNewDialog
           open={whatsNewOpen}
           onOpenChange={(v) => {
-            setWhatsNewOpen(v);
             if (!v) store.setWhatsNewSeen(APP_VERSION);
           }}
         />
