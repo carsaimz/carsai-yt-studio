@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & publish release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build web app (standalone)
+        run: bun run build
+
+      - name: Package web bundle
+        run: |
+          cd .next && zip -qr ../carsai-yt-studio-${{ github.ref_name }}-web.zip standalone static ../public && cd ..
+          ls -la *.zip
+
+      - name: Build Electron app
+        run: |
+          bunx electron-builder --config electron-builder.yml --publish never || true
+        env:
+          # Electron Builder may need code-signing vars; unsigned builds are fine for now
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Collect Electron artifacts
+        id: electron
+        run: |
+          mkdir -p dist-release
+          if compgen -G "dist/*.zip" > /dev/null; then cp dist/*.zip dist-release/; fi
+          if compgen -G "dist/*.AppImage" > /dev/null; then cp dist/*.AppImage dist-release/; fi
+          if compgen -G "dist/*.deb" > /dev/null; then cp dist/*.deb dist-release/; fi
+          if compgen -G "dist/*.exe" > /dev/null; then cp dist/*.exe dist-release/; fi
+          if compgen -G "dist/*.dmg" > /dev/null; then cp dist/*.dmg dist-release/; fi
+          ls -la dist-release/ || true
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          # extract the section of the changelog matching this version
+          awk -v ver="$VERSION" '
+            BEGIN { capture=0 }
+            $0 ~ "^## \\[" ver "\\]" { capture=1; next }
+            capture && /^## \[/ { exit }
+            capture { print }
+          ' CHANGELOG.md > release-notes.md
+          # fallback: if empty, use the whole changelog
+          if [ ! -s release-notes.md ]; then cp CHANGELOG.md release-notes.md; fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Carsai YT Studio ${{ github.ref_name }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            carsai-yt-studio-${{ github.ref_name }}-web.zip
+            dist-release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

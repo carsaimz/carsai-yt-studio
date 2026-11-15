@@ -1,0 +1,73 @@
+name: "🐞 Bug report"
+description: "Reporta um problema no Carsai YT Studio"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar! Antes de continuar, procura em [Issues](https://github.com/carsaimz/carsai-yt-studio/issues) e [Discussões](https://github.com/carsaimz/carsai-yt-studio/discussions) para ver se já foi reportado.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Descrição do bug"
+      description: "Explica clara e concisamente o que aconteceu."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Passos para reproduzir"
+      placeholder: |
+        1. Abrir '...'
+        2. Clicar em '...'
+        3. Ver erro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: "Plataforma"
+      options:
+        - Web (browser)
+        - Desktop (Electron)
+        - Android (Capacitor)
+        - iOS (Capacitor)
+        - Outro
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: "Versão"
+      description: "Número da versão (ver Definições → Sobre) ou commit"
+      placeholder: "v3.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: "Modo de dados"
+      options:
+        - Demo
+        - Ao vivo (com chave da YouTube API)
+        - Ambos
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Logs / screenshots"
+      description: "Cola logs do console (F12) ou screenshots se ajudarem."
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Verificações"
+      options:
+        - label: "Procurei issues e discussões existentes"
+        - label: "Consigo reproduzir este bug de forma consistente"

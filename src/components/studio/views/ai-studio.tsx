@@ -8,10 +8,10 @@ import {
 import { toast } from "sonner";
 import { ViewHeader, SectionCard, EmptyState } from "../widgets";
 import { useStudioStore } from "@/lib/studio/store";
-import { AI_PROVIDERS, aiComplete, demoBrain, providerMeta } from "@/lib/studio/ai";
+import { allProviders, aiComplete, demoBrain, resolveProvider } from "@/lib/studio/ai";
 import { useI18n } from "@/lib/studio/i18n";
 import { copyText } from "@/lib/studio/utils";
-import type { Channel, Video, CommentItem, AiProvider, AiMessage } from "@/lib/studio/types";
+import type { Channel, Video, CommentItem, AiMessage } from "@/lib/studio/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,12 +36,22 @@ export function AiStudioView({
 }) {
   const { t, lang } = useI18n();
   const store = useStudioStore();
-  const provider = store.aiProvider as AiProvider;
-  const key = store.keys[provider as keyof typeof store.keys] || "";
-  const meta = providerMeta(provider);
+  const provider = store.aiProvider;
+  const providers = allProviders(store.customProviders);
+  const resolved = resolveProvider(provider, store.customProviders);
+  const key = provider.startsWith("custom:")
+    ? resolved.customDef?.key || ""
+    : store.keys[provider as keyof typeof store.keys] || "";
+  const meta = resolved.meta;
   const [model, setModel] = useState(meta.defaultModel);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  /* keep model in sync when the provider changes externally */
+  useEffect(() => {
+    setModel(resolveProvider(store.aiProvider, store.customProviders).meta.defaultModel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.aiProvider, store.customProviders.length]);
 
   /* chat */
   const [input, setInput] = useState("");
@@ -64,7 +74,7 @@ export function AiStudioView({
           ? store.chatHistory.slice(-10).map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content }))
           : [];
       history.push({ role: "user", content: prompt });
-      return aiComplete({ provider, key, model, system, messages: history });
+      return aiComplete({ provider, key, model, system, messages: history, baseUrl: meta.baseUrl });
     }
     await new Promise((r) => setTimeout(r, 700));
     return demoBrain(task === "chat" ? "chat" : task, prompt, lang);
@@ -128,19 +138,24 @@ export function AiStudioView({
           </div>
         </div>
         <div className="flex flex-1 flex-wrap gap-2 md:justify-end">
-          <Select value={provider} onValueChange={(v) => { store.setAiProvider(v); setModel(providerMeta(v).defaultModel); }}>
-            <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+          <Select value={provider} onValueChange={(v) => { store.setAiProvider(v); store.setAiModel(resolveProvider(v, store.customProviders).meta.defaultModel); }}>
+            <SelectTrigger className="w-full sm:w-[190px] max-w-full"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {AI_PROVIDERS.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              {providers.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  <span className="flex items-center gap-2">
+                    <span className={cn("h-1.5 w-1.5 rounded-full", p.tier === "local" ? "bg-sky-400" : p.tier === "free" ? "bg-emerald-400" : "bg-amber-400")} />
+                    {p.name}
+                  </span>
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={model} onValueChange={setModel}>
-            <SelectTrigger className="w-[240px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[240px] max-w-full"><SelectValue /></SelectTrigger>
             <SelectContent>
               {meta.models.map((m) => (
-                <SelectItem key={m} value={m} className="font-mono text-xs">{m}</SelectItem>
+                <SelectItem key={m} value={m} className="font-mono text-xs break-all">{m}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -176,7 +191,7 @@ export function AiStudioView({
                     <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                       <div
                         className={cn(
-                          "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed",
+                          "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed break-words",
                           m.role === "user"
                             ? "bg-gradient-flame text-white rounded-br-sm"
                             : "bg-muted rounded-bl-sm"

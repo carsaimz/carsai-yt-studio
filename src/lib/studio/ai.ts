@@ -1,86 +1,239 @@
 "use client";
 
-import type { AiProvider, AiMessage } from "./types";
+import type { AiMessage, CustomProvider, ProviderKind } from "./types";
 
 export interface ProviderMeta {
-  id: AiProvider;
+  id: string;
   name: string;
+  kind: ProviderKind;
+  /** Fixed base URL for OpenAI-compatible providers (custom providers carry their own) */
+  baseUrl?: string;
   models: string[];
   defaultModel: string;
   keyUrl: string;
+  /** "free" | "paid" | "local" */
+  tier: "free" | "paid" | "local";
   freeNote: string;
 }
 
+/**
+ * Built-in provider registry — online (free & paid), local (Ollama / LM Studio).
+ * Custom user providers are added dynamically by `allProviders()`.
+ */
 export const AI_PROVIDERS: ProviderMeta[] = [
   {
     id: "gemini",
     name: "Google Gemini",
-    models: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"],
+    kind: "gemini",
+    models: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-2.0-flash-lite"],
     defaultModel: "gemini-2.5-flash",
     keyUrl: "https://aistudio.google.com/apikey",
+    tier: "free",
     freeNote: "Nível gratuito generoso no AI Studio",
   },
   {
     id: "groq",
     name: "Groq",
-    models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
+    kind: "openai-compatible",
+    baseUrl: "https://api.groq.com/openai/v1",
+    models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"],
     defaultModel: "llama-3.3-70b-versatile",
     keyUrl: "https://console.groq.com/keys",
+    tier: "free",
     freeNote: "Camada gratuita com limite de taxa elevado",
   },
   {
     id: "openrouter",
     name: "OpenRouter",
-    models: ["meta-llama/llama-3.3-70b-instruct:free", "google/gemini-2.0-flash-exp:free", "mistralai/mistral-7b-instruct:free"],
+    kind: "openai-compatible",
+    baseUrl: "https://openrouter.ai/api/v1",
+    models: ["meta-llama/llama-3.3-70b-instruct:free", "google/gemini-2.0-flash-exp:free", "mistralai/mistral-7b-instruct:free", "qwen/qwen-2.5-72b-instruct:free"],
     defaultModel: "meta-llama/llama-3.3-70b-instruct:free",
     keyUrl: "https://openrouter.ai/keys",
+    tier: "free",
     freeNote: "Modelos marcados ':free' sem custo",
+  },
+  {
+    id: "mistral",
+    name: "Mistral AI",
+    kind: "openai-compatible",
+    baseUrl: "https://api.mistral.ai/v1",
+    models: ["mistral-large-latest", "mistral-small-latest", "open-mistral-nemo"],
+    defaultModel: "mistral-small-latest",
+    keyUrl: "https://console.mistral.ai/api-keys",
+    tier: "free",
+    freeNote: "Camada gratuita disponível (La Plateforme)",
+  },
+  {
+    id: "huggingface",
+    name: "Hugging Face",
+    kind: "openai-compatible",
+    baseUrl: "https://router.huggingface.co/v1",
+    models: ["meta-llama/Llama-3.1-8B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3"],
+    defaultModel: "meta-llama/Llama-3.1-8B-Instruct",
+    keyUrl: "https://huggingface.co/settings/tokens",
+    tier: "free",
+    freeNote: "Inferência com camada gratuita",
   },
   {
     id: "openai",
     name: "OpenAI",
+    kind: "openai-compatible",
+    baseUrl: "https://api.openai.com/v1",
     models: ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini"],
     defaultModel: "gpt-4o-mini",
     keyUrl: "https://platform.openai.com/api-keys",
+    tier: "paid",
     freeNote: "Requer créditos (pago)",
   },
   {
     id: "anthropic",
     name: "Anthropic Claude",
+    kind: "anthropic",
     models: ["claude-3-5-haiku-20241022", "claude-3-5-sonnet-20241022"],
     defaultModel: "claude-3-5-haiku-20241022",
     keyUrl: "https://console.anthropic.com/settings/keys",
+    tier: "paid",
     freeNote: "Requer créditos (pago)",
   },
   {
-    id: "huggingface",
-    name: "Hugging Face",
-    models: ["meta-llama/Llama-3.1-8B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3"],
-    defaultModel: "meta-llama/Llama-3.1-8B-Instruct",
-    keyUrl: "https://huggingface.co/settings/tokens",
-    freeNote: "Inferência com camada gratuita",
+    id: "deepseek",
+    name: "DeepSeek",
+    kind: "openai-compatible",
+    baseUrl: "https://api.deepseek.com/v1",
+    models: ["deepseek-chat", "deepseek-reasoner"],
+    defaultModel: "deepseek-chat",
+    keyUrl: "https://platform.deepseek.com/api_keys",
+    tier: "paid",
+    freeNote: "Custo muito baixo por token",
+  },
+  {
+    id: "together",
+    name: "Together AI",
+    kind: "openai-compatible",
+    baseUrl: "https://api.together.xyz/v1",
+    models: ["meta-llama/Llama-3.3-70B-Instruct-Turbo", "Qwen/Qwen2.5-72B-Instruct-Turbo"],
+    defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    keyUrl: "https://api.together.ai/settings/api-keys",
+    tier: "paid",
+    freeNote: "Modelos open-source a preço baixo",
+  },
+  {
+    id: "ollama",
+    name: "Ollama (local)",
+    kind: "openai-compatible",
+    baseUrl: "http://localhost:11434/v1",
+    models: ["llama3.2", "qwen2.5", "gemma2", "mistral"],
+    defaultModel: "llama3.2",
+    keyUrl: "https://ollama.com/download",
+    tier: "local",
+    freeNote: "100% offline no teu computador — sem chave",
+  },
+  {
+    id: "lmstudio",
+    name: "LM Studio (local)",
+    kind: "openai-compatible",
+    baseUrl: "http://localhost:1234/v1",
+    models: ["local-model"],
+    defaultModel: "local-model",
+    keyUrl: "https://lmstudio.ai",
+    tier: "local",
+    freeNote: "Servidor local compatível com OpenAI — sem chave",
   },
 ];
 
 export function providerMeta(id: string): ProviderMeta {
-  return AI_PROVIDERS.find((p) => p.id === id) || AI_PROVIDERS[0];
+  return (
+    AI_PROVIDERS.find((p) => p.id === id) ||
+    AI_PROVIDERS.find((p) => p.tier === "free") ||
+    AI_PROVIDERS[0]
+  );
+}
+
+export interface ProviderRef {
+  key: string;
+  model?: string;
+  baseUrl?: string;
+}
+
+/** Registry + custom providers, for pickers */
+export function allProviders(custom: CustomProvider[]): ProviderMeta[] {
+  const customs: ProviderMeta[] = custom.map((c) => ({
+    id: `custom:${c.id}`,
+    name: c.name + (c.local ? " (local)" : ""),
+    kind: c.kind,
+    baseUrl: c.baseUrl,
+    models: [c.model || "default"],
+    defaultModel: c.model || "default",
+    keyUrl: "",
+    tier: c.local ? "local" : "paid",
+    freeNote: c.local ? "Provedor local personalizado" : "Provedor personalizado",
+  }));
+  return [...AI_PROVIDERS, ...customs];
+}
+
+/** Resolves a provider id (built-in or custom:<id>) into connection params */
+export function resolveProvider(id: string, custom: CustomProvider[]): { meta: ProviderMeta; customDef?: CustomProvider } {
+  if (id.startsWith("custom:")) {
+    const def = custom.find((c) => c.id === id.slice(7));
+    if (def) {
+      return {
+        meta: {
+          id,
+          name: def.name,
+          kind: def.kind,
+          baseUrl: def.baseUrl,
+          models: [def.model],
+          defaultModel: def.model,
+          keyUrl: "",
+          tier: def.local ? "local" : "paid",
+          freeNote: "Provedor personalizado",
+        },
+        customDef: def,
+      };
+    }
+  }
+  return { meta: providerMeta(id) };
 }
 
 export interface AiRequest {
-  provider: AiProvider;
+  provider: string;
   key: string;
   model?: string;
+  baseUrl?: string;
   system?: string;
   messages: { role: "user" | "assistant"; content: string }[];
 }
 
-export async function aiComplete(req: AiRequest): Promise<string> {
-  const meta = providerMeta(req.provider);
-  const model = req.model || meta.defaultModel;
-  const system = req.system || "Você é um assistente especialista em YouTube para criadores de conteúdo. Responda de forma prática, específica e no idioma do utilizador.";
+const DEFAULT_SYSTEM =
+  "Você é um assistente especialista em YouTube para criadores de conteúdo. Responda de forma prática, específica e no idioma do utilizador.";
 
-  if (req.provider === "gemini") {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(req.key)}`;
+export async function aiComplete(req: AiRequest): Promise<string> {
+  const system = req.system || DEFAULT_SYSTEM;
+  let kind: ProviderKind = "openai-compatible";
+  let model = req.model || "";
+  let url = "";
+
+  if (req.provider.startsWith("custom:")) {
+    // resolved by caller via resolveProvider; expects baseUrl supplied
+    kind = "openai-compatible";
+    url = req.baseUrl || "";
+    if (!url) throw new Error("Base URL do provedor personalizado em falta");
+    if (!model) model = "default";
+  } else {
+    const { meta } = resolveProvider(req.provider, []);
+    kind = meta.kind;
+    model = req.model || meta.defaultModel;
+    if (kind === "gemini") {
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(req.key)}`;
+    } else if (kind === "anthropic") {
+      url = "https://api.anthropic.com/v1/messages";
+    } else {
+      url = `${(req.baseUrl || meta.baseUrl || "").replace(/\/$/, "")}/chat/completions`;
+    }
+  }
+
+  if (kind === "gemini") {
     const body = {
       systemInstruction: { parts: [{ text: system }] },
       contents: req.messages.map((m) => ({
@@ -94,8 +247,8 @@ export async function aiComplete(req: AiRequest): Promise<string> {
     return data?.candidates?.[0]?.content?.parts?.[0]?.text || "(resposta vazia)";
   }
 
-  if (req.provider === "anthropic") {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+  if (kind === "anthropic") {
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -110,18 +263,12 @@ export async function aiComplete(req: AiRequest): Promise<string> {
     return data?.content?.[0]?.text || "(resposta vazia)";
   }
 
-  // OpenAI-compatible: openai, groq, openrouter, huggingface
-  const endpoints: Record<string, string> = {
-    openai: "https://api.openai.com/v1/chat/completions",
-    groq: "https://api.groq.com/openai/v1/chat/completions",
-    openrouter: "https://openrouter.ai/api/v1/chat/completions",
-    huggingface: "https://router.huggingface.co/v1/chat/completions",
-  };
-  const url = endpoints[req.provider];
-  if (!url) throw new Error("Provedor desconhecido");
-  const headers: Record<string, string> = { "Content-Type": "application/json", Authorization: `Bearer ${req.key}` };
+  // OpenAI-compatible: openai, groq, openrouter, mistral, deepseek, together,
+  // huggingface, ollama, lmstudio, custom
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (req.key) headers.Authorization = `Bearer ${req.key}`;
   if (req.provider === "openrouter") {
-    headers["HTTP-Referer"] = typeof location !== "undefined" ? location.origin : "https://carsai-yt-studio.vercel.app";
+    headers["HTTP-Referer"] = typeof location !== "undefined" ? location.origin : "https://carsaiytstudio.vercel.app";
     headers["X-Title"] = "Carsai YT Studio";
   }
   const res = await fetch(url, {
@@ -137,6 +284,14 @@ export async function aiComplete(req: AiRequest): Promise<string> {
   if (!res.ok) throw new Error(await readError(res));
   const data = await res.json();
   return data?.choices?.[0]?.message?.content || "(resposta vazia)";
+}
+
+/** Quick connectivity test — returns latency in ms */
+export async function testProvider(req: Omit<AiRequest, "messages">): Promise<number> {
+  const t0 = performance.now();
+  const out = await aiComplete({ ...req, messages: [{ role: "user", content: "Diz apenas: ok" }], system: "Responde apenas com 'ok'." });
+  void out;
+  return Math.round(performance.now() - t0);
 }
 
 async function readError(res: Response): Promise<string> {
@@ -167,9 +322,7 @@ export function demoBrain(task: "chat" | "script" | "ideas" | "reply" | "metadat
   }
 }
 
-type DemoLangPack = typeof ptDemo;
-
-const ptDemo: DemoLangPack = {
+const ptDemo = {
   defaultTopic: "o teu nicho",
   chat: (t: string) =>
     `**Modo demo local** (sem chave de IA configurada) — análise sobre: *${t}*\n\nCom base nos teus dados do canal:\n\n1. **Posicionamento** — os tutoriais práticos ("Como...") são os que geram mais CTR no teu canal (+38%).\n2. **Estrutura** — mantém intros abaixo de 30s; a retenção cai após 45s.\n3. **Calendário** — terça às 20h é o teu pico; publica séries em blocos de 4 semanas.\n\nPara respostas reais geradas por IA, liga Gemini/Groq/OpenRouter em **Integrações** (todos com camada gratuita).`,
@@ -182,6 +335,8 @@ const ptDemo: DemoLangPack = {
   metadata: (t: string) =>
     `**Título sugerido (demo):** ${t} — Guia Completo 2026 (Passo a Passo)\n\n**Descrição:**\nAprende ${t.toLowerCase()} do zero, com tudo o que precisas num só vídeo.\n\n⏱️ Capítulos:\n00:00 Introdução\n01:24 Passo 1\n05:30 Passo 2\n09:10 Erros comuns\n11:40 Conclusão\n\n**Tags:** ${t.toLowerCase()}, tutorial, 2026, passo a passo, para iniciantes, dicas, guia completo`,
 };
+
+type DemoLangPack = typeof ptDemo;
 
 const enDemo: DemoLangPack = {
   defaultTopic: "your niche",

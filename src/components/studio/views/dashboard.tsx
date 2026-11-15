@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -8,16 +8,13 @@ import {
   ArrowRight, CalendarClock, Target, Trophy, Sparkles, Wrench, Bot, SearchCheck,
   MessagesSquare,
 } from "lucide-react";
-import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-} from "recharts";
-import { ViewHeader, KpiCard, ScoreRing, SectionCard, Thumb, EmptyState } from "../widgets";
+import { ViewHeader, KpiCard, ScoreRing, SectionCard, Thumb, EmptyState, MetricChart, ChartTypeSwitcher } from "../widgets";
 import { useStudioRoute } from "../nav-context";
 import { useStudioStore } from "@/lib/studio/store";
 import { demoTimeseries, demoAiInsights, demoKpis } from "@/lib/studio/demo-data";
 import { useI18n } from "@/lib/studio/i18n";
 import { compact, fmtDateShort, num, timeAgo, cn } from "@/lib/studio/utils";
-import type { Channel, Video, CommentItem } from "@/lib/studio/types";
+import type { Channel, Video, CommentItem, ChartType } from "@/lib/studio/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -34,6 +31,7 @@ export function DashboardView({
   const { t, lang } = useI18n();
   const { navigate } = useStudioRoute();
   const store = useStudioStore();
+  const [mainType, setMainType] = useState<ChartType>(store.chartType);
   const series = useMemo(() => demoTimeseries(90), []);
 
   const last28 = series.slice(-28);
@@ -113,27 +111,32 @@ export function DashboardView({
           title={t("analytics.viewsOverTime")}
           icon={<Eye className="h-4 w-4" />}
           className="lg:col-span-2"
-          action={<Badge variant="outline">28 {t("common.days")}</Badge>}
+          action={
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="hidden sm:inline-flex">28 {t("common.days")}</Badge>
+              <ChartTypeSwitcher
+                value={mainType}
+                onChange={(ct) => {
+                  setMainType(ct);
+                  store.setChartType(ct);
+                }}
+                allowed={["line", "area", "bar", "3d"]}
+                size="xs"
+              />
+            </div>
+          }
         >
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id="viewsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} interval={6} />
-                <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={44} tickFormatter={(v: number) => compact(v, lang)} />
-                <Tooltip
-                  contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }}
-                  labelStyle={{ color: "var(--muted-foreground)" }}
-                />
-                <Area type="monotone" dataKey="views" stroke="var(--chart-1)" strokeWidth={2} fill="url(#viewsGrad)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            <MetricChart
+              data={chartData}
+              series={[
+                { key: "views", name: t("common.views"), color: "var(--chart-1)" },
+                { key: "subs", name: t("analytics.subsGained"), color: "var(--chart-4)" },
+              ]}
+              type={mainType}
+              height={256}
+              interval={6}
+            />
           </div>
         </SectionCard>
 

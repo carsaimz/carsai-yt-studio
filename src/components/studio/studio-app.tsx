@@ -6,9 +6,9 @@ import { toast } from "sonner";
 import {
   LayoutDashboard, BarChart3, Clapperboard, SearchCheck, MessagesSquare,
   Sparkles, Bot, Blocks, Wrench, Settings2, Menu, Flame, Command,
-  Moon, Sun, Zap, Radio, Plus,
+  Moon, Sun, Zap, Radio, Plus, Youtube, CircleDot, X,
 } from "lucide-react";
-import { useStudioStore, resolveVideos } from "@/lib/studio/store";
+import { useStudioStore, resolveVideos, APP_VERSION } from "@/lib/studio/store";
 import { demoChannel, demoComments, demoVideos } from "@/lib/studio/demo-data";
 import { I18nProvider, useI18n, languages } from "@/lib/studio/i18n";
 import type { StudioStateView, StudioView, Lang, DataMode } from "@/lib/studio/types";
@@ -23,11 +23,13 @@ import {
 import { CommandPalette } from "./command-palette";
 import { Onboarding } from "./onboarding";
 import { StatusDot } from "./widgets";
+import { WhatsNewDialog, WHATS_NEW } from "./whats-new";
 
 import { DashboardView } from "./views/dashboard";
 import { AnalyticsView } from "./views/analytics";
 import { ContentView } from "./views/content";
 import { VideoDetailView } from "./views/video-detail";
+import { YouTubeHubView } from "./views/youtube";
 import { SeoView } from "./views/seo";
 import { CommunityView } from "./views/community";
 import { AiStudioView } from "./views/ai-studio";
@@ -43,6 +45,7 @@ const NAV_GROUPS: { label: string; items: { id: StudioView; icon: React.ReactNod
       { id: "dashboard", icon: <LayoutDashboard className="h-4 w-4" />, i18n: "nav.dashboard" },
       { id: "analytics", icon: <BarChart3 className="h-4 w-4" />, i18n: "nav.analytics" },
       { id: "content", icon: <Clapperboard className="h-4 w-4" />, i18n: "nav.content" },
+      { id: "youtube", icon: <Youtube className="h-4 w-4" />, i18n: "nav.youtube" },
     ],
   },
   {
@@ -98,13 +101,24 @@ function StudioShell() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  /* theme class on <html> */
+  /* theme + accent on <html> */
   useEffect(() => {
     document.documentElement.classList.toggle("dark", store.theme !== "light");
-  }, [store.theme]);
+    if (store.accent === "flame") delete document.documentElement.dataset.accent;
+    else document.documentElement.dataset.accent = store.accent;
+  }, [store.theme, store.accent]);
 
   /* automation engine heartbeat */
   useEffect(() => startAutomationLoop(), []);
+
+  /* What's new — once per version, only after onboarding */
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+  useEffect(() => {
+    if (store.onboarded && store.whatsNewSeen !== APP_VERSION) {
+      setWhatsNewOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.onboarded]);
 
   const navigate = useCallback((view: StudioView, extra?: Partial<StudioStateView>) => {
     setRoute({ view, ...extra });
@@ -171,16 +185,16 @@ function StudioShell() {
 
             <button
               onClick={() => navigate("dashboard")}
-              className="flex items-center gap-2 font-bold tracking-tight"
+              className="flex items-center gap-2 font-bold tracking-tight min-w-0"
               aria-label={t("app.name")}
             >
               <BrandMark />
-              <span className="hidden sm:inline text-sm">{t("app.name")}</span>
+              <span className="hidden sm:inline text-sm truncate">{t("app.name")}</span>
             </button>
 
             <button
               onClick={() => setPaletteOpen(true)}
-              className="ml-2 hidden md:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors min-w-64"
+              className="ml-2 hidden md:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors min-w-0 max-w-56 flex-1"
             >
               <SearchCheck className="h-4 w-4" />
               {t("common.search")}
@@ -189,26 +203,29 @@ function StudioShell() {
               </kbd>
             </button>
 
-            <div className="ml-auto flex items-center gap-1.5">
+            <div className="ml-auto flex items-center gap-1 md:gap-1.5 shrink-0">
               <div className="flex items-center rounded-full border border-border bg-muted/40 p-0.5">
                 <button
                   onClick={() => switchMode("demo")}
+                  title={t("common.demo")}
                   className={cn(
-                    "rounded-full px-2.5 py-1 text-xs font-semibold transition-colors whitespace-nowrap",
+                    "flex items-center gap-1 rounded-full px-2 md:px-2.5 py-1 text-xs font-semibold transition-colors whitespace-nowrap",
                     store.dataMode === "demo" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {t("common.demo")}
+                  <CircleDot className="h-3 w-3" />
+                  <span className="hidden lg:inline">{t("common.demo")}</span>
                 </button>
                 <button
                   onClick={() => switchMode("live")}
+                  title={t("common.live")}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors whitespace-nowrap",
+                    "flex items-center gap-1 rounded-full px-2 md:px-2.5 py-1 text-xs font-semibold transition-colors whitespace-nowrap",
                     store.dataMode === "live" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <Radio className="h-3 w-3" />
-                  {t("common.live")}
+                  <span className="hidden lg:inline">{t("common.live")}</span>
                 </button>
               </div>
 
@@ -274,6 +291,7 @@ function StudioShell() {
                 {route.view === "analytics" && <AnalyticsView {...viewProps} />}
                 {route.view === "content" && <ContentView {...viewProps} />}
                 {route.view === "video" && <VideoDetailView {...viewProps} />}
+                {route.view === "youtube" && <YouTubeHubView {...viewProps} />}
                 {route.view === "seo" && <SeoView {...viewProps} />}
                 {route.view === "community" && <CommunityView {...viewProps} />}
                 {route.view === "ai" && <AiStudioView {...viewProps} />}
@@ -329,6 +347,14 @@ function StudioShell() {
         </nav>
 
         <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onNavigate={navigate} />
+
+        <WhatsNewDialog
+          open={whatsNewOpen}
+          onOpenChange={(v) => {
+            setWhatsNewOpen(v);
+            if (!v) store.setWhatsNewSeen(APP_VERSION);
+          }}
+        />
       </div>
     </RouteProvider>
   );

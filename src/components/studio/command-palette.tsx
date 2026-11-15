@@ -5,11 +5,11 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import {
   LayoutDashboard, BarChart3, Clapperboard, SearchCheck, MessagesSquare,
   Sparkles, Bot, Blocks, Wrench, Settings2, Moon, Radio, PlayCircle,
-  Lightbulb, Download, RefreshCw,
+  Lightbulb, Download, RefreshCw, Youtube, Palette,
 } from "lucide-react";
 import { useStudioStore } from "@/lib/studio/store";
 import { useI18n } from "@/lib/studio/i18n";
-import type { StudioView } from "@/lib/studio/types";
+import type { StudioView, StudioStateView } from "@/lib/studio/types";
 import { simulateEvent } from "@/lib/studio/automation";
 import { toast } from "sonner";
 
@@ -20,7 +20,7 @@ export function CommandPalette({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  onNavigate: (view: StudioView, extra?: { tool?: string }) => void;
+  onNavigate: (view: StudioView, extra?: Partial<StudioStateView>) => void;
 }) {
   const { t } = useI18n();
   const store = useStudioStore();
@@ -38,6 +38,7 @@ export function CommandPalette({
       { id: "dashboard" as StudioView, icon: <LayoutDashboard className="h-4 w-4" />, label: t("nav.dashboard") },
       { id: "analytics" as StudioView, icon: <BarChart3 className="h-4 w-4" />, label: t("nav.analytics") },
       { id: "content" as StudioView, icon: <Clapperboard className="h-4 w-4" />, label: t("nav.content") },
+      { id: "youtube" as StudioView, icon: <Youtube className="h-4 w-4" />, label: t("nav.youtube") },
       { id: "seo" as StudioView, icon: <SearchCheck className="h-4 w-4" />, label: t("nav.seo") },
       { id: "community" as StudioView, icon: <MessagesSquare className="h-4 w-4" />, label: t("nav.community") },
       { id: "ai" as StudioView, icon: <Sparkles className="h-4 w-4" />, label: t("nav.ai") },
@@ -83,6 +84,14 @@ export function CommandPalette({
             store.setTheme(store.theme === "dark" ? "light" : "dark");
           })}>
             <Moon className="mr-2 h-4 w-4 text-primary" /> {t("common.theme")}: {store.theme === "dark" ? t("common.dark") : t("common.light")} → toggle
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => {
+            const order: Array<"flame" | "orchid" | "ocean" | "volt"> = ["flame", "orchid", "ocean", "volt"];
+            const next = order[(order.indexOf(store.accent) + 1) % order.length];
+            store.setAccent(next);
+            toast.success(`${t("settings.accent")}: ${t(`accent.${next}`)}`);
+          })}>
+            <Palette className="mr-2 h-4 w-4 text-primary" /> {t("settings.accent")}: {t(`accent.${store.accent}`)} → cycle
           </CommandItem>
           <CommandItem onSelect={() => run(() => {
             const mode = store.dataMode === "demo" ? "live" : "demo";

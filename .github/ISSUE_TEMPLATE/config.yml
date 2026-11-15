@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "💬 Discussões da comunidade"
+    url: https://github.com/carsaimz/carsai-yt-studio/discussions
+    about: "Perguntas, ideias, apresentações e roadmap do projeto"
+  - name: "🌐 Site oficial"
+    url: https://carsaiytstudio.vercel.app
+    about: "Documentação, changelog e downloads"

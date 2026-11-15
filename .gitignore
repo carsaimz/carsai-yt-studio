@@ -49,3 +49,6 @@ dev.log
 *.log
 /db
 /prisma/*.db
+
+# official website lives in its own repo (carsai-yt-studio-web)
+/web/

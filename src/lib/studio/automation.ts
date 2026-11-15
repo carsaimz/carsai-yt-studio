@@ -139,7 +139,7 @@ export async function simulateEvent(kind: "new_video" | "new_comment") {
   const baseVideo = Object.values(videos)[0];
   const event: AutomationEvent =
     kind === "new_video"
-      ? { kind: "new_video", video: { id: "sim-v1", title: baseVideo?.title || "Novo vídeo simulado", tags: [], views: 0, likes: 0 } as Video }
+      ? { kind: "new_video", video: { id: "sim-v1", title: baseVideo?.title || "Novo vídeo simulado", tags: [], views: 0, likes: 0 } as unknown as Video }
       : {
           kind: "new_comment",
           comment: {

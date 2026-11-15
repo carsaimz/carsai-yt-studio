@@ -1,17 +1,14 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import {
-  AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, CartesianGrid,
-} from "recharts";
 import { Eye, Clock, Download, Users, MousePointerClick, Flame } from "lucide-react";
 import { toast } from "sonner";
-import { ViewHeader, SectionCard } from "../widgets";
+import { ViewHeader, SectionCard, MetricChart, CategoryChart, ChartTypeSwitcher } from "../widgets";
 import { demoTimeseries, demoTraffic, demoRetention, demoBestTimes } from "@/lib/studio/demo-data";
 import { useI18n } from "@/lib/studio/i18n";
-import { compact, downloadFile, num, cn } from "@/lib/studio/utils";
-import type { Channel, Video, CommentItem } from "@/lib/studio/types";
+import { compact, downloadFile, cn } from "@/lib/studio/utils";
+import { useStudioStore } from "@/lib/studio/store";
+import type { Channel, Video, CommentItem, ChartType } from "@/lib/studio/types";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -19,7 +16,10 @@ const WEEK_DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 export function AnalyticsView(_props: { channel: Channel; videos: Video[]; comments: CommentItem[] }) {
   const { t, lang } = useI18n();
+  const store = useStudioStore();
   const [period, setPeriod] = useState<28 | 90>(90);
+  const [mainType, setMainType] = useState<ChartType>(store.chartType);
+  const [trafficType, setTrafficType] = useState<ChartType>("pie");
   const series = useMemo(() => demoTimeseries(period), [period]);
 
   const chartData = series.map((p) => ({
@@ -44,13 +44,13 @@ export function AnalyticsView(_props: { channel: Channel; videos: Video[]; comme
       ...series.map((p) => [p.date, p.views, p.watchHours, p.subscribersGained, p.ctr.toFixed(4), p.avgViewPercent.toFixed(4)]),
     ];
     downloadFile(`carsai-analytics-${period}d.csv`, rows.map((r) => r.join(",")).join("\n"), "text/csv");
-    toast.success(t("analytics.exportCsv"), { description: `${period} dias exportados` });
+    toast.success(t("analytics.exportCsv"), { description: `${period} ${t("common.days").toLowerCase()}` });
   };
 
-  const tooltipStyle = {
-    contentStyle: { background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 },
-    labelStyle: { color: "var(--muted-foreground)" },
-  };
+  const mainSeries = [
+    { key: "views", name: t("common.views"), color: "var(--chart-1)" },
+    { key: "subs", name: t("analytics.subsGained"), color: "var(--chart-4)" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -66,7 +66,7 @@ export function AnalyticsView(_props: { channel: Channel; videos: Video[]; comme
               </TabsList>
             </Tabs>
             <Button size="sm" variant="outline" onClick={exportCsv} className="gap-1.5">
-              <Download className="h-4 w-4" /> {t("analytics.exportCsv")}
+              <Download className="h-4 w-4" /> <span className="hidden sm:inline">{t("analytics.exportCsv")}</span>
             </Button>
           </>
         }
@@ -80,10 +80,10 @@ export function AnalyticsView(_props: { channel: Channel; videos: Video[]; comme
           { icon: <Users className="h-4 w-4" />, label: t("analytics.subsGained"), value: compact(totals.subs, lang) },
           { icon: <MousePointerClick className="h-4 w-4" />, label: t("common.ctr"), value: `${(totals.ctr * 100).toFixed(1)}%` },
         ].map((m) => (
-          <div key={m.label} className="obsidian-card card-elevated flex items-center gap-3 px-4 py-3.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">{m.icon}</span>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.label}</p>
+          <div key={m.label} className="obsidian-card card-elevated flex items-center gap-3 px-4 py-3.5 min-w-0">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">{m.icon}</span>
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">{m.label}</p>
               <p className="text-lg font-bold font-mono">{m.value}</p>
             </div>
           </div>
@@ -91,105 +91,83 @@ export function AnalyticsView(_props: { channel: Channel; videos: Video[]; comme
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <SectionCard title={t("analytics.viewsOverTime")} icon={<Eye className="h-4 w-4" />}>
+        <SectionCard
+          title={t("analytics.viewsOverTime")}
+          icon={<Eye className="h-4 w-4" />}
+          action={
+            <ChartTypeSwitcher
+              value={mainType}
+              onChange={(ct) => {
+                setMainType(ct);
+                store.setChartType(ct);
+              }}
+              allowed={["line", "area", "bar", "3d"]}
+              size="xs"
+            />
+          }
+        >
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id="aViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} interval={Math.floor(period / 8)} />
-                <YAxis tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={44} tickFormatter={(v: number) => compact(v, lang)} />
-                <Tooltip {...tooltipStyle} />
-                <Area type="monotone" dataKey="views" name={t("common.views")} stroke="var(--chart-1)" strokeWidth={2} fill="url(#aViews)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            <MetricChart data={chartData} series={mainSeries} type={mainType} height={224} interval={Math.floor(period / 8)} />
           </div>
         </SectionCard>
 
         <SectionCard title={t("analytics.watchHours")} icon={<Clock className="h-4 w-4" />}>
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} interval={Math.floor(period / 8)} />
-                <YAxis tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={44} tickFormatter={(v: number) => compact(v, lang)} />
-                <Tooltip {...tooltipStyle} cursor={{ fill: "var(--muted)" }} />
-                <Bar dataKey="watch" name={t("common.watchHours")} fill="var(--chart-2)" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <MetricChart
+              data={chartData}
+              series={[{ key: "watch", name: t("common.watchHours"), color: "var(--chart-2)" }]}
+              type={mainType === "line" ? "area" : mainType}
+              height={224}
+              interval={Math.floor(period / 8)}
+            />
           </div>
         </SectionCard>
 
         <SectionCard title={t("analytics.subsGained")} icon={<Users className="h-4 w-4" />}>
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} interval={Math.floor(period / 8)} />
-                <YAxis tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={44} />
-                <Tooltip {...tooltipStyle} />
-                <Line type="monotone" dataKey="subs" name={t("analytics.subsGained")} stroke="var(--chart-4)" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+            <MetricChart
+              data={chartData}
+              series={[{ key: "subs", name: t("analytics.subsGained"), color: "var(--chart-4)" }]}
+              type={mainType}
+              height={224}
+              interval={Math.floor(period / 8)}
+            />
           </div>
         </SectionCard>
 
-        <SectionCard title={t("common.ctr")} icon={<MousePointerClick className="h-4 w-4" />}>
+        <SectionCard
+          title={t("analytics.trafficSources")}
+          icon={<Flame className="h-4 w-4" />}
+          action={
+            <ChartTypeSwitcher
+              value={trafficType}
+              onChange={setTrafficType}
+              allowed={["pie", "radar", "bar", "3d"]}
+              size="xs"
+            />
+          }
+        >
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} interval={Math.floor(period / 8)} />
-                <YAxis tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={40} unit="%" />
-                <Tooltip {...tooltipStyle} />
-                <Line type="monotone" dataKey="ctr" name={t("common.ctr")} stroke="var(--chart-3)" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+            <CategoryChart
+              data={demoTraffic.map((s) => ({ label: s.source, value: s.viewsPct }))}
+              type={trafficType}
+              height={224}
+            />
           </div>
         </SectionCard>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Traffic sources */}
-        <SectionCard title={t("analytics.trafficSources")} icon={<Flame className="h-4 w-4" />}>
-          <ul className="space-y-3">
-            {demoTraffic.map((s) => (
-              <li key={s.source}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium">{s.source}</span>
-                  <span className="font-mono text-muted-foreground">{s.viewsPct}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-flame" style={{ width: `${s.viewsPct}%` }} />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
-
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* Retention curve */}
         <SectionCard title={t("analytics.retentionCurve")} icon={<Clock className="h-4 w-4" />}>
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={demoRetention} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id="aRet" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-4)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="var(--chart-4)" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="pct" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} unit="%" />
-                <YAxis tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={36} unit="%" />
-                <Tooltip {...tooltipStyle} />
-                <Area type="monotone" dataKey="value" name={t("common.retention")} stroke="var(--chart-4)" strokeWidth={2} fill="url(#aRet)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            <MetricChart
+              data={demoRetention.map((r) => ({ date: `${r.pct}%`, views: r.value }))}
+              series={[{ key: "views", name: t("common.retention"), color: "var(--chart-4)" }]}
+              type={mainType === "bar" ? "area" : mainType}
+              height={224}
+              interval="preserveStartEnd"
+            />
           </div>
         </SectionCard>
 

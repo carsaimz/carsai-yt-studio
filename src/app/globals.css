@@ -171,23 +171,98 @@ html:not(.dark) {
   --elevated: oklch(0.965 0.006 80);
 }
 
+/* ---------- Accent palettes ---------- */
+/* Flame is the default (no data-accent needed). Others remap brand + primary + chart-1 */
+
+html[data-accent="orchid"] {
+  --primary: oklch(0.66 0.2 300);
+  --ring: oklch(0.66 0.2 300);
+  --chart-1: oklch(0.66 0.2 300);
+  --sidebar-primary: oklch(0.66 0.2 300);
+  --sidebar-ring: oklch(0.66 0.2 300);
+  --flame: oklch(0.66 0.2 300);
+  --ember: oklch(0.72 0.16 340);
+  --orchid: oklch(0.68 0.17 25);
+}
+html:not(.dark)[data-accent="orchid"] {
+  --primary: oklch(0.56 0.2 300);
+  --ring: oklch(0.56 0.2 300);
+  --chart-1: oklch(0.56 0.2 300);
+  --sidebar-primary: oklch(0.56 0.2 300);
+  --sidebar-ring: oklch(0.56 0.2 300);
+  --flame: oklch(0.56 0.2 300);
+  --ember: oklch(0.62 0.16 340);
+  --orchid: oklch(0.58 0.17 25);
+}
+
+html[data-accent="ocean"] {
+  --primary: oklch(0.7 0.14 230);
+  --ring: oklch(0.7 0.14 230);
+  --chart-1: oklch(0.7 0.14 230);
+  --sidebar-primary: oklch(0.7 0.14 230);
+  --sidebar-ring: oklch(0.7 0.14 230);
+  --flame: oklch(0.7 0.14 230);
+  --ember: oklch(0.74 0.13 190);
+  --orchid: oklch(0.68 0.15 280);
+}
+html:not(.dark)[data-accent="ocean"] {
+  --primary: oklch(0.58 0.14 230);
+  --ring: oklch(0.58 0.14 230);
+  --chart-1: oklch(0.58 0.14 230);
+  --sidebar-primary: oklch(0.58 0.14 230);
+  --sidebar-ring: oklch(0.58 0.14 230);
+  --flame: oklch(0.58 0.14 230);
+  --ember: oklch(0.62 0.13 190);
+  --orchid: oklch(0.58 0.15 280);
+}
+
+html[data-accent="volt"] {
+  --primary: oklch(0.78 0.18 140);
+  --primary-foreground: oklch(0.2 0.06 140);
+  --ring: oklch(0.78 0.18 140);
+  --chart-1: oklch(0.78 0.18 140);
+  --sidebar-primary: oklch(0.78 0.18 140);
+  --sidebar-ring: oklch(0.78 0.18 140);
+  --flame: oklch(0.78 0.18 140);
+  --ember: oklch(0.8 0.16 110);
+  --orchid: oklch(0.7 0.15 190);
+}
+html:not(.dark)[data-accent="volt"] {
+  --primary: oklch(0.6 0.17 140);
+  --primary-foreground: oklch(0.99 0.01 140);
+  --ring: oklch(0.6 0.17 140);
+  --chart-1: oklch(0.6 0.17 140);
+  --sidebar-primary: oklch(0.6 0.17 140);
+  --sidebar-ring: oklch(0.6 0.17 140);
+  --flame: oklch(0.6 0.17 140);
+  --ember: oklch(0.66 0.15 110);
+  --orchid: oklch(0.58 0.14 190);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   html {
     scroll-behavior: smooth;
+    /* Fix: never allow horizontal page drag from overflowing content */
+    overflow-x: clip;
   }
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.63 0.24 25 / 0.07), transparent),
-      radial-gradient(ellipse 60% 40% at 90% 110%, oklch(0.66 0.16 310 / 0.05), transparent);
+      radial-gradient(ellipse 80% 50% at 50% -20%, color-mix(in oklch, var(--flame) 7%, transparent), transparent),
+      radial-gradient(ellipse 60% 40% at 90% 110%, color-mix(in oklch, var(--orchid) 5%, transparent), transparent);
     background-attachment: fixed;
+    max-width: 100vw;
+    overflow-x: clip;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
   }
   ::selection {
-    background: oklch(0.63 0.24 25 / 0.35);
+    background: color-mix(in oklch, var(--flame) 35%, transparent);
   }
 }
 
@@ -209,13 +284,13 @@ html:not(.dark) {
     background: color-mix(in oklch, var(--card) 72%, transparent);
   }
   .glow-flame {
-    box-shadow: 0 0 24px oklch(0.63 0.24 25 / 0.25), 0 0 4px oklch(0.63 0.24 25 / 0.4);
+    box-shadow: 0 0 24px color-mix(in oklch, var(--flame) 25%, transparent), 0 0 4px color-mix(in oklch, var(--flame) 40%, transparent);
   }
   .card-elevated {
     box-shadow: 0 1px 2px oklch(0 0 0 / 0.2), 0 8px 28px -12px oklch(0 0 0 / 0.5);
   }
   .ring-focus {
-    box-shadow: 0 0 0 2px oklch(0.63 0.24 25 / 0.55), 0 0 18px oklch(0.63 0.24 25 / 0.2);
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--flame) 55%, transparent), 0 0 18px color-mix(in oklch, var(--flame) 20%, transparent);
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -223,6 +298,18 @@ html:not(.dark) {
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  /* long tokens (URLs, IDs, keys) must break instead of blowing up layout */
+  .break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 0;
+  }
+  /* horizontal scroller with soft fade edges */
+  .scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
 }
 
@@ -241,7 +328,7 @@ html:not(.dark) {
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.45 0.02 25);
+  background: color-mix(in oklch, var(--flame) 60%, oklch(0.3 0.01 275));
   background-clip: padding-box;
 }
 
@@ -251,6 +338,7 @@ html:not(.dark) {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  min-width: 0;
 }
 .obsidian-card::before {
   content: "";
@@ -258,7 +346,13 @@ html:not(.dark) {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, oklch(0.63 0.24 25 / 0.35), transparent 40%, transparent 60%, oklch(0.66 0.16 310 / 0.25));
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--flame) 35%, transparent),
+    transparent 40%,
+    transparent 60%,
+    color-mix(in oklch, var(--orchid) 25%, transparent)
+  );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -269,8 +363,8 @@ html:not(.dark) {
 /* Subtle grid texture for hero areas */
 .grid-texture {
   background-image:
-    linear-gradient(oklch(0.63 0.24 25 / 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.63 0.24 25 / 0.05) 1px, transparent 1px);
+    linear-gradient(color-mix(in oklch, var(--flame) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklch, var(--flame) 5%, transparent) 1px, transparent 1px);
   background-size: 44px 44px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black, transparent);
 }
@@ -291,4 +385,11 @@ html:not(.dark) {
   animation: shimmer 1.6s linear infinite;
   background: linear-gradient(90deg, var(--muted) 25%, var(--elevated) 50%, var(--muted) 75%);
   background-size: 800px 100%;
+}
+
+/* Recharts hygiene: never spill outside their container */
+.recharts-wrapper,
+.recharts-surface {
+  max-width: 100%;
+  overflow: visible;
 }

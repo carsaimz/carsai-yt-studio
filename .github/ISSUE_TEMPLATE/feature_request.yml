@@ -1,0 +1,44 @@
+name: "✨ Feature request"
+description: "Sugere uma ideia ou melhoria para o Studio"
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problema ou necessidade"
+      description: "Que problema esta funcionalidade resolve? Qual o caso de uso?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Solução proposta"
+      description: "Como gostarias que funcionasse?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternativas consideradas"
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: "Âmbito"
+      description: "Onde a funcionalidade se aplica"
+      options:
+        - label: "App web"
+        - label: "Desktop (Electron)"
+        - label: "Mobile (Capacitor)"
+        - label: "Site oficial"
+        - label: "Documentação"
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Verificações"
+      options:
+        - label: "Procurei issues e discussões existentes"

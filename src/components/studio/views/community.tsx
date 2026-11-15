@@ -198,7 +198,7 @@ export function CommunityView({
         subtitle={t("community.subtitle")}
         actions={
           <Select value={sentimentFilter} onValueChange={(v) => setSentimentFilter(v as typeof sentimentFilter)}>
-            <SelectTrigger className="w-[170px]">
+            <SelectTrigger className="w-full sm:w-[170px] max-w-full">
               <SelectValue placeholder={t("community.filterSentiment")} />
             </SelectTrigger>
             <SelectContent>

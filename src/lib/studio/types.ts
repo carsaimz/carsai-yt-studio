@@ -4,6 +4,12 @@ export type Lang = "pt" | "en" | "es";
 export type ThemeMode = "dark" | "light" | "system";
 export type DataMode = "demo" | "live";
 
+/** Accent palettes for the Obsidian theme */
+export type AccentId = "flame" | "orchid" | "ocean" | "volt";
+
+/** Chart visualisation types */
+export type ChartType = "line" | "area" | "bar" | "pie" | "radar" | "3d";
+
 export type VideoVisibility = "public" | "unlisted" | "private";
 
 export interface Channel {
@@ -91,6 +97,16 @@ export interface Kpi {
   spark: number[];
 }
 
+/* ---------- Goals ---------- */
+
+export interface Goal {
+  id: string;
+  metric: "subscribers" | "views" | "watchHours" | "videos";
+  target: number;
+  label: string;
+  createdAt: string;
+}
+
 /* ---------- Automation ---------- */
 
 export type AutomationTriggerType =
@@ -141,7 +157,7 @@ export interface AutomationRule {
 export interface ActivityEntry {
   id: string;
   at: string;
-  kind: "automation" | "ai" | "seo" | "system" | "community";
+  kind: "automation" | "ai" | "seo" | "system" | "community" | "youtube";
   title: string;
   detail?: string;
 }
@@ -156,6 +172,11 @@ export type IntegrationId =
   | "openai"
   | "anthropic"
   | "huggingface"
+  | "mistral"
+  | "deepseek"
+  | "together"
+  | "ollama"
+  | "lmstudio"
   | "pexels"
   | "unsplash"
   | "pixabay"
@@ -172,9 +193,23 @@ export interface IntegrationMeta {
   keyHint?: string;
 }
 
-/* ---------- AI ---------- */
+/* ---------- AI providers ---------- */
 
-export type AiProvider = "gemini" | "groq" | "openrouter" | "openai" | "anthropic" | "huggingface";
+/** Any provider id: built-in registry ids or `custom:<uid>` */
+export type AiProvider = string;
+
+export type ProviderKind = "openai-compatible" | "gemini" | "anthropic";
+
+export interface CustomProvider {
+  id: string;
+  name: string;
+  kind: ProviderKind;
+  baseUrl: string;
+  model: string;
+  key: string;
+  local: boolean;
+  createdAt: string;
+}
 
 export interface AiMessage {
   role: "user" | "assistant" | "system";
@@ -189,6 +224,7 @@ export type StudioView =
   | "analytics"
   | "content"
   | "video"
+  | "youtube"
   | "seo"
   | "community"
   | "ai"
@@ -200,5 +236,5 @@ export type StudioView =
 export interface StudioStateView {
   view: StudioView;
   videoId?: string;
-  tool?: "thumbnail" | "trending" | "planner" | "keywords";
+  tool?: "thumbnail" | "trending" | "planner" | "keywords" | "export";
 }

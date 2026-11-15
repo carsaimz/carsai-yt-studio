@@ -37,6 +37,14 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "push-export",
+    "examples",
+    "mini-services",
+    "skills",
+    "tests",
+    "web",
+    "capacitor.config.ts",
+    "electron"
   ]
 }

@@ -16,12 +16,21 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Carsai YT Studio — Plataforma para Criadores YouTube com IA",
   description:
-    "Analytics avançada, SEO, comunidade, automação e agentes de IA para o seu canal YouTube. Web, Android e Desktop.",
-  keywords: ["YouTube", "Studio", "Analytics", "SEO", "IA", "Creators", "Automation"],
+    "Analytics avançada, SEO, comunidade, automação, YouTube Data API v3 completa e agentes de IA multi-provedor para o seu canal. Web, Android, iOS e Desktop. Open-source (MIT) e local-first.",
+  keywords: ["YouTube", "Studio", "Analytics", "SEO", "IA", "Creators", "Automation", "PWA", "Open Source"],
   authors: [{ name: "Carsai" }],
   applicationName: "Carsai YT Studio",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon.svg",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "Carsai YT Studio",
+    description: "O estúdio open-source e local-first para criadores YouTube.",
+    url: "https://carsaiytstudio.vercel.app",
+    siteName: "Carsai YT Studio",
+    type: "website",
   },
 };
 

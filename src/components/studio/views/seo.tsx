@@ -243,7 +243,7 @@ export function SeoView(_props: { channel: Channel; videos: Video[]; comments: C
                 {suggestions.map((s, i) => (
                   <li key={s} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2">
                     <span className="font-mono text-[10px] text-muted-foreground w-6">{String(i + 1).padStart(2, "0")}</span>
-                    <span className="flex-1 text-sm">{s}</span>
+                    <span className="flex-1 min-w-0 text-sm break-anywhere">{s}</span>
                     <Badge variant="outline" className="text-[10px]">{s.split(/\s+/).length}p</Badge>
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void copy(s)}>
                       {copied === s ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -259,8 +259,8 @@ export function SeoView(_props: { channel: Channel; videos: Video[]; comments: C
         <TabsContent value="competitor" className="mt-4">
           <SectionCard title={t("seo.tab.competitor")} icon={<Users className="h-4 w-4" />}>
             <p className="text-xs text-muted-foreground mb-3">{t("seo.competitorHint")}</p>
-            <div className="flex gap-2">
-              <Input value={chInput} onChange={(e) => setChInput(e.target.value)} placeholder="UC... ou URL do canal" className="font-mono text-xs" />
+            <div className="flex flex-wrap gap-2">
+              <Input value={chInput} onChange={(e) => setChInput(e.target.value)} placeholder="UC... ou URL do canal" className="font-mono text-xs flex-1 min-w-0" />
               <Button onClick={() => void doCompetitor()} disabled={compBusy} className="gap-1.5">
                 {compBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
               </Button>

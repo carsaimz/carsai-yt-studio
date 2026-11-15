@@ -10,7 +10,7 @@ import { ViewHeader, SectionCard, StatusDot } from "../widgets";
 import { useStudioStore } from "@/lib/studio/store";
 import { useI18n } from "@/lib/studio/i18n";
 import { AI_PROVIDERS } from "@/lib/studio/ai";
-import type { Channel, Video, CommentItem, IntegrationId } from "@/lib/studio/types";
+import type { Channel, Video, CommentItem, IntegrationId, IntegrationMeta } from "@/lib/studio/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +79,51 @@ const CATALOG: IntegrationMeta[] = [
     docsUrl: "https://huggingface.co/settings/tokens",
     description: "Inferência open-source (Llama, Mistral) para tarefas pontuais.",
     keyHint: "hf_...",
+  },
+  {
+    id: "mistral",
+    name: "Mistral AI",
+    category: "ai",
+    free: "Camada gratuita (La Plateforme)",
+    docsUrl: "https://console.mistral.ai/api-keys",
+    description: "Mistral Large/Small — europeu, rápido e com camada gratuita.",
+    keyHint: "...",
+  },
+  {
+    id: "deepseek",
+    name: "DeepSeek",
+    category: "ai",
+    free: "Custo muito baixo por token",
+    docsUrl: "https://platform.deepseek.com/api_keys",
+    description: "deepseek-chat e deepseek-reasoner — económico para tarefas em volume.",
+    keyHint: "sk-...",
+  },
+  {
+    id: "together",
+    name: "Together AI",
+    category: "ai",
+    free: "Modelos open-source a preço baixo",
+    docsUrl: "https://api.together.ai/settings/api-keys",
+    description: "Llama 3.3, Qwen 2.5 e dezenas de modelos open-source em turbina.",
+    keyHint: "...",
+  },
+  {
+    id: "ollama",
+    name: "Ollama (local)",
+    category: "ai",
+    free: "100% offline",
+    docsUrl: "https://ollama.com/download",
+    description: "Corre modelos locais (llama3.2, qwen2.5, gemma2) no teu computador — sem chave, sem nuvem.",
+    keyHint: "sem chave — servidor em localhost:11434",
+  },
+  {
+    id: "lmstudio",
+    name: "LM Studio (local)",
+    category: "ai",
+    free: "100% offline",
+    docsUrl: "https://lmstudio.ai",
+    description: "Servidor local compatível com OpenAI em localhost:1234 — sem chave.",
+    keyHint: "sem chave — servidor em localhost:1234",
   },
   {
     id: "pexels",

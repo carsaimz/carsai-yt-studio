@@ -10,7 +10,7 @@ import { useStudioStore } from "@/lib/studio/store";
 import { RULE_TEMPLATES, simulateEvent } from "@/lib/studio/automation";
 import { useI18n } from "@/lib/studio/i18n";
 import { timeAgo, uid } from "@/lib/studio/utils";
-import type { Channel, Video, CommentItem, AutomationRule, AutomationTriggerType, AutomationActionType, AutomationCondition } from "@/lib/studio/types";
+import type { Channel, Video, CommentItem, AutomationRule, AutomationTriggerType, AutomationActionType, AutomationAction, AutomationCondition } from "@/lib/studio/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -75,12 +75,11 @@ export function AutomationView(_props: { channel: Channel; videos: Video[]; comm
       toast.error(t("automation.newRule"), { description: "Dá um nome à regra" });
       return;
     }
-    const actions = draft.actions.map((type) => ({
-      type,
-      params:
-        type === "append_tags" ? { tags: draft.tags } :
-        type === "webhook" ? { url: draft.webhookUrl } : undefined,
-    }));
+    const actions: AutomationAction[] = draft.actions.map((type) => {
+      if (type === "append_tags") return { type, params: { tags: draft.tags } as Record<string, string> };
+      if (type === "webhook") return { type, params: { url: draft.webhookUrl } as Record<string, string> };
+      return { type };
+    });
     const rule: AutomationRule = {
       id: uid(),
       name: draft.name.trim(),
@@ -340,10 +339,10 @@ export function AutomationView(_props: { channel: Channel; videos: Video[]; comm
             <li key={a.id} className="flex items-start gap-3 px-4 md:px-5 py-3">
               <StatusDot ok pulse />
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium">{a.title}</p>
-                {a.detail && <p className="mt-0.5 text-[11px] text-muted-foreground">{a.detail}</p>}
+                <p className="text-xs font-medium break-anywhere">{a.title}</p>
+                {a.detail && <p className="mt-0.5 text-[11px] text-muted-foreground break-anywhere">{a.detail}</p>}
               </div>
-              <span className="text-[10px] text-muted-foreground whitespace-nowrap">{timeAgo(a.at, "pt")}</span>
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">{timeAgo(a.at, "pt")}</span>
             </li>
           ))}
           {store.activity.filter((a) => a.kind === "automation").length === 0 && (

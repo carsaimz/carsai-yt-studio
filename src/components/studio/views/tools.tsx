@@ -155,13 +155,13 @@ export function ToolsView({
                     {/* YouTube size previews */}
                     <div className="space-y-2">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Pesquisa · 168×94</p>
-                      <div className="w-[168px] h-[94px] rounded-md overflow-hidden border border-border">
+                      <div className="w-[168px] max-w-full aspect-[168/94] rounded-md overflow-hidden border border-border">
                         {src && (
                           <img src={src} alt="" className="w-full h-full object-cover" />
                         )}
                       </div>
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Sidebar · 246×138</p>
-                      <div className="w-[246px] h-[138px] rounded-md overflow-hidden border border-border">
+                      <div className="w-[246px] max-w-full aspect-[246/138] rounded-md overflow-hidden border border-border">
                         {src && (
                           <img src={src} alt="" className="w-full h-full object-cover" />
                         )}
@@ -180,9 +180,9 @@ export function ToolsView({
             title={t("tools.tab.trending")}
             icon={<TrendingUp className="h-4 w-4" />}
             action={
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Select value={region} onValueChange={setRegion}>
-                  <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-[150px] max-w-full h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {REGIONS.map((r) => <SelectItem key={r.code} value={r.code}>{r.label}</SelectItem>)}
                   </SelectContent>
@@ -239,7 +239,7 @@ export function ToolsView({
                     <p className="text-xs text-muted-foreground">{fmtDateShort(p.date, lang)}</p>
                   </div>
                   <Select value={p.status} onValueChange={(v) => store.updatePlanner(p.id, { status: v as typeof p.status })}>
-                    <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-[130px] max-w-full h-8 text-xs shrink-0"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
