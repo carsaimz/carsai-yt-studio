@@ -12,7 +12,7 @@ files:
 # asar disabled: the main process spawns the Next.js standalone server with
 # ELECTRON_RUN_AS_NODE, which cannot read scripts inside an asar archive.
 asar: false
-artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+artifactName: carsai-yt-studio-${version}-${os}-${arch}.${ext}
 win:
   target:
     - target: nsis
