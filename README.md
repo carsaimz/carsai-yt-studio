@@ -113,7 +113,7 @@ src/
 
 ### Contribuir
 
-Contribuições são muito bem-vinas! Lê [CONTRIBUTING.md](CONTRIBUTING.md), participa nas [Discussões](https://github.com/carsaimz/carsai-yt-studio/discussions) e consulta o [roadmap](https://github.com/carsaimz/carsai-yt-studio/discussions/categories/roadmap). Bom primeiro ponto de partida: [`good first issue`](https://github.com/carsaimz/carsai-yt-studio/labels/good%20first%20issue).
+Contribuições são muito bem-vinas! Lê [CONTRIBUTING.md](CONTRIBUTING.md), participa nas [Discussões](https://github.com/carsaimz/carsai-yt-studio/discussions) e consulta o [roadmap público](https://github.com/carsaimz/carsai-yt-studio/discussions/1). Bom primeiro ponto de partida: [`good first issue`](https://github.com/carsaimz/carsai-yt-studio/labels/good%20first%20issue).
 
 ---
 

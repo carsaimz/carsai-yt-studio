@@ -4,7 +4,7 @@ Obrigado por considerares contribuir! 🎬
 
 ## Comunidade
 
-- 💬 [Discussões](https://github.com/carsaimz/carsai-yt-studio/discussions) — perguntas, ideias, roadmap e apresentações (Q&A, Ideas, Show and tell, Roadmap)
+- 💬 [Discussões](https://github.com/carsaimz/carsai-yt-studio/discussions) — perguntas, ideias, roadmap e apresentações (Q&A, Ideas, Show and tell, Announcements)
 - 🐛 [Issues](https://github.com/carsaimz/carsai-yt-studio/issues) — bugs e pedidos de funcionalidades com templates prontos
 - 🌐 Site oficial: [carsaiytstudio.vercel.app](https://carsaiytstudio.vercel.app)
 
