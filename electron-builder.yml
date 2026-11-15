@@ -1,5 +1,6 @@
 appId: mz.carsai.ytstudio
 productName: Carsai YT Studio
+main: electron/main.cjs
 directories:
   output: dist-electron
 files:
@@ -8,12 +9,15 @@ files:
   - .next/static/**/*
   - public/**/*
   - package.json
-asar: true
+# asar disabled: the main process spawns the Next.js standalone server with
+# ELECTRON_RUN_AS_NODE, which cannot read scripts inside an asar archive.
+asar: false
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 win:
   target:
     - target: nsis
       arch: [x64]
-  icon: public/icon.svg
+  icon: public/icon-512.png
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
@@ -26,3 +30,4 @@ linux:
     - AppImage
     - deb
   category: Development
+  icon: public/icon-512.png

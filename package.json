@@ -105,5 +105,6 @@
     "electron-builder": "^25.1.8",
     "@capacitor/cli": "^6.2.0"
   },
-  "description": "Plataforma local-first open-source (MIT) para criadores YouTube — analytics, SEO, comunidade, automação, YouTube Data API v3 e IA multi-provedor (Next.js + Capacitor + Electron + PWA)"
+  "description": "Plataforma local-first open-source (MIT) para criadores YouTube — analytics, SEO, comunidade, automação, YouTube Data API v3 e IA multi-provedor (Next.js + Capacitor + Electron + PWA)",
+  "main": "electron/main.cjs"
 }

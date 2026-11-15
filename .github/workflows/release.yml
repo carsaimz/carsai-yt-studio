@@ -41,11 +41,9 @@ jobs:
         id: electron
         run: |
           mkdir -p dist-release
-          if compgen -G "dist/*.zip" > /dev/null; then cp dist/*.zip dist-release/; fi
-          if compgen -G "dist/*.AppImage" > /dev/null; then cp dist/*.AppImage dist-release/; fi
-          if compgen -G "dist/*.deb" > /dev/null; then cp dist/*.deb dist-release/; fi
-          if compgen -G "dist/*.exe" > /dev/null; then cp dist/*.exe dist-release/; fi
-          if compgen -G "dist/*.dmg" > /dev/null; then cp dist/*.dmg dist-release/; fi
+          for f in dist-electron/*.zip dist-electron/*.AppImage dist-electron/*.deb dist-electron/*.exe dist-electron/*.dmg; do
+            [ -e "$f" ] && cp "$f" dist-release/
+          done
           ls -la dist-release/ || true
 
       - name: Extract release notes from CHANGELOG
