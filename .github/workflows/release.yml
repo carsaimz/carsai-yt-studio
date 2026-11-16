@@ -9,8 +9,11 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Build & publish release
+  # ------------------------------------------------------------------
+  # Web bundle + Linux Electron (AppImage, deb)
+  # ------------------------------------------------------------------
+  web-linux:
+    name: Web + Linux build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,34 +33,169 @@ jobs:
           cd .next && zip -qr ../carsai-yt-studio-${{ github.ref_name }}-web.zip standalone static ../public && cd ..
           ls -la *.zip
 
-      - name: Build Electron app
-        run: |
-          bunx electron-builder --config electron-builder.yml --publish never || true
+      - name: Build Electron (Linux: AppImage + deb)
+        run: bunx electron-builder --config electron-builder.yml --publish never
         env:
-          # Electron Builder may need code-signing vars; unsigned builds are fine for now
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
-      - name: Collect Electron artifacts
-        id: electron
+      - name: Collect artifacts
         run: |
           mkdir -p dist-release
-          for f in dist-electron/*.zip dist-electron/*.AppImage dist-electron/*.deb dist-electron/*.exe dist-electron/*.dmg; do
-            [ -e "$f" ] && cp "$f" dist-release/
+          shopt -s nullglob
+          for f in dist-electron/*.AppImage dist-electron/*.deb dist-electron/*.zip dist-electron/*.exe dist-electron/*.dmg; do
+            cp "$f" dist-release/
           done
-          ls -la dist-release/ || true
+          ls -la dist-release/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: |
+            carsai-yt-studio-${{ github.ref_name }}-web.zip
+            dist-release/*
+          if-no-files-found: error
+
+  # ------------------------------------------------------------------
+  # Windows Electron (NSIS installer)
+  # ------------------------------------------------------------------
+  windows:
+    name: Windows build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build web app (standalone)
+        run: bun run build
+
+      - name: Build Electron (Windows: NSIS)
+        run: bunx electron-builder --config electron-builder.yml --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: dist-electron/*.exe
+          if-no-files-found: error
+
+  # ------------------------------------------------------------------
+  # macOS Electron (DMG)
+  # ------------------------------------------------------------------
+  macos:
+    name: macOS build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build web app (standalone)
+        run: bun run build
+
+      - name: Build Electron (macOS: DMG)
+        run: bunx electron-builder --config electron-builder.yml --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: dist-electron/*.dmg
+          if-no-files-found: error
+
+  # ------------------------------------------------------------------
+  # Android (Capacitor → Gradle → APK + AAB)
+  # ------------------------------------------------------------------
+  android:
+    name: Android build (APK + AAB)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build static web export
+        run: bun run build:mobile
+
+      - name: Prepare native Android project
+        run: bash scripts/prepare-android.sh
+        env:
+          CAP_SERVER_URL: ""
+
+      - name: Build release APK + AAB
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace
+
+      - name: Rename artifacts
+        run: |
+          mkdir -p dist-android
+          cp android/app/build/outputs/apk/release/app-release.apk \
+             "carsai-yt-studio-${{ github.ref_name }}-android.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab \
+             "carsai-yt-studio-${{ github.ref_name }}-android.aab"
+          ls -la carsai-yt-studio-*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: |
+            carsai-yt-studio-${{ github.ref_name }}-android.apk
+            carsai-yt-studio-${{ github.ref_name }}-android.aab
+          if-no-files-found: error
+
+  # ------------------------------------------------------------------
+  # Publish GitHub Release with all artifacts + changelog notes
+  # ------------------------------------------------------------------
+  publish:
+    name: Publish release
+    needs: [web-linux, windows, macos, android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p dist-all
+          find artifacts -type f -exec cp {} dist-all/ \;
+          ls -la dist-all/
 
       - name: Extract release notes from CHANGELOG
-        id: notes
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          # extract the section of the changelog matching this version
           awk -v ver="$VERSION" '
             BEGIN { capture=0 }
             $0 ~ "^## \\[" ver "\\]" { capture=1; next }
             capture && /^## \[/ { exit }
             capture { print }
           ' CHANGELOG.md > release-notes.md
-          # fallback: if empty, use the whole changelog
           if [ ! -s release-notes.md ]; then cp CHANGELOG.md release-notes.md; fi
 
       - name: Create GitHub Release
@@ -67,8 +205,6 @@ jobs:
           body_path: release-notes.md
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
-          files: |
-            carsai-yt-studio-${{ github.ref_name }}-web.zip
-            dist-release/*
+          files: dist-all/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

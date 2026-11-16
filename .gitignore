@@ -15,6 +15,10 @@
 /.next/
 /out/
 
+# capacitor native projects are generated in CI (npx cap add android)
+/android/
+/ios/
+
 # production
 /build
 

@@ -5,9 +5,7 @@
 
 
   <p>
-    <strong>🇲🇿 Plataforma local-first para criadores YouTube — analytics, SEO, comunidade, automação e IA</strong><br/>
-    <strong>🇺🇸 Local-first platform for YouTube creators — analytics, SEO, community, automation & AI</strong><br/>
-    <strong>🇪🇸 Plataforma local-first para creadores de YouTube — analíticas, SEO, comunidad, automatización e IA</strong>
+    <strong>Local-first platform for YouTube creators — analytics, SEO, community, automation & AI</strong>
   </p>
 
   <p>
@@ -23,127 +21,67 @@
   </p>
 
   <p>
-    🌐 <strong><a href="https://carsaiytstudio.vercel.app">Site oficial — carsaiytstudio.vercel.app</a></strong>
+    🌐 <strong><a href="https://carsaiytstudio.vercel.app">Official website — carsaiytstudio.vercel.app</a></strong>
+  </p>
+
+  <p><strong>Read in:</strong>
+    <a href="README.md">English</a> ·
+    <a href="README.pt.md">Português</a> ·
+    <a href="README.es.md">Español</a> ·
+    <a href="README.fr.md">Français</a> ·
+    <a href="README.de.md">Deutsch</a> ·
+    <a href="README.it.md">Italiano</a> ·
+    <a href="README.zh.md">中文</a>
   </p>
 </div>
 
 ---
 
-<a id="pt"></a>
-## 🇲🇿 Português
-
-### O que é?
-
-O **Carsai YT Studio v3** é uma alternativa ao YouTube Studio com superpoderes: analisa o teu canal, otimiza SEO, modera a comunidade, automatiza tarefas repetitivas, explora **toda a YouTube Data API v3** e usa agentes de IA — tudo numa única aplicação que corre no **browser (PWA), Android/iOS (Capacitor) e desktop (Electron)**.
-
-Ao contrário da versão anterior, a v3 é **local-first**: os teus dados e chaves de API vivem apenas no teu dispositivo. Sem Firebase, sem backend obrigatório, sem servidores intermédios. Open-source sob licença **MIT**.
-
-### Funcionalidades
-
-| | Funcionalidade | Descrição |
-|--|---|---|
-| 📊 | **Painel & Analytics** | KPIs com sparklines, gráficos de 28/90 dias, origens de tráfego, curva de retenção, heatmap de melhores horários, exportação CSV |
-| 📈 | **Gráficos alternáveis (novo)** | Troca o tipo de gráfico em qualquer painel: **linha, área, barras, circular (donut), radar e 3D** |
-| 🔐 | **OAuth Google (novo)** | Liga a conta Google com PKCE — playlists próprias, legendas e **YouTube Analytics API v2** (relatórios reais diários + top vídeos + CSV); captura automática loopback no Electron |
-| 🎬 | **Biblioteca de conteúdo** | Pesquisa, filtros, editor de metadados com score SEO ao vivo, capítulos, pré-visualização de miniatura |
-| 🛰️ | **YouTube Hub (novo)** | Toda a YouTube Data API v3 num só lugar: tendências por região/categoria, pesquisa global (vídeos/canais/playlists), playlists, subscrições, atividades, transmissões live e taxonomias oficiais (categorias, regiões i18n, idiomas) |
-| 🔍 | **Estúdio SEO** | Otimizador de títulos com checklist, laboratório de tags (extração real via API), pesquisa de palavras-chave (autocomplete público), análise de concorrentes |
-| 💬 | **Comunidade** | Caixa de entrada com sentimentos, respostas por IA, modelos de resposta, moderação (aprovar/ocultar/spam) |
-| 🤖 | **Estúdio IA multi-provedor** | Chat com contexto do canal, roteiros, 10 ideias, respostas — **Gemini, Groq, OpenRouter, Mistral, Hugging Face, OpenAI, Claude, DeepSeek, Together + locais (Ollama, LM Studio) + provedores personalizados ilimitados** (OpenAI-compatible / Gemini / Anthropic) |
-| ⚡ | **Automação** | Motor de regras acionador→condições→ações: responder, gerar ideias, aplicar tags, notificar, webhooks. Modelos prontos e registo de execuções |
-| 🔌 | **Integrações** | Cofre de chaves local para **16 serviços** públicos/gratuitos (YouTube API, Gemini, Groq, OpenRouter, Mistral, DeepSeek, Together, Ollama, LM Studio, Pexels, Unsplash, Pixabay, webhooks…) |
-| 🧰 | **Ferramentas** | Teste A/B de miniaturas em tamanho real, tendências por região, planeador de uploads, backup/exportação JSON |
-| 🎯 | **Objetivos (novo)** | Metas do canal (subs, views, horas, vídeos) com progresso no painel |
-| 🎨 | **Temas & acentos (novo)** | Tema Obsidian dark/light + **4 acentos personalizáveis** (Flame, Orchid, Ocean, Volt) |
-| 🌍 | **Multi-idioma** | Português · English · Español |
-| ⌨️ | **Command palette** | `Cmd/Ctrl+K` para navegar e executar ações |
-| 📲 | **PWA instalável (novo)** | Instala como app nativa no desktop e Android — funciona offline após a primeira visita |
-| 📱 | **Multi-plataforma** | Web · Android/iOS (Capacitor) · Windows/macOS/Linux (Electron) |
-
-> **Nota sobre a web**: a versão web funciona apenas como **teste e demonstração** (dados de exemplo, sem ligações reais). A experiência completa — dados reais, OAuth e automação — corre nas apps **Electron (desktop)** e **Capacitor (telemóvel)**, descarregáveis nos [Releases](https://github.com/carsaimz/carsai-yt-studio/releases/latest).
-
-### Início rápido
-
-```bash
-git clone https://github.com/carsaimz/carsai-yt-studio.git
-cd carsai-yt-studio
-npm install
-npm run dev
-```
-
-1. Abre `http://localhost:3000`
-2. Escolhe **Explorar em modo Demo** (dados de exemplo, zero configuração) ou liga o teu canal com uma chave gratuita da [YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com)
-3. Opcionalmente configura IA gratuita em **Definições → Provedores de IA** (Gemini / Groq / OpenRouter / Mistral — ou Ollama local)
-
-### Plataformas
-
-| Plataforma | Comando | Notas |
-|---|---|---|
-| 🌐 Web | `npm run dev` / `npm run build` | Next.js standalone + PWA |
-| 📱 Android | `npm run cap:android` | `build:mobile` (export estático) + `cap sync` |
-| 🖥️ Desktop | `npm run electron:dev` | carrega a app web; `electron:build` gera instaladores |
-
-> 📖 Consulta o [SETUP.md](SETUP.md) para instruções detalhadas de cada plataforma e obtenção de chaves gratuitas.
-
-### Tecnologias
-
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui · Zustand (persistência local) · Recharts · Framer Motion · Lucide · Capacitor 6 · Electron 33
-
-### Arquitetura
-
-```
-src/
-  app/                    # Next.js App Router (rota única / — SPA + PWA)
-  components/studio/
-    studio-app.tsx        # shell: topbar, sidebar, navegação SPA, acentos, novidades
-    views/                # 12 vistas: dashboard, analytics, content, video, youtube (Hub),
-                          # seo, community, ai, automation, integrations, tools, settings
-  lib/studio/
-    youtube.ts            # cliente YouTube Data API v3 completo (browser, CORS)
-    ai.ts                 # motor multi-provedor (online, local, personalizado) + cérebro demo
-    seo.ts                # motor de pontuação e sugestões SEO
-    automation.ts         # motor de regras (tick 60s) + modelos
-    store.ts              # Zustand + localStorage (local-first) com migrações
-    i18n.tsx              # dicionários PT/EN/ES
-    demo-data.ts          # dataset demo determinístico
-```
-
-### Segurança e privacidade
-
-- 🔐 As chaves de API ficam em `localStorage` **apenas no teu dispositivo**
-- 🌐 Chamadas externas vão diretamente do teu browser para as APIs oficiais
-- 🚫 Sem analytics, telemetria ou servidores intermédios
-- 🧹 Backup/exportação em **Definições**; zona de risco repõe tudo
-
-### Contribuir
-
-Contribuições são muito bem-vinas! Lê [CONTRIBUTING.md](CONTRIBUTING.md), participa nas [Discussões](https://github.com/carsaimz/carsai-yt-studio/discussions) e consulta o [roadmap público](https://github.com/carsaimz/carsai-yt-studio/discussions/1). Bom primeiro ponto de partida: [`good first issue`](https://github.com/carsaimz/carsai-yt-studio/labels/good%20first%20issue).
-
----
-
-<a id="en"></a>
-## 🇺🇸 English
-
-### What is it?
+## What is it?
 
 **Carsai YT Studio v3** is a YouTube Studio alternative with superpowers: analyze your channel, optimize SEO, moderate your community, automate repetitive work, explore the **entire YouTube Data API v3** and use AI agents — all in one app that runs on **browser (PWA), Android/iOS (Capacitor) and desktop (Electron)**.
 
-Unlike the previous version, v3 is **local-first**: your data and API keys live only on your device. No Firebase, no required backend, no middleman servers. Open-source under **MIT**.
+v3 is **local-first**: your data and API keys live only on your device. No Firebase, no required backend, no middleman servers. Open-source under **MIT**.
 
-### Features
+> **Web note**: the hosted web version is for **testing and demonstration only** (sample data, no real connections). The full experience — real data, OAuth and automation — runs in the **Electron (desktop)** and **Capacitor (mobile)** apps, downloadable from [Releases](https://github.com/carsaimz/carsai-yt-studio/releases/latest).
 
-- **Dashboard & Analytics** — KPI sparklines, 28/90-day charts, traffic sources, retention curve, best-time heatmap, CSV export
-- **Switchable charts (new)** — swap chart type on any panel: **line, area, bars, donut, radar and 3D**
-- **YouTube Hub (new)** — the full Data API v3 surface: trending by region/category, global search, playlists, subscriptions, activities, live broadcasts and official taxonomies
-- **Content library** — search, filters, live SEO score metadata editor, chapters, thumbnail preview
-- **SEO Studio** — title optimizer checklist, real tag extraction via API, keyword research, competitor analysis
-- **Community** — sentiment inbox, AI-suggested replies, reply templates, moderation
-- **AI Studio (multi-provider)** — channel-aware chat, scripts, ideas, replies: **Gemini, Groq, OpenRouter, Mistral, Hugging Face, OpenAI, Claude, DeepSeek, Together + local (Ollama, LM Studio) + unlimited custom providers**
-- **Automation** — trigger→conditions→actions rule engine with templates and run log
-- **Integrations** — local key vault for 16 public/free services
-- **Goals (new)**, **accent themes (new)**, **PWA (new)**, multi-language (PT/EN/ES), command palette
+## Features
 
-### Quick start
+| | Feature | Description |
+|--|---|---|
+| 📊 | **Dashboard & Analytics** | KPI sparklines, 28/90-day charts, traffic sources, retention curve, best-time heatmap, CSV export |
+| 📈 | **Switchable charts** | Swap chart type on any panel: **line, area, bars, donut, radar and 3D** |
+| 🔐 | **Google OAuth** | PKCE OAuth — own playlists, captions and **real YouTube Analytics API v2 reports** (daily metrics + top videos + CSV); automatic loopback capture on Electron |
+| 🎬 | **Content library** | Search, filters, live SEO-score metadata editor, chapters, thumbnail preview |
+| 🛰️ | **YouTube Hub** | The full Data API v3 surface: trending by region/category, global search (videos/channels/playlists), playlists, subscriptions, activities, live broadcasts and official taxonomies |
+| 🔍 | **SEO Studio** | Title optimizer checklist, real tag extraction via API, keyword research (public autocomplete), competitor analysis |
+| 💬 | **Community** | Sentiment inbox, AI-suggested replies, reply templates, moderation (approve/hide/spam) |
+| 🤖 | **Multi-provider AI Studio** | Channel-aware chat, scripts, ideas, replies — **Gemini, Groq, OpenRouter, Mistral, Hugging Face, OpenAI, Claude, DeepSeek, Together + local (Ollama, LM Studio) + unlimited custom providers** (OpenAI-compatible / Gemini / Anthropic) |
+| ⚡ | **Automation** | Trigger→conditions→actions rule engine: reply, generate ideas, apply tags, notify, webhooks. Ready-made templates and run log |
+| 🔌 | **Integrations** | Local key vault for **16 public/free services** (YouTube API, Gemini, Groq, OpenRouter, Mistral, DeepSeek, Together, Ollama, LM Studio, Pexels, Unsplash, Pixabay, webhooks…) |
+| 🧰 | **Tools** | Thumbnail A/B testing at real YouTube sizes, trending by region, upload planner, JSON backup/export |
+| 🎯 | **Goals** | Channel targets (subs, views, watch hours, videos) with dashboard progress |
+| 🎨 | **Themes & accents** | Obsidian dark/light theme + **4 custom accents** (Flame, Orchid, Ocean, Volt) |
+| 🌍 | **Six languages** | Português · English · Español · Français · Deutsch · Italiano |
+| ⌨️ | **Command palette** | `Cmd/Ctrl+K` to navigate and run actions |
+| 📲 | **Installable PWA** | Install as a native app — works offline after first visit |
+| 📱 | **Multi-platform** | Web · Android/iOS (Capacitor) · Windows/macOS/Linux (Electron) |
+
+## Downloads
+
+Every release ships builds for all platforms (see [CHANGELOG.md](CHANGELOG.md) for what changed):
+
+| Platform | File |
+|---|---|
+| 🤖 Android | `carsai-yt-studio-vX.Y.Z-android.apk` · `.aab` |
+| 🪟 Windows | `carsai-yt-studio-X.Y.Z-win-x64.exe` (NSIS installer) |
+| 🍎 macOS | `carsai-yt-studio-X.Y.Z-macos-*.dmg` |
+| 🐧 Linux | `carsai-yt-studio-X.Y.Z-linux-x86_64.AppImage` · `.deb` |
+| 🌐 Web | `carsai-yt-studio-vX.Y.Z-web.zip` (self-host bundle) |
+
+👉 [Latest release](https://github.com/carsaimz/carsai-yt-studio/releases/latest)
+
+## Quick start
 
 ```bash
 git clone https://github.com/carsaimz/carsai-yt-studio.git
@@ -152,32 +90,56 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`, pick **Demo mode** (sample data, zero setup) or connect your channel with a free [YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com) key. Optionally add free AI under **Settings → AI providers** (Gemini / Groq / OpenRouter / Mistral — or local Ollama).
+1. Open `http://localhost:3000`
+2. Pick **Explore in Demo mode** (sample data, zero setup) or connect your channel with a free [YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com) key
+3. Optionally add free AI under **Settings → AI providers** (Gemini / Groq / OpenRouter / Mistral — or local Ollama)
 
----
+## Platforms
 
-<a id="es"></a>
-## 🇪🇸 Español
+| Platform | Command | Notes |
+|---|---|---|
+| 🌐 Web | `npm run dev` / `npm run build` | Next.js standalone + PWA |
+| 📱 Android | `npm run cap:android` | `build:mobile` (static export) + `cap sync` |
+| 🖥️ Desktop | `npm run electron:dev` | loads the web app; `electron:build` builds installers |
 
-### ¿Qué es?
+> 📖 See [SETUP.md](SETUP.md) for detailed per-platform instructions and how to get free API keys. The public roadmap lives in [ROADMAP.md](ROADMAP.md).
 
-**Carsai YT Studio v3** es una alternativa a YouTube Studio con superpoderes: analiza tu canal, optimiza el SEO, modera la comunidad, automatiza el trabajo repetitivo, explora **toda la YouTube Data API v3** y usa agentes de IA — todo en una app que funciona en **navegador (PWA), Android/iOS (Capacitor) y escritorio (Electron)**.
+## Tech stack
 
-A diferencia de la versión anterior, la v3 es **local-first**: tus datos y claves de API viven solo en tu dispositivo. Sin Firebase, sin backend obligatorio. Open-source bajo licencia **MIT**.
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui · Zustand (local persistence) · Recharts · Framer Motion · Lucide · Capacitor 6 · Electron 33
 
-### Inicio rápido
+## Architecture
 
-```bash
-git clone https://github.com/carsaimz/carsai-yt-studio.git
-cd carsai-yt-studio
-npm install
-npm run dev
+```
+src/
+  app/                    # Next.js App Router (single route / — SPA + PWA)
+  components/studio/
+    studio-app.tsx        # shell: topbar, sidebar, SPA navigation, accents, what's new
+    views/                # 12 views: dashboard, analytics, content, video, youtube (Hub),
+                          # seo, community, ai, automation, integrations, tools, settings
+  lib/studio/
+    youtube.ts            # full YouTube Data API v3 client (browser, CORS-safe)
+    gapi.ts               # OAuth-gated endpoints (own playlists, captions)
+    oauth.ts              # Google OAuth 2.0 PKCE flow
+    ai.ts                 # multi-provider engine (online, local, custom) + demo brain
+    seo.ts                # SEO scoring and suggestion engine
+    automation.ts         # rule engine (60s tick) + templates
+    store.ts              # Zustand + localStorage (local-first) with migrations
+    i18n.tsx              # dictionaries: PT/EN/ES/FR/DE/IT
+    demo-data.ts          # deterministic demo dataset
 ```
 
-Abre `http://localhost:3000`, elige **modo Demo** o conecta tu canal con una clave gratuita de la YouTube Data API v3. Añade IA gratuita en **Ajustes → Proveedores de IA**.
+## Security & privacy
 
----
+- 🔐 API keys live in `localStorage` **on your device only**
+- 🌐 External calls go straight from your browser to the official APIs
+- 🚫 No analytics, no telemetry, no middleman servers
+- 🧹 Backup/export in **Settings**; the danger zone resets everything
 
-## Licença / License
+## Contributing
 
-MIT — ver [LICENSE](LICENSE).
+Contributions are very welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md), join the [Discussions](https://github.com/carsaimz/carsai-yt-studio/discussions) and check the [public roadmap](ROADMAP.md). Good first starting points: [`good first issue`](https://github.com/carsaimz/carsai-yt-studio/labels/good%20first%20issue). Translators: the i18n dictionaries in `src/lib/studio/i18n.tsx` are the place to add a language.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

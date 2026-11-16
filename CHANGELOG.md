@@ -1,88 +1,108 @@
 # Changelog — Carsai YT Studio
 
-Todas as alterações notáveis deste projeto estão documentadas aqui. O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o versionamento usa [SemVer](https://semver.org/lang/pt-BR/).
+All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows [SemVer](https://semver.org/).
+
+## [3.3.0] — 2026-11-16
+
+### Added
+
+- **Android release builds** — the release workflow now builds the Capacitor app (APK + AAB, generated native project, debug-signed for direct install) fixing the missing APK asset in v3.x releases
+- **Windows installer** (NSIS) and **macOS DMG** Electron builds — releases now cover Linux, Windows, macOS, Android and web in one pipeline
+- **Three new UI languages** — Français, Deutsch and Italiano join PT/EN/ES (full dictionaries in `src/lib/studio/i18n.tsx`)
+- **Public ROADMAP.md** — shipped / in-progress / planned items (OAuth write actions, deeper analytics, encrypted device sync, team mode via WebRTC/P2P, more languages, Playwright E2E) open for community feedback
+
+### Changed
+
+- CHANGELOG, README and project docs now use English as the primary language (global project); translated READMEs live in per-language files
+- Release notes extraction updated for the multi-platform pipeline
+
+### Fixed
+
+- `ci.yml` branch filters hardened; release notes step moved to the publish job
 
 ## [3.2.0] — 2026-11-16
 
-### Adicionado
+### Added
 
-- **Google OAuth 2.0** — liga a conta Google com PKCE usando o client OAuth do utilizador (credenciais e tokens apenas no dispositivo); captura automática de loopback no Electron (redirect `http://localhost:8765/`) e colagem manual do código em qualquer plataforma; *refresh token* aplicado automaticamente quando o access token expira
-- **YouTube Analytics API v2** — nova aba **Live · Analytics** na vista Analytics: relatórios reais diários do canal (views, minutos assistidos, subscritores ganhos/perdidos, likes, comentários, partilhas) e top vídeos do período, com gráficos e exportação CSV
-- **Recursos da Data API só com OAuth** — playlists próprias (`mine=true`) e legendas do canal via token OAuth (lib `gapi.ts`)
-- **Modo web demo explícito** — quando aberto num navegador comum a plataforma entra em modo de teste/demonstração: banner permanente com link para descarregar a app, alternador "Ao vivo" bloqueado com explicação, onboarding adaptado e secção OAuth desativada na web
-- **Verificador de atualizações** — consulta o último release do GitHub no arranque e mostra um toast com link quando existe versão mais recente
-- **Electron** — IPC `carsai:oauth-loopback` no main process (servidor loopback seguro, timeout 5 min) + preload com `contextIsolation`
+- **Google OAuth 2.0** — connect the Google account with PKCE using the user's own OAuth client (credentials and tokens stay on the device only); automatic loopback capture on Electron (redirect `http://localhost:8765/`) and manual code paste anywhere else; refresh token applied automatically when the access token expires
+- **YouTube Analytics API v2** — new **Live · Analytics** tab in the Analytics view: real daily channel reports (views, watch minutes, subscribers gained/lost, likes, comments, shares) and top videos of the period, with charts and CSV export
+- **OAuth-gated Data API features** — own playlists (`mine=true`) and channel captions via OAuth token (`gapi.ts`)
+- **Explicit web demo mode** — opened in a normal browser the platform enters testing/demonstration mode: permanent banner with app download link, "Live" switch blocked with explanation, adapted onboarding and OAuth section disabled on web
+- **Update checker** — queries the latest GitHub release at startup and shows a toast with a link when a newer version exists
+- **Electron** — `carsai:oauth-loopback` IPC in the main process (secure loopback server, 5 min timeout) + preload with `contextIsolation`
 
-### Melhorado
+### Improved
 
-- Onboarding distingue a web demo (cartão "Ligar canal" desativado com nota de acesso total nas apps) das apps instaladas
-- Store persistida **v5** com estado `googleAuth` e migração automática v3/v4→v5
-- i18n (PT/EN/ES) completa para todos os novos ecrãs (OAuth, analytics live, banner web, atualizações)
+- Onboarding distinguishes the web demo ("Connect channel" card disabled with a full-access note for installed apps) from the installed apps
+- Persisted store **v5** with `googleAuth` state and automatic v3/v4→v5 migration
+- i18n (PT/EN/ES) complete for all new screens (OAuth, live analytics, web banner, updates)
 
-### Notas
+### Notes
 
-- A versão web fica apenas para **testes e demonstração** — a funcionalidade completa (dados reais, OAuth, automação) corre em Electron (desktop) e Capacitor (telemóvel)
+- The web version remains **testing and demonstration only** — full functionality (real data, OAuth, automation) runs on Electron (desktop) and Capacitor (mobile)
 
 ## [3.1.0] — 2026-11-15
 
-### Adicionado
+### Added
 
-- **YouTube Hub** — nova vista com toda a YouTube Data API v3: tendências por região e categoria, pesquisa global (vídeos, canais, playlists) com ordenação, playlists com detalhe de vídeos, subscrições do canal, feed de atividades, pesquisa de transmissões em direto e taxonomias oficiais (categorias de vídeo, regiões i18n, idiomas i18n)
-- **Motor de IA multi-provedor v2** — provedores **locais** (Ollama, LM Studio), novos serviços online (Mistral, DeepSeek, Together) e **provedores personalizados ilimitados** (OpenAI-compatible, Gemini ou Anthropic) com nome, base URL, modelo e chave; teste de conectividade com latência em Definições
-- **Gráficos alternáveis** — seletor de tipo de gráfico (linha, área, barras, circular/donut, radar e **3D isométrico**) no Dashboard e Analytics, com preferência guardada
-- **Cor de acento** — 4 paletas personalizáveis para o tema Obsidian (Flame, Orchid, Ocean, Volt), aplicáveis em Definições ou pela command palette
-- **Objetivos do canal** — metas por métrica (subscritores, views, horas vistas, vídeos) geridas em Definições
-- **Novidades por versão** — diálogo "What's new" mostrado uma vez por lançamento, reabrível em Definições
-- **PWA instalável** — manifest, ícones (normal + maskable) e metadados completos
-- **CI + Releases** — GitHub Actions (`ci.yml` typecheck/lint/build; `release.yml` publica artefactos e notas a partir do CHANGELOG), templates de issues/PR, FUNDING e Discussions habilitadas
-- `npm run typecheck` e migração do armazenamento local v3→v4
+- **YouTube Hub** — new view with the full YouTube Data API v3: trending by region and category, global search (videos, channels, playlists) with sorting, playlists with video detail, channel subscriptions, activity feed, live broadcast search and official taxonomies (video categories, i18n regions, i18n languages)
+- **Multi-provider AI engine v2** — **local** providers (Ollama, LM Studio), new online services (Mistral, DeepSeek, Together) and **unlimited custom providers** (OpenAI-compatible, Gemini or Anthropic) with name, base URL, model and key; connectivity test with latency in Settings
+- **Switchable charts** — chart type selector (line, area, bars, pie/donut, radar and **isometric 3D**) in Dashboard and Analytics, with persisted preference
+- **Accent colour** — 4 customisable palettes for the Obsidian theme (Flame, Orchid, Ocean, Volt), applied in Settings or via command palette
+- **Channel goals** — per-metric targets (subscribers, views, watch hours, videos) managed in Settings
+- **Per-release news** — "What's new" dialog shown once per release, reopenable in Settings
+- **Installable PWA** — manifest, icons (normal + maskable) and complete metadata
+- **CI + Releases** — GitHub Actions (`ci.yml` typecheck/lint/build; `release.yml` publishes artifacts and notes from the CHANGELOG), issue/PR templates, FUNDING and Discussions enabled
+- `npm run typecheck` and local storage migration v3→v4
 
-### Melhorado
+### Improved
 
-- **Responsividade global** — corrigidos textos e tabelas que ultrapassavam cartões; barra superior sem arrasto horizontal (overflow-x clip), filtros e selects com quebra de linha, chat e gráficos contidos, URLs/IDs longos quebráveis
-- **Tema Obsidian refinado** — cartões com borda gradiente adaptável ao acento, tipografia balanceada, scrollbar com acento, utilitários de quebra de texto
-- **Landing de primeira abertura** — nova página inicial premium (badges, funcionalidades, animações); mostra-se apenas na primeira abertura e, com o modo Ao vivo configurado, a aplicação cai sempre no Dashboard
-- Command palette com ações de acento; integrações atualizadas para 16 serviços; modo Demo/Ao vivo compacto no telemóvel
+- **Global responsiveness** — fixed texts and tables overflowing cards; top bar without horizontal drag (overflow-x clip), filters and selects with line breaking, chat and charts contained, long URLs/IDs breakable
+- **Refined Obsidian theme** — cards with gradient border adapting to the accent, balanced typography, accent scrollbar, text-break utilities
+- **First-run landing** — new premium home page (badges, features, animations); shown only on first open and, with Live mode configured, the app always lands on the Dashboard
+- Command palette with accent actions; integrations updated to 16 services; compact Demo/Live switch on mobile
 
-### Corrigido
+### Fixed
 
-- Erros de tipos acumulados (actions de automação, catálogo de integrações, packs demo)
-- `ChartTooltip` ultrapassava o cartão em ecrãs pequenos
+- Accumulated type errors (automation actions, integrations catalogue, demo packs)
+- `ChartTooltip` overflowed the card on small screens
 
 ## [3.0.0] — 2026-11-15
 
-### Reescrita
+### Rewritten
 
-- **Stack nova**: Next.js 16 (App Router) · React 19 · TypeScript · Tailwind 4 · shadcn/ui · Zustand · Recharts · Framer Motion
-- **Local-first**: sem Firebase — dados e chaves em `localStorage`; modo Demo com dataset determinístico
-- **Design novo**: tema "Obsidian" dark-first com acento gradiente flame, glass topbar, cartões com luz de foco, tema claro incluído
-- **SPA de rota única** com 11 vistas navegáveis + command palette `Cmd/Ctrl+K`
-- **Multi-plataforma**: Capacitor (Android/iOS, export estático ou shell remoto) e Electron (standalone local ou APP_URL)
+- **New stack**: Next.js 16 (App Router) · React 19 · TypeScript · Tailwind 4 · shadcn/ui · Zustand · Recharts · Framer Motion
+- **Local-first**: no Firebase — data and keys in `localStorage`; Demo mode with a deterministic dataset
+- **New design**: "Obsidian" dark-first theme with flame gradient accent, glass topbar, cards with focus light, light theme included
+- **Single-route SPA** with 11 navigable views + `Cmd/Ctrl+K` command palette
+- **Multi-platform**: Capacitor (Android/iOS, static export or remote shell) and Electron (standalone local or APP_URL)
 
-### Novas funcionalidades
+### New features
 
-- **Automação**: motor de regras acionador→condições→ações (comentários, vídeos, marcos, agendador 60s), modelos prontos, registo de execuções, webhooks
-- **Integrações**: cofre de chaves local para 11 serviços públicos/gratuitos (YouTube, Gemini, Groq, OpenRouter, OpenAI, Claude, HF, Pexels, Unsplash, Pixabay, webhook universal)
-- **Ferramentas**: teste A/B de miniaturas em tamanhos reais do YouTube, tendências por região (mostPopular), planeador de uploads com estados, backup/exportação JSON
-- **IA multi-provedor**: 6 provedores com fallback demo local sem chave; chat com contexto do canal, roteiros com timestamps, 10 ideias, respostas a comentários
-- **Estúdio SEO**: otimizador de títulos (checklist ponderada), extração real de tags por API, pesquisa de keywords via autocomplete público (com fallback), análise de concorrentes
-- **Comunidade**: sentimentos, resposta sugerida por IA, modelos, moderação
-- **i18n PT/EN/ES** completo · modo claro/escuro · heatmap de melhores horários · exportação CSV
+- **Automation**: trigger→conditions→actions rule engine (comments, videos, milestones, 60s scheduler), ready-made templates, run log, webhooks
+- **Integrations**: local key vault for 11 public/free services (YouTube, Gemini, Groq, OpenRouter, OpenAI, Claude, HF, Pexels, Unsplash, Pixabay, universal webhook)
+- **Tools**: thumbnail A/B testing at real YouTube sizes, trending by region (mostPopular), upload planner with states, JSON backup/export
+- **Multi-provider AI**: 6 providers with local demo fallback without key; chat with channel context, scripts with timestamps, 10 ideas, comment replies
+- **SEO Studio**: title optimiser (weighted checklist), real tag extraction via API, keyword research via public autocomplete (with fallback), competitor analysis
+- **Community**: sentiments, AI-suggested replies, templates, moderation
+- **i18n PT/EN/ES** complete · light/dark mode · best-times heatmap · CSV export
 
-### Removido
+### Removed
 
-- Firebase Authentication/Firestore e dependências associadas
-- TanStack Start/Router e Vite (substituídos por Next.js App Router)
-- Configurações Docker/Netlify legadas da v2
+- Firebase Authentication/Firestore and associated dependencies
+- TanStack Start/Router and Vite (replaced by Next.js App Router)
+- Legacy Docker/Netlify configs from v2
 
-### Migração
+### Migration
 
-A v3 usa armazenamento novo (`carsai-yt-studio-v3`); os dados da v2 não migram automaticamente — exporta da v2 e importa em Ferramentas → Backup.
+v3 uses new storage (`carsai-yt-studio-v3`); v2 data does not migrate automatically — export from v2 and import in Tools → Backup.
 
-## [1.x] — herança
+## [1.x] — legacy
 
-Aplicação React 19 + TanStack Start + Firebase com analytics, gestão de conteúdo, comunidade, SEO e IA (v1.0.0 → v1.1.3). Substituída pela v3.
+React 19 + TanStack Start + Firebase app with analytics, content management, community, SEO and AI (v1.0.0 → v1.1.3). Replaced by v3.
 
+[3.3.0]: https://github.com/carsaimz/carsai-yt-studio/releases/tag/v3.3.0
+[3.2.0]: https://github.com/carsaimz/carsai-yt-studio/releases/tag/v3.2.0
 [3.1.0]: https://github.com/carsaimz/carsai-yt-studio/releases/tag/v3.1.0
 [3.0.0]: https://github.com/carsaimz/carsai-yt-studio/releases/tag/v3.0.0
 [1.x]: https://github.com/carsaimz/carsai-yt-studio/releases

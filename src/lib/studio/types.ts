@@ -1,6 +1,6 @@
 /** Carsai YT Studio v3 — domain model */
 
-export type Lang = "pt" | "en" | "es";
+export type Lang = "pt" | "en" | "es" | "fr" | "de" | "it";
 export type ThemeMode = "dark" | "light" | "system";
 export type DataMode = "demo" | "live";
 

@@ -10,6 +10,14 @@ import { APP_VERSION } from "@/lib/studio/store";
 /** Release highlights — update together with CHANGELOG.md on each release */
 export const WHATS_NEW: { version: string; items: { icon: React.ReactNode; text: string }[] }[] = [
   {
+    version: "3.3.0",
+    items: [
+      { icon: <Youtube className="h-4 w-4 text-primary" />, text: "Android builds are back — APK and AAB ship with every release, plus Windows (NSIS) and macOS (DMG) installers" },
+      { icon: <Globe className="h-4 w-4 text-primary" />, text: "Three new languages: Français, Deutsch and Italiano (six languages in total)" },
+      { icon: <Sparkles className="h-4 w-4 text-primary" />, text: "Public ROADMAP.md — follow and vote on what ships next in GitHub Discussions" },
+    ],
+  },
+  {
     version: "3.2.0",
     items: [
       { icon: <Lock className="h-4 w-4 text-primary" />, text: "Google OAuth 2.0 — liga a tua conta com PKCE e captura automática no desktop (YouTube Data + Analytics API)" },

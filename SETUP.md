@@ -1,21 +1,21 @@
 # SETUP — Carsai YT Studio v3
 
-Guia de instalação e configuração para as três plataformas, com instruções para obter todas as chaves gratuitas.
+Installation and configuration guide for all platforms, with instructions for obtaining every free key.
 
 ---
 
-## 1. Requisitos
+## 1. Requirements
 
-| Ferramenta | Versão | Nota |
+| Tool | Version | Note |
 |---|---|---|
-| Node.js | 20+ (recomendado 22) | `node -v` |
-| npm | 10+ | ou `bun` |
-| Android Studio | Iguana+ | apenas para build Android |
-| Java JDK | 17 | apenas para build Android |
+| Node.js | 20+ (22 recommended) | `node -v` |
+| npm | 10+ | or `bun` |
+| Android Studio | Iguana+ | only for local Android builds |
+| Java JDK | 17 | only for Android builds |
 
 ---
 
-## 2. Instalação
+## 2. Installation
 
 ```bash
 git clone https://github.com/carsaimz/carsai-yt-studio.git
@@ -24,74 +24,81 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-O ecrã de boas-vindas oferece dois caminhos:
+The welcome screen offers two paths:
 
-1. **Modo Demo** — dados de exemplo realistas, nada para configurar.
-2. **Ligar canal ao vivo** — pede uma chave da YouTube Data API v3 + ID do canal (`UC...`).
+1. **Demo mode** — realistic sample data, nothing to configure.
+2. **Connect a live channel** — asks for a YouTube Data API v3 key + channel ID (`UC...`).
 
 ---
 
-## 3. Chaves gratuitas (todas opcionais)
+## 3. Free keys (all optional)
 
-### YouTube Data API v3 (10.000 unidades/dia grátis)
+### YouTube Data API v3 (10,000 units/day free)
 
-1. Abre [console.cloud.google.com](https://console.cloud.google.com)
-2. Cria um projeto → **APIs & Services → Library** → ativa **YouTube Data API v3**
+1. Open [console.cloud.google.com](https://console.cloud.google.com)
+2. Create a project → **APIs & Services → Library** → enable **YouTube Data API v3**
 3. **Credentials → Create credentials → API key**
-4. (Recomendado) restringe a chave à YouTube Data API
-5. Cola a chave no onboarding, ou em **Definições → Cofre de chaves**
+4. (Recommended) restrict the key to the YouTube Data API
+5. Paste the key in the onboarding, or under **Settings → API key vault**
 
-Para descobrir o teu **Channel ID**: YouTube → o teu canal → **About/Sobre** → "Share channel" → "Copy channel ID".
+To find your **Channel ID**: YouTube → your channel → **About** → "Share channel" → "Copy channel ID".
 
-### IA gratuita
+### Free AI
 
-| Serviço | Onde obter | Nota |
+| Service | Where to get it | Note |
 |---|---|---|
-| Google Gemini | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | camada gratuita generosa |
-| Groq | [console.groq.com/keys](https://console.groq.com/keys) | inferência ultrarrápida |
-| OpenRouter | [openrouter.ai/keys](https://openrouter.ai/keys) | modelos marcados `:free` |
-| Hugging Face | [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) | inferência open-source |
+| Google Gemini | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | generous free tier |
+| Groq | [console.groq.com/keys](https://console.groq.com/keys) | free tier, very fast |
+| OpenRouter | [openrouter.ai/keys](https://openrouter.ai/keys) | free models available |
+| Mistral | [console.mistral.ai](https://console.mistral.ai) | free experiment tier |
+| DeepSeek / Together | platform.deepseek.ai / api.together.xyz | pay-as-you-go |
+| Ollama / LM Studio | local install | 100% offline, no key |
 
-Configura em **Integrações** (ou **Definições → Cofre de chaves**). A chave fica **só no teu dispositivo**.
+### Google OAuth (optional — real analytics & own playlists)
 
-### Mídia (stock para miniaturas)
-
-Pexels · Unsplash · Pixabay — chaves gratuitas em `pexels.com/api`, `unsplash.com/developers`, `pixabay.com/api/docs/`.
+1. Google Cloud Console → **Credentials → Create credentials → OAuth 2.0 Client**
+2. Type **Desktop app**, redirect URI `http://localhost:8765/`
+3. Paste **Client ID** and **Client secret** in Settings → Google account (OAuth)
+4. Tokens stay on the device; the refresh token is applied automatically
 
 ---
 
 ## 4. Web / deploy
 
 ```bash
-npm run build        # build standalone em .next/standalone
-npm start            # servidor de produção
+npm run build        # standalone build in .next/standalone
+npm start            # production server
 ```
 
-Deploy recomendado: **Vercel** (zero config) ou `node .next/standalone/server.js` em qualquer VPS/Docker.
+Recommended deploy: **Vercel** (zero config) or `node .next/standalone/server.js` on any VPS/Docker.
+
+> The hosted web version is **testing and demonstration only** — the platform shows a demo banner and blocks the Live switch. Full functionality runs in the desktop/mobile apps.
 
 ---
 
 ## 5. Android (Capacitor)
 
-Dois modos:
+Two modes:
 
-**a) App estático embutida (offline-first):**
+**a) Bundled static app (offline-first):**
 
 ```bash
-npm run build:mobile   # gera ./out (export estático, BUILD_TARGET=mobile)
-npx cap add android    # primeira vez
-npm run cap:sync       # copia ./out para o projeto nativo
-npm run cap:android    # abre o Android Studio
+npm run build:mobile   # generates ./out (static export, BUILD_TARGET=mobile)
+npx cap add android    # first time only
+npm run cap:sync       # copies ./out into the native project
+npm run cap:android    # opens Android Studio
 ```
 
-**b) Shell remoto (dados sempre atualizados):**
+**b) Remote shell (always-updated data):**
 
 ```bash
-CAP_SERVER_URL=https://o-teu-deploy.vercel.app npx cap sync android
+CAP_SERVER_URL=https://your-deploy.vercel.app npx cap sync android
 npm run cap:android
 ```
 
-> Nota: no modo estático, as chamadas às APIs (YouTube, Gemini, Groq…) são feitas diretamente do dispositivo — todas suportam CORS.
+> Note: in static mode, API calls (YouTube, Gemini, Groq…) go straight from the device — all support CORS.
+
+**CI release builds:** the native `android/` folder is generated in CI by `scripts/prepare-android.sh` (adds the platform, syncs assets, patches release signing with the debug keystore) and built by the `android` job in `.github/workflows/release.yml`, which uploads `app-release.apk` and `app-release.aab` to the GitHub Release. Keep `android/` out of git (see `.gitignore`).
 
 ---
 
@@ -100,40 +107,55 @@ npm run cap:android
 **Dev:**
 
 ```bash
-npm run build                # build standalone
-npm run electron:dev         # abre a janela carregando localhost:3000
+npm run build                # standalone build
+npm run electron:dev         # opens the window loading localhost:3000
 ```
 
-**Produção (instaladores):**
+**Production (installers):**
 
 ```bash
 npm run electron:build       # NSIS (Windows), DMG (macOS), AppImage/deb (Linux)
-# output em dist-electron/
+# output in dist-electron/
 ```
 
-Modos do main process:
+Main process modes:
 
-- `APP_URL=https://o-teu-deploy.vercel.app electron electron/main.cjs` → carrega o site publicado
-- sem `APP_URL` → arranca o servidor Next standalone local e carrega `localhost:3000`
+- `APP_URL=https://your-deploy.vercel.app electron electron/main.cjs` → loads the published site
+- without `APP_URL` → spawns the local Next standalone server and loads `localhost:3000`
+
+OAuth note: Electron registers the `carsai:oauth-loopback` IPC so the OAuth redirect to `http://localhost:8765/` is captured automatically.
 
 ---
 
-## 7. Problemas comuns
+## 7. Releases (all platforms, automated)
 
-| Sintoma | Causa provável | Solução |
+Tag a version and GitHub Actions builds everything (`.github/workflows/release.yml`):
+
+```bash
+npm version minor        # or patch/major — bumps package.json
+git push --follow-tags
+```
+
+Jobs: `web-linux` (web.zip + AppImage/deb), `windows` (NSIS exe), `macos` (DMG), `android` (APK + AAB), `publish` (assembles the GitHub Release with notes extracted from CHANGELOG.md). CI must be green before tagging.
+
+---
+
+## 8. Troubleshooting
+
+| Symptom | Likely cause | Fix |
 |---|---|---|
-| `quotaExceeded` | limite diário da YouTube API | espera pela reposição (meia-noite PT) ou cria outro projeto |
-| `API key not valid` | chave mal colada / restrições | verifica em Definições → Cofre de chaves |
-| `Canal não encontrado` | ID inválido | usa o formato `UC…` (24+ caracteres) |
-| IA não responde | sem chave do provedor ativo | configura em Integrações; sem chave usa o modo demo local |
-| CORS em suggest | bloqueio raro do autocomplete | a app usa fallback local automático |
+| `quotaExceeded` | YouTube API daily limit | wait for the reset (midnight PT) or create another project |
+| `API key not valid` | key pasted wrong / restrictions | check under Settings → API key vault |
+| `Channel not found` | invalid ID | use the `UC…` format (24+ characters) |
+| AI does not respond | no key for the active provider | configure in Integrations; without a key the local demo mode is used |
+| CORS on suggest | rare autocomplete block | the app falls back to a local suggestion engine automatically |
 
 ---
 
-## 8. Dados e backup
+## 9. Data & backup
 
-Tudo vive em `localStorage` (chave `carsai-yt-studio-v3`):
+Everything lives in `localStorage` (key `carsai-yt-studio-v3`):
 
-- **Exportar**: Definições → Dados → Exportar (JSON sem chaves)
-- **Importar**: Definições → Dados → Importar
-- **Repor**: Definições → Zona de risco → Repor tudo
+- **Export**: Settings → Data → Export (JSON without keys)
+- **Import**: Settings → Data → Import
+- **Reset**: Settings → Danger zone → Reset everything
