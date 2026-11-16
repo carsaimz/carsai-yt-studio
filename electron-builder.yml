@@ -2,6 +2,9 @@ appId: mz.carsai.ytstudio
 productName: Carsai YT Studio
 directories:
   output: dist-electron
+# Pure-JS app: never node-gyp rebuild native deps during packaging
+# (@parcel/watcher etc. have no compilers available on some runners).
+npmRebuild: false
 files:
   - electron/**/*
   - .next/standalone/**/*

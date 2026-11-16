@@ -68,8 +68,12 @@ jobs:
         with:
           bun-version: latest
 
+      # --ignore-scripts: @parcel/watcher has no prebuilt binding for some
+      # runners and node-gyp fails (no MSVC / no distutils). Nothing in the
+      # build path needs lifecycle scripts — electron-builder downloads the
+      # Electron dist itself.
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Build web app (standalone)
         run: bun run build
@@ -99,7 +103,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Build web app (standalone)
         run: bun run build
