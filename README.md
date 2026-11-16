@@ -3,6 +3,7 @@
 
   <h1>Carsai YT Studio</h1>
 
+
   <p>
     <strong>🇲🇿 Plataforma local-first para criadores YouTube — analytics, SEO, comunidade, automação e IA</strong><br/>
     <strong>🇺🇸 Local-first platform for YouTube creators — analytics, SEO, community, automation & AI</strong><br/>
